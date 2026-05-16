@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# merge-claude-security — adds deny list and Bash hooks to ~/.claude/settings.json.
+#
+# ADDITIVE ONLY: never removes or replaces existing allow entries, mcpServers,
+# additionalDirectories, model, theme, or any other existing settings.
+# Safe to run on a machine that has been in use for months.
+#
+# Idempotent: skips each section if already present.
+# Requires: jq
+#
+# Bump this version string to force a re-run on next chezmoi apply:
+# security-policy-version: v1.0.1
+
+set -euo pipefail
+
+SETTINGS="$HOME/.claude/settings.json"
+
+if [[ ! -f "$SETTINGS" ]]; then
+  echo "merge-claude-security: $SETTINGS not found, skipping"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: merge-claude-security: jq not installed, skipping" >&2
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Deny list — credential stores, env files, cert/key material, shell configs,
+# destructive ops, and Claude self-modification. Sourced from adobe-cursor-rules
+# baseline reviewed 2026-05-15.
+# ---------------------------------------------------------------------------
+DENY_ENTRIES='[
+  "Read(~/.ssh/**)",
+  "Edit(~/.ssh/**)",
+  "Read(~/.aws/credentials)",
+  "Read(~/.aws/sso/cache/**)",
+  "Edit(~/.aws/**)",
+  "Read(~/.git-credentials)",
+  "Edit(~/.git-credentials)",
+  "Read(~/.config/gh/hosts.yml)",
+  "Edit(~/.config/gh/hosts.yml)",
+  "Read(**/*-service-account.json)",
+  "Read(~/.gnupg/**)",
+  "Edit(~/.gnupg/**)",
+  "Read(~/Library/Keychains/**)",
+  "Read(~/.docker/config.json)",
+  "Read(~/.kube/**)",
+  "Read(~/.cargo/credentials.toml)",
+  "Read(~/.composer/auth.json)",
+  "Read(~/.gem/credentials)",
+  "Read(~/.my.cnf)",
+  "Read(~/.pgpass)",
+  "Read(~/.config/bw/**)",
+  "Read(~/.config/op/**)",
+  "Read(~/.config/vault/**)",
+  "Read(~/.netrc)",
+  "Read(~/.vault-token)",
+  "Read(**/.env)",
+  "Read(**/.env.local)",
+  "Read(**/.env.*.local)",
+  "Read(**/.env.development)",
+  "Read(**/.env.production)",
+  "Read(**/.env.staging)",
+  "Read(**/.env.test)",
+  "Read(**/.env.dev)",
+  "Read(**/.env.prod)",
+  "Edit(**/.env)",
+  "Edit(**/.env.local)",
+  "Edit(**/.env.*.local)",
+  "Edit(**/.env.production)",
+  "Edit(**/.env.staging)",
+  "Read(**/*.pem)",
+  "Read(**/*.key)",
+  "Read(**/*.p12)",
+  "Read(**/*.pfx)",
+  "Read(**/*.ppk)",
+  "Edit(**/*.pem)",
+  "Edit(**/*.key)",
+  "Edit(**/*.p12)",
+  "Edit(**/*.pfx)",
+  "Edit(**/*.ppk)",
+  "Edit(~/.bash_profile)",
+  "Edit(~/.bashrc)",
+  "Edit(~/.profile)",
+  "Edit(~/.zprofile)",
+  "Edit(~/.zshrc)",
+  "Edit(~/.claude/settings.json)",
+  "Edit(~/.claude/credentials.json)",
+  "Bash(git push --force *)",
+  "Bash(git push -f *)",
+  "Bash(git push * --force)",
+  "Bash(rm -rf /)",
+  "Bash(rm -rf /*)",
+  "Bash(rm -rf ~)",
+  "Bash(rm -rf ~/*)",
+  "Bash(rm -rf *)",
+  "Bash(rm -fr *)",
+  "Bash(chmod -R 777 *)",
+  "Bash(chmod 777 *)"
+]'
+
+# ---------------------------------------------------------------------------
+# Bash PreToolUse hooks — added as a single matcher block if not already present.
+# ---------------------------------------------------------------------------
+BASH_HOOKS='{
+  "matcher": "Bash",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; recursive-rm hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''^\\s*rm\\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|(-[a-zA-Z]*f[a-zA-Z]*\\s+)?-[a-zA-Z]*r[a-zA-Z]*)\\s'\''; then echo '\''BLOCKED: recursive delete detected. Use a scoped rm or trash instead.'\'' >&2; exit 2; fi"
+    },
+    {
+      "type": "command",
+      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; main-push hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''git\\s+push\\s+\\S+\\s+(main|master)(\\s|$)'\''; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; if echo \"$cmd\" | grep -qE '\''^\\s*git\\s+push\\s*$'\''; then branch=$(git branch --show-current 2>/dev/null); if [ \"$branch\" = main ] || [ \"$branch\" = master ]; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; fi"
+    },
+    {
+      "type": "command",
+      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; pipe-to-shell hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''(curl|wget)\\s.*\\|\\s*(bash|sh|zsh|dash|ksh|python|perl|ruby|node)'\''; then echo '\''BLOCKED: pipe-to-shell pattern detected. Download the script first, review it, then run it.'\'' >&2; exit 2; fi"
+    },
+    {
+      "type": "command",
+      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; find-exec hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''(^|\\s)find\\s.*-(exec|execdir|ok|okdir|delete|fprint|fprintf|fprint0)(\\s|$)'\''; then echo '\''BLOCKED: find with -exec/-execdir/-delete/-fprint* can run arbitrary commands or modify files. Use a scoped command or request explicit approval.'\'' >&2; exit 2; fi"
+    }
+  ]
+}'
+
+# ---------------------------------------------------------------------------
+# 1. Merge deny list — adds any entries not already present (unique merge)
+# ---------------------------------------------------------------------------
+current_deny_count=$(jq '(.permissions.deny // []) | length' "$SETTINGS")
+merged_count=$(jq --argjson new "$DENY_ENTRIES" \
+  '((.permissions.deny // []) + $new | unique) | length' "$SETTINGS")
+
+if [[ "$merged_count" -gt "$current_deny_count" ]]; then
+  echo "merge-claude-security: adding $((merged_count - current_deny_count)) new deny entries..."
+  tmp=$(mktemp)
+  jq --argjson new "$DENY_ENTRIES" \
+    '.permissions.deny = ((.permissions.deny // []) + $new | unique)' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done (deny total: $merged_count)"
+else
+  echo "merge-claude-security: deny list up to date ($current_deny_count entries)"
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Add Bash PreToolUse hooks — only if no Bash matcher already exists
+# ---------------------------------------------------------------------------
+has_bash_hook=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Bash")] | length' "$SETTINGS")
+
+if [[ "$has_bash_hook" -eq 0 ]]; then
+  echo "merge-claude-security: adding Bash PreToolUse hooks..."
+  tmp=$(mktemp)
+  jq --argjson hook "$BASH_HOOKS" \
+    '.hooks.PreToolUse += [$hook]' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+else
+  echo "merge-claude-security: Bash hooks already present, skipping"
+fi
+
+echo "merge-claude-security: done"
