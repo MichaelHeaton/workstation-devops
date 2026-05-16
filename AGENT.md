@@ -1,71 +1,43 @@
 # AGENT.md — workstation-devops
 
-> AI agent context document. Read this before working in this repository.
-> Provider-specific configuration: see [CLAUDE.md](CLAUDE.md).
-
-## What this is
-
-Ansible-based personal workstation setup for DevOps and development work.
-Covers shell environment, core CLI tools, and language runtimes.
-Public repo — contains no Adobe-proprietary content, credentials, or internal URLs.
+> Personal workstation Ansible repo. See [CLAUDE.md](CLAUDE.md) for Claude Code policy.
 
 ## Architecture
 
 ```
-bootstrap.sh         ← run this first on a new machine
-playbook.yml         ← main Ansible playbook
-inventory/local      ← localhost inventory
-roles/
-  homebrew/          ← Brewfile and package installs
-  shell/             ← oh-my-zsh, zshrc, theme (robbyrussell)
-  development/       ← git, gh CLI, Go, AWS CLI, Azure CLI, Ansible
-  vscode/            ← VS Code + extension list
-  minecraft-tools/   ← packwiz, Java (for modpack dev)
-docs/
-  README.md
+playbook.yml              ← immutable role list only
+vars/config.yml           ← all machine config (paths, buckets, clones)
+scripts/install.sh        ← remote bootstrap: mkdir, clone, make deps apply
+scripts/bootstrap-deps.sh ← CLT + Homebrew + Ansible
+setup.sh / bootstrap.sh   ← local: make deps apply
+roles/ directories | homebrew | repos | chezmoi
 ```
 
-Entry point is `bootstrap.sh`: installs Homebrew, then Ansible via brew, then
-runs `playbook.yml`. The playbook is idempotent — safe to re-run on a live machine.
+Bootstrap installs the toolchain; Ansible applies layout and clones. Content repos:
 
-## Getting started
-
-```bash
-git clone git@gitlab.com:Michael-Heaton/workstation-devops.git ~/Projects/personal/workstation-devops
-cd ~/Projects/personal/workstation-devops
-./bootstrap.sh
-```
+- `workspace` — Cursor workspace files (GitLab)
+- `personal/claude-skills` — skills (`install.sh` after clone)
 
 ## Conventions
 
-- Idempotent roles only — safe to re-run on a live machine without breaking anything.
-- **Hard boundary**: nothing Adobe-specific goes here. No KLAM, no internal URLs, no Adobe account identifiers, no Vault-specific tooling.
-- Shell fragments sourced from `.zshrc`, not written directly to it.
-- Generic DevOps tooling only — if it's specific to one employer, it belongs in a private work repo instead.
+- Change behavior via **`vars/config.yml`**, not roles or `playbook.yml`, unless adding a new capability.
+- Idempotent roles — safe to re-run `make apply`.
+- `workstation-devops` is cloned by `install.sh` / manually; it is not in `managed_repos`.
 
 ## Key files
 
-| File | What it does |
-|---|---|
-| `bootstrap.sh` | First-run entry point: Homebrew + Ansible + runs playbook |
-| `playbook.yml` | Orchestrates all roles in order |
-| `roles/homebrew/files/Brewfile` | Declarative package list |
-| `roles/minecraft-tools/tasks/main.yml` | packwiz + Java install for modpack dev |
-
-## Security
-
-Public repo. Hard rules:
-- No tokens, credentials, or secrets of any kind.
-- No Adobe-internal URLs, account IDs, or tool configurations.
-- No KLAM, no Vault-specific aliases, no Adobe AWS account references.
-- SSH key paths are placeholders — users supply their own at apply time.
+| File | Purpose |
+|------|---------|
+| `vars/config.yml` | Single source of configuration |
+| `scripts/install.sh` | curl \| bash entry point |
+| `Makefile` | `deps`, `dry-run`, `apply` |
 
 ## Gotchas
 
-- **bootstrap.sh must install Ansible before running the playbook** — Ansible is not present on a clean macOS install. The script installs Homebrew first, then Ansible via brew, then runs the playbook.
-- **packwiz lives in minecraft-tools role** — it's a personal project tool, not standard DevOps tooling. Kept in its own role so it can be skipped or excluded cleanly.
+- **`make dry-run` must not write** — chezmoi/repos/directories roles respect `dry_run`.
+- **SSH host keys** — `repos` role runs `ssh-keyscan` for `git_ssh_hosts` before cloning.
+- **Workspace paths** — `.code-workspace` files use paths relative to each file; must match bucket layout under `projects_root`.
 
-## What's not documented here
+## Migration
 
-- Adobe-specific workstation setup → private repo `workstation-ces_vault`
-- Vault team tooling (KLAM, Vault CLI functions, Teleport config) → `workstation-ces_vault`
+Legacy `~/Projects` layout: [docs/migration.md](docs/migration.md).

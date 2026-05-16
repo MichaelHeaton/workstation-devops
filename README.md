@@ -1,78 +1,56 @@
 # workstation-devops
 
-Ansible-based personal workstation setup for DevOps and development work.
+Personal Ansible workstation bootstrap — fast setup across your machines.
 
-Covers shell environment, core CLI tools, language runtimes, and personal project tooling. Public repo — no employer-specific configuration.
+**Edit [vars/config.yml](vars/config.yml)** for paths, project buckets, and git clones.
+**Do not** scatter changes across roles or `playbook.yml`.
 
-## Quick start
+## Configuration
+
+| Variable | Purpose |
+|----------|---------|
+| `projects_root` | Base directory (default `~/Projects`) |
+| `projects_buckets` | Top-level folders to create |
+| `managed_repos` | Repos to clone (`dest` relative to `projects_root`) |
+| `git_ssh_hosts` | Hosts added to `~/.ssh/known_hosts` before clone |
+| `workstation_devops_*` | Clone URL/path for `scripts/install.sh` |
+
+Content lives in separate repos (cloned via `managed_repos`):
+
+- **`workspace`** — Cursor `.code-workspace` files
+- **`personal/claude-skills`** — IA rules (`install.sh` after clone)
+
+## Quick start (new Mac)
 
 ```bash
+curl -fsSL "https://gitlab.com/Michael-Heaton/workstation-devops/-/raw/main/scripts/install.sh" | bash
+```
+
+Creates `projects_root`, clones this repo, installs Ansible (`make deps`), runs the playbook (`make apply`).
+
+Or manually:
+
+```bash
+mkdir -p ~/Projects/personal
 git clone git@gitlab.com:Michael-Heaton/workstation-devops.git ~/Projects/personal/workstation-devops
 cd ~/Projects/personal/workstation-devops
+./setup.sh
 ```
-
-**Prerequisites:** Ansible and Homebrew must be installed.
 
 ```bash
-brew install ansible
+make dry-run   # preview changes
+make apply     # apply
 ```
 
-### Dry run first (safe — no changes written)
+Existing repos elsewhere under `~/Projects` are untouched. See [docs/migration.md](docs/migration.md) if you are moving off an older layout.
 
-```bash
-make dry-run
-# or: ansible-playbook playbook.yml -e dry_run=true
-```
+## Roles
 
-Then apply:
+| Role | What it does |
+|------|----------------|
+| `directories` | Creates `projects_buckets` under `projects_root` |
+| `homebrew` | `gh`, `glab`; GitHub Desktop, VS Code, Claude, 1Password |
+| `repos` | SSH known_hosts + clones `managed_repos` |
+| `chezmoi` | Claude Code security dotfiles |
 
-```bash
-make apply
-# or: ansible-playbook playbook.yml
-```
-
-## What's included
-
-| Role | What it sets up |
-|---|---|
-| `homebrew` | `gh`, `glab` (formulae); GitHub Desktop, VS Code, Claude, 1Password (casks) |
-| `chezmoi` | Deploys dotfiles — currently the Claude Code security merge script |
-| `shell` | oh-my-zsh, robbyrussell theme, zshrc fragments |
-| `development` | git, Go, AWS CLI, Azure CLI, Ansible |
-| `minecraft-tools` | packwiz, Java (for modpack dev) |
-
-Roles listed without a ✓ are planned but not yet implemented.
-
-## Global gitignore
-
-Set up a global gitignore to exclude OS and editor noise from every repo on the machine:
-
-```bash
-cat > ~/.gitignore_global << 'EOF'
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Terraform
-*.tfstate
-*.tfstate.backup
-.terraform/
-.terraform.lock.hcl
-
-# Ansible
-*.retry
-vault_pass.txt
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-EOF
-git config --global core.excludesfile ~/.gitignore_global
-```
-
-## For AI agents
-
-See [AGENT.md](AGENT.md) for full architecture, conventions, gotchas, and security notes.
+See [AGENT.md](AGENT.md) for agent context.
