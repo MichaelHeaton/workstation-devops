@@ -24,6 +24,36 @@ cd ~/Projects/personal/workstation-devops
 | `vscode` | VS Code + extension list |
 | `minecraft-tools` | packwiz, Java (for modpack dev) |
 
+## Global gitignore
+
+Set up a global gitignore to exclude OS and editor noise from every repo on the machine:
+
+```bash
+cat > ~/.gitignore_global << 'EOF'
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+vault_pass.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+EOF
+git config --global core.excludesfile ~/.gitignore_global
+```
+
 ## For AI agents
 
 See [AGENT.md](AGENT.md) for full architecture, conventions, gotchas, and security notes.
