@@ -1,8 +1,9 @@
 ---
 # Clones personal repos that should be present on every machine.
-# Checks for .git rather than the directory itself — the directories role
-# creates the parent dirs as empty folders, which would break a naive
-# "does the dir exist" guard.
+# Checks for .git rather than the parent dir — the directories role
+# creates the parent dirs as empty folders, which would block git clone.
+#
+# Repos with an install_cmd get that command run once after the clone.
 
 - name: Check which personal repos are already cloned
   ansible.builtin.stat:
@@ -14,7 +15,7 @@
 
 - name: Show repos that would be cloned (dry-run)
   ansible.builtin.debug:
-    msg: "Would clone {{ item.item.repo }} → ~/{{ item.item.dest }}"
+    msg: "Would clone {{ item.item.repo }} → ~/{{ item.item.dest }}{{ ' and run: ' + item.item.install_cmd if item.item.install_cmd is defined else '' }}"
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
@@ -33,3 +34,16 @@
   when:
     - not (dry_run | default(false) | bool)
     - not item.stat.exists
+
+- name: Run post-clone install commands
+  ansible.builtin.command:
+    cmd: "{{ item.item.install_cmd }}"
+    chdir: "{{ ansible_facts['env']['HOME'] }}/{{ item.item.dest }}"
+  loop: "{{ repo_state.results }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  when:
+    - not (dry_run | default(false) | bool)
+    - not item.stat.exists
+    - item.item.install_cmd is defined
+  changed_when: true

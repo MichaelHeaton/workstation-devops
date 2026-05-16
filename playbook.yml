@@ -13,10 +13,12 @@
     personal_repos:
       - repo: git@gitlab.com:Michael-Heaton/workspace.git
         dest: Projects/workspace
+      - repo: git@github.com:MichaelHeaton/claude-skills.git
+        dest: Projects/personal/claude-skills
+        install_cmd: bash install.sh
 
   roles:
     - role: directories
     - role: homebrew
     - role: repos
     - role: chezmoi
-    - role: claude-skills
