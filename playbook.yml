@@ -1,0 +1,22 @@
+---
+- name: Personal workstation setup
+  hosts: localhost
+  connection: local
+
+  vars:
+    is_mac:   "{{ ansible_facts['os_family'] == 'Darwin' }}"
+    is_linux: "{{ ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'RedHat' }}"
+
+    brew_prefix: "{{ '/opt/homebrew' if ansible_facts['machine'] == 'arm64' else '/usr/local' }}"
+    brew_bin: "{{ brew_prefix }}/bin/brew"
+
+    personal_repos:
+      - repo: git@gitlab.com:Michael-Heaton/workspace.git
+        dest: Projects/workspace
+
+  roles:
+    - role: directories
+    - role: homebrew
+    - role: repos
+    - role: chezmoi
+    - role: claude-skills
