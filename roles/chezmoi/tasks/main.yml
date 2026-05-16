@@ -14,12 +14,20 @@
     path: "{{ chezmoi_bin }}"
   register: chezmoi_present
 
+- name: Show chezmoi install (dry-run)
+  ansible.builtin.debug:
+    msg: "Would install chezmoi via {{ 'Homebrew' if ansible_facts['os_family'] == 'Darwin' else 'get.chezmoi.io script' }}"
+  when:
+    - dry_run | default(false) | bool
+    - not chezmoi_present.stat.exists
+
 - name: Install chezmoi via Homebrew (macOS)
   ansible.builtin.command:
     cmd: "{{ brew_bin }} install chezmoi"
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
   when:
+    - not (dry_run | default(false) | bool)
     - not chezmoi_present.stat.exists
     - ansible_facts['os_family'] == 'Darwin'
 
@@ -27,26 +35,54 @@
   ansible.builtin.shell: |
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b {{ ansible_facts['env']['HOME'] }}/.local/bin
   when:
+    - not (dry_run | default(false) | bool)
     - not chezmoi_present.stat.exists
     - ansible_facts['os_family'] != 'Darwin'
+
+- name: Re-check chezmoi after install
+  ansible.builtin.stat:
+    path: "{{ chezmoi_bin }}"
+  register: chezmoi_present_after_install
+  when: not (dry_run | default(false) | bool)
+
+- name: Use post-install chezmoi stat
+  ansible.builtin.set_fact:
+    chezmoi_available: "{{ chezmoi_present_after_install.stat.exists | default(chezmoi_present.stat.exists) }}"
+  when: not (dry_run | default(false) | bool)
+
+- name: Assume chezmoi available for dry-run preview when already installed
+  ansible.builtin.set_fact:
+    chezmoi_available: "{{ chezmoi_present.stat.exists }}"
+  when: dry_run | default(false) | bool
+
+- name: Show chezmoi config and apply (dry-run, chezmoi not installed)
+  ansible.builtin.debug:
+    msg: "Would create ~/.config/chezmoi/chezmoi.yaml and apply dotfiles from {{ playbook_dir }}/dotfiles"
+  when:
+    - dry_run | default(false) | bool
+    - not chezmoi_available | default(false) | bool
 
 - name: Ensure chezmoi config directory exists
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi"
     state: directory
     mode: "0755"
+  when: not (dry_run | default(false) | bool)
 
 - name: Check if chezmoi config already exists
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
   register: chezmoi_config
+  when: not (dry_run | default(false) | bool)
 
 - name: Seed chezmoi config (first run only)
   ansible.builtin.template:
     src: chezmoi.yaml.j2
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
     mode: "0600"
-  when: not chezmoi_config.stat.exists
+  when:
+    - not (dry_run | default(false) | bool)
+    - not chezmoi_config.stat.exists
 
 - name: Apply chezmoi dotfiles from repo
   ansible.builtin.command:
@@ -55,11 +91,15 @@
       --source={{ playbook_dir }}/dotfiles
       {{ '--dry-run --verbose' if dry_run | default(false) | bool else '--force' }}
   environment:
-    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   register: chezmoi_apply
   changed_when: not (dry_run | default(false) | bool)
+  when: chezmoi_available | default(false) | bool
 
 - name: Show dry-run diff
   ansible.builtin.debug:
     msg: "{{ (chezmoi_apply.stdout_lines + chezmoi_apply.stderr_lines) | join('\n') }}"
-  when: dry_run | default(false) | bool
+  when:
+    - dry_run | default(false) | bool
+    - chezmoi_available | default(false) | bool
+    - chezmoi_apply is defined

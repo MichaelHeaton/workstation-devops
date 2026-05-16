@@ -1,11 +1,14 @@
 ---
+- name: Show directories that would be created (dry-run)
+  ansible.builtin.debug:
+    msg: "Would create {{ projects_root }}/{{ item }}"
+  loop: "{{ projects_buckets }}"
+  when: dry_run | default(false) | bool
+
 - name: Create Projects directory structure
   ansible.builtin.file:
-    path: "{{ ansible_facts['env']['HOME'] }}/Projects/{{ item }}"
+    path: "{{ projects_root }}/{{ item }}"
     state: directory
     mode: "0755"
-  loop:
-    - adobe
-    - personal
-    - review
-    - workspace
+  loop: "{{ projects_buckets }}"
+  when: not (dry_run | default(false) | bool)

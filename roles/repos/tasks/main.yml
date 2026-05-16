@@ -1,21 +1,47 @@
 ---
-# Clones personal repos that should be present on every machine.
-# Checks for .git rather than the parent dir — the directories role
-# creates the parent dirs as empty folders, which would block git clone.
-#
-# Repos with an install_cmd get that command run once after the clone.
+# Clones repos listed in managed_repos (vars/config.yml).
+# Checks for .git — parent dirs may exist empty from the directories role.
 
-- name: Check which personal repos are already cloned
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    state: directory
+    mode: "0700"
+  when: not (dry_run | default(false) | bool)
+
+- name: Scan SSH host keys for git providers
+  ansible.builtin.command:
+    cmd: ssh-keyscan -H -t ed25519,ecdsa,rsa {{ item }}
+  register: git_host_keyscan
+  loop: "{{ git_ssh_hosts }}"
+  changed_when: false
+  when:
+    - not (dry_run | default(false) | bool)
+    - managed_repos | selectattr('repo', 'search', 'git@|ssh://') | list | length > 0
+
+- name: Add git provider host keys to known_hosts
+  ansible.builtin.known_hosts:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts"
+    name: "{{ item.item }}"
+    key: "{{ item.stdout }}"
+    state: present
+  loop: "{{ git_host_keyscan.results }}"
+  when:
+    - not (dry_run | default(false) | bool)
+    - item.stdout is defined
+    - item.stdout | length > 0
+
+- name: Check which managed repos are already cloned
   ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/{{ item.dest }}/.git"
+    path: "{{ projects_root }}/{{ item.dest }}/.git"
   register: repo_state
-  loop: "{{ personal_repos }}"
+  loop: "{{ managed_repos }}"
   loop_control:
     label: "{{ item.dest }}"
 
 - name: Show repos that would be cloned (dry-run)
   ansible.builtin.debug:
-    msg: "Would clone {{ item.item.repo }} → ~/{{ item.item.dest }}{{ ' and run: ' + item.item.install_cmd if item.item.install_cmd is defined else '' }}"
+    msg: "Would clone {{ item.item.repo }} → {{ projects_root }}/{{ item.item.dest }}{{ ' and run: ' + item.item.install_cmd if item.item.install_cmd is defined else '' }}"
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
@@ -23,10 +49,10 @@
     - dry_run | default(false) | bool
     - not item.stat.exists
 
-- name: Clone personal repos
+- name: Clone managed repos
   ansible.builtin.git:
     repo: "{{ item.item.repo }}"
-    dest: "{{ ansible_facts['env']['HOME'] }}/{{ item.item.dest }}"
+    dest: "{{ projects_root }}/{{ item.item.dest }}"
     update: false
   loop: "{{ repo_state.results }}"
   loop_control:
@@ -38,7 +64,7 @@
 - name: Run post-clone install commands
   ansible.builtin.command:
     cmd: "{{ item.item.install_cmd }}"
-    chdir: "{{ ansible_facts['env']['HOME'] }}/{{ item.item.dest }}"
+    chdir: "{{ projects_root }}/{{ item.item.dest }}"
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"

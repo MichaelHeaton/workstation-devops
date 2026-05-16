@@ -1,0 +1,42 @@
+---
+# Single configuration file for this repo — edit here, not roles or playbook.yml.
+
+# --- Projects layout ---------------------------------------------------------
+
+projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
+
+projects_buckets:
+  - personal
+  - review
+  - workspace
+  - adobe
+  - specterrealm
+  - uvcyber
+
+# --- Git clones (workstation-devops is cloned by scripts/install.sh) ----------
+
+# SSH hostnames used by managed_repos (added to ~/.ssh/known_hosts before clone).
+git_ssh_hosts:
+  - github.com
+  - gitlab.com
+
+managed_repos:
+  - repo: git@gitlab.com:Michael-Heaton/workspace.git
+    dest: workspace
+  - repo: git@github.com:MichaelHeaton/claude-skills.git
+    dest: personal/claude-skills
+    install_cmd: bash install.sh
+
+# --- Bootstrap / install.sh (keep in sync with clone path above) --------------
+
+workstation_devops_repo: git@gitlab.com:Michael-Heaton/workstation-devops.git
+workstation_devops_repo_https: https://gitlab.com/Michael-Heaton/workstation-devops.git
+workstation_devops_dest: personal/workstation-devops
+workstation_devops_branch: main
+
+# --- Platform (used by homebrew / chezmoi roles) ------------------------------
+
+is_mac: "{{ ansible_facts['os_family'] == 'Darwin' }}"
+is_linux: "{{ ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'RedHat' }}"
+brew_prefix: "{{ '/opt/homebrew' if ansible_facts['machine'] == 'arm64' else '/usr/local' }}"
+brew_bin: "{{ brew_prefix }}/bin/brew"
