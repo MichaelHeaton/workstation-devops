@@ -9,7 +9,7 @@
 # Requires: jq
 #
 # Bump this version string to force a re-run on next chezmoi apply:
-# security-policy-version: v1.0.1
+# security-policy-version: v1.0.3
 
 set -euo pipefail
 
@@ -24,6 +24,14 @@ if ! command -v jq >/dev/null 2>&1; then
   echo "WARN: merge-claude-security: jq not installed, skipping" >&2
   exit 0
 fi
+
+# Capture absolute paths for tools used in hook commands so the installed
+# hooks use absolute paths rather than relying on the user's PATH at runtime.
+# This guards against binary planting — a malicious executable shadowing jq
+# earlier in PATH.
+JQ_BIN=$(command -v jq)
+GIT_BIN=$(command -v git)
+GREP_BIN=$(command -v grep)
 
 # ---------------------------------------------------------------------------
 # Deny list — credential stores, env files, cert/key material, shell configs,
@@ -108,22 +116,25 @@ BASH_HOOKS='{
   "hooks": [
     {
       "type": "command",
-      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; recursive-rm hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''^\\s*rm\\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|(-[a-zA-Z]*f[a-zA-Z]*\\s+)?-[a-zA-Z]*r[a-zA-Z]*)\\s'\''; then echo '\''BLOCKED: recursive delete detected. Use a scoped rm or trash instead.'\'' >&2; exit 2; fi"
+      "command": "if [[ ! -x __JQ__ ]]; then echo '\''WARN: jq not found; recursive-rm hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | __JQ__ -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | __GREP__ -qE '\''^\\s*rm\\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|(-[a-zA-Z]*f[a-zA-Z]*\\s+)?-[a-zA-Z]*r[a-zA-Z]*)\\s'\''; then echo '\''BLOCKED: recursive delete detected. Use a scoped rm or trash instead.'\'' >&2; exit 2; fi"
     },
     {
       "type": "command",
-      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; main-push hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''git\\s+push\\s+\\S+\\s+(main|master)(\\s|$)'\''; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; if echo \"$cmd\" | grep -qE '\''^\\s*git\\s+push\\s*$'\''; then branch=$(git branch --show-current 2>/dev/null); if [ \"$branch\" = main ] || [ \"$branch\" = master ]; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; fi"
+      "command": "if [[ ! -x __JQ__ ]]; then echo '\''WARN: jq not found; main-push hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | __JQ__ -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | __GREP__ -qE '\''git\\s+push\\s+\\S+\\s+(main|master)(\\s|$)'\''; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; if echo \"$cmd\" | __GREP__ -qE '\''^\\s*git\\s+push\\s*$'\''; then branch=$(__GIT__ branch --show-current 2>/dev/null); if [ \"$branch\" = main ] || [ \"$branch\" = master ]; then echo '\''BLOCKED: pushing directly to main/master. Use a feature branch and create a PR instead.'\'' >&2; exit 2; fi; fi"
     },
     {
       "type": "command",
-      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; pipe-to-shell hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''(curl|wget)\\s.*\\|\\s*(bash|sh|zsh|dash|ksh|python|perl|ruby|node)'\''; then echo '\''BLOCKED: pipe-to-shell pattern detected. Download the script first, review it, then run it.'\'' >&2; exit 2; fi"
+      "command": "if [[ ! -x __JQ__ ]]; then echo '\''WARN: jq not found; pipe-to-shell hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | __JQ__ -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | __GREP__ -qE '\''(curl|wget)\\s.*\\|\\s*(bash|sh|zsh|dash|ksh|python|perl|ruby|node)'\''; then echo '\''BLOCKED: pipe-to-shell pattern detected. Download the script first, review it, then run it.'\'' >&2; exit 2; fi"
     },
     {
       "type": "command",
-      "command": "if ! command -v jq >/dev/null 2>&1; then echo '\''WARN: jq not installed; find-exec hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | jq -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | grep -qE '\''(^|\\s)find\\s.*-(exec|execdir|ok|okdir|delete|fprint|fprintf|fprint0)(\\s|$)'\''; then echo '\''BLOCKED: find with -exec/-execdir/-delete/-fprint* can run arbitrary commands or modify files. Use a scoped command or request explicit approval.'\'' >&2; exit 2; fi"
+      "command": "if [[ ! -x __JQ__ ]]; then echo '\''WARN: jq not found; find-exec hook disabled.'\'' >&2; exit 0; fi; input=$(cat); cmd=$(echo \"$input\" | __JQ__ -r '\''.tool_input.command // .input.command // empty'\''); if echo \"$cmd\" | __GREP__ -qE '\''(^|\\s)find\\s.*-(exec|execdir|ok|okdir|delete|fprint|fprintf|fprint0)(\\s|$)'\''; then echo '\''BLOCKED: find with -exec/-execdir/-delete/-fprint* can run arbitrary commands or modify files. Use a scoped command or request explicit approval.'\'' >&2; exit 2; fi"
     }
   ]
 }'
+
+# Substitute absolute paths into hook commands (replaces placeholders set above).
+BASH_HOOKS=$(echo "$BASH_HOOKS" | sed "s|__JQ__|$JQ_BIN|g; s|__GIT__|$GIT_BIN|g; s|__GREP__|$GREP_BIN|g")
 
 # ---------------------------------------------------------------------------
 # 1. Merge deny list — adds any entries not already present (unique merge)
@@ -144,19 +155,26 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Add Bash PreToolUse hooks — only if no Bash matcher already exists
+# 2. Add / upgrade Bash PreToolUse hooks
+#    Installs fresh when absent; replaces if existing hooks still use the
+#    old relative-path format ("command -v jq") rather than absolute paths.
 # ---------------------------------------------------------------------------
 has_bash_hook=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Bash")] | length' "$SETTINGS")
+has_relative_hooks=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Bash") | .hooks[]? | select(.command | test("command -v jq"))] | length' "$SETTINGS")
 
-if [[ "$has_bash_hook" -eq 0 ]]; then
-  echo "merge-claude-security: adding Bash PreToolUse hooks..."
+if [[ "$has_bash_hook" -eq 0 ]] || [[ "$has_relative_hooks" -gt 0 ]]; then
+  if [[ "$has_relative_hooks" -gt 0 ]]; then
+    echo "merge-claude-security: upgrading Bash hooks to absolute paths..."
+  else
+    echo "merge-claude-security: adding Bash PreToolUse hooks..."
+  fi
   tmp=$(mktemp)
   jq --argjson hook "$BASH_HOOKS" \
-    '.hooks.PreToolUse += [$hook]' \
+    '(.hooks.PreToolUse) |= (map(select(.matcher != "Bash")) + [$hook])' \
     "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
   echo "  done"
 else
-  echo "merge-claude-security: Bash hooks already present, skipping"
+  echo "merge-claude-security: Bash hooks already up to date, skipping"
 fi
 
 echo "merge-claude-security: done"
