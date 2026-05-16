@@ -1,0 +1,65 @@
+---
+- name: Resolve chezmoi binary path (macOS)
+  ansible.builtin.set_fact:
+    chezmoi_bin: "{{ brew_prefix }}/bin/chezmoi"
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Resolve chezmoi binary path (Linux)
+  ansible.builtin.set_fact:
+    chezmoi_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/chezmoi"
+  when: ansible_facts['os_family'] != 'Darwin'
+
+- name: Check if chezmoi is installed
+  ansible.builtin.stat:
+    path: "{{ chezmoi_bin }}"
+  register: chezmoi_present
+
+- name: Install chezmoi via Homebrew (macOS)
+  ansible.builtin.command:
+    cmd: "{{ brew_bin }} install chezmoi"
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] }}"
+  when:
+    - not chezmoi_present.stat.exists
+    - ansible_facts['os_family'] == 'Darwin'
+
+- name: Install chezmoi via install script (Linux)
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b {{ ansible_facts['env']['HOME'] }}/.local/bin
+  when:
+    - not chezmoi_present.stat.exists
+    - ansible_facts['os_family'] != 'Darwin'
+
+- name: Ensure chezmoi config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi"
+    state: directory
+    mode: "0755"
+
+- name: Check if chezmoi config already exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
+  register: chezmoi_config
+
+- name: Seed chezmoi config (first run only)
+  ansible.builtin.template:
+    src: chezmoi.yaml.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
+    mode: "0600"
+  when: not chezmoi_config.stat.exists
+
+- name: Apply chezmoi dotfiles from repo
+  ansible.builtin.command:
+    cmd: >
+      {{ chezmoi_bin }} apply
+      --source={{ playbook_dir }}/dotfiles
+      {{ '--dry-run --verbose' if dry_run | default(false) | bool else '--force' }}
+  environment:
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+  register: chezmoi_apply
+  changed_when: not (dry_run | default(false) | bool)
+
+- name: Show dry-run diff
+  ansible.builtin.debug:
+    msg: "{{ (chezmoi_apply.stdout_lines + chezmoi_apply.stderr_lines) | join('\n') }}"
+  when: dry_run | default(false) | bool

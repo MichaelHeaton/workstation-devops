@@ -1,0 +1,35 @@
+---
+# Clones personal repos that should be present on every machine.
+# Checks for .git rather than the directory itself — the directories role
+# creates the parent dirs as empty folders, which would break a naive
+# "does the dir exist" guard.
+
+- name: Check which personal repos are already cloned
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/{{ item.dest }}/.git"
+  register: repo_state
+  loop: "{{ personal_repos }}"
+  loop_control:
+    label: "{{ item.dest }}"
+
+- name: Show repos that would be cloned (dry-run)
+  ansible.builtin.debug:
+    msg: "Would clone {{ item.item.repo }} → ~/{{ item.item.dest }}"
+  loop: "{{ repo_state.results }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  when:
+    - dry_run | default(false) | bool
+    - not item.stat.exists
+
+- name: Clone personal repos
+  ansible.builtin.git:
+    repo: "{{ item.item.repo }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/{{ item.item.dest }}"
+    update: false
+  loop: "{{ repo_state.results }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  when:
+    - not (dry_run | default(false) | bool)
+    - not item.stat.exists

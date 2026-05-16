@@ -1,0 +1,30 @@
+---
+- name: Check if claude-skills is already cloned
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/Projects/personal/claude-skills/.git"
+  register: claude_skills_dir
+
+- name: Show claude-skills install that would run (dry-run)
+  ansible.builtin.debug:
+    msg: "Would clone MichaelHeaton/claude-skills → ~/Projects/personal/claude-skills and run install.sh"
+  when:
+    - dry_run | default(false) | bool
+    - not claude_skills_dir.stat.exists
+
+- name: Clone claude-skills repo
+  ansible.builtin.git:
+    repo: git@github.com:MichaelHeaton/claude-skills.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/Projects/personal/claude-skills"
+    update: false
+  when:
+    - not (dry_run | default(false) | bool)
+    - not claude_skills_dir.stat.exists
+
+- name: Run claude-skills install script
+  ansible.builtin.command:
+    cmd: bash install.sh
+    chdir: "{{ ansible_facts['env']['HOME'] }}/Projects/personal/claude-skills"
+  when:
+    - not (dry_run | default(false) | bool)
+    - not claude_skills_dir.stat.exists
+  changed_when: true

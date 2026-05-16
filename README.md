@@ -9,20 +9,39 @@ Covers shell environment, core CLI tools, language runtimes, and personal projec
 ```bash
 git clone git@gitlab.com:Michael-Heaton/workstation-devops.git ~/Projects/personal/workstation-devops
 cd ~/Projects/personal/workstation-devops
-./bootstrap.sh
 ```
 
-`bootstrap.sh` installs Homebrew and Ansible, then runs the playbook. Safe to re-run on a live machine.
+**Prerequisites:** Ansible and Homebrew must be installed.
+
+```bash
+brew install ansible
+```
+
+### Dry run first (safe — no changes written)
+
+```bash
+make dry-run
+# or: ansible-playbook playbook.yml -e dry_run=true
+```
+
+Then apply:
+
+```bash
+make apply
+# or: ansible-playbook playbook.yml
+```
 
 ## What's included
 
 | Role | What it sets up |
 |---|---|
-| `homebrew` | Brewfile packages |
+| `homebrew` | `gh`, `glab` (formulae); GitHub Desktop, VS Code, Claude, 1Password (casks) |
+| `chezmoi` | Deploys dotfiles — currently the Claude Code security merge script |
 | `shell` | oh-my-zsh, robbyrussell theme, zshrc fragments |
-| `development` | git, gh CLI, Go, AWS CLI, Azure CLI, Ansible |
-| `vscode` | VS Code + extension list |
+| `development` | git, Go, AWS CLI, Azure CLI, Ansible |
 | `minecraft-tools` | packwiz, Java (for modpack dev) |
+
+Roles listed without a ✓ are planned but not yet implemented.
 
 ## Global gitignore
 

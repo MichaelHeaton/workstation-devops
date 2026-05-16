@@ -1,0 +1,58 @@
+---
+- name: List installed Homebrew formulae
+  ansible.builtin.command: "{{ brew_bin }} list --formula"
+  register: brew_formulae
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: List installed Homebrew casks
+  ansible.builtin.command: "{{ brew_bin }} list --cask"
+  register: brew_casks
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Show formulae that would be installed (dry-run)
+  ansible.builtin.debug:
+    msg: "Would install formula: {{ item }}"
+  loop:
+    - gh
+    - glab
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - dry_run | default(false) | bool
+    - item not in brew_formulae.stdout_lines
+
+- name: Install Homebrew formulae
+  ansible.builtin.command: "{{ brew_bin }} install {{ item }}"
+  loop:
+    - gh
+    - glab
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - not (dry_run | default(false) | bool)
+    - item not in brew_formulae.stdout_lines
+
+- name: Show casks that would be installed (dry-run)
+  ansible.builtin.debug:
+    msg: "Would install cask: {{ item }}"
+  loop:
+    - github
+    - visual-studio-code
+    - claude
+    - 1password
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - dry_run | default(false) | bool
+    - item not in brew_casks.stdout_lines
+
+- name: Install Homebrew casks
+  ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
+  loop:
+    - github
+    - visual-studio-code
+    - claude
+    - 1password
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - not (dry_run | default(false) | bool)
+    - item not in brew_casks.stdout_lines
