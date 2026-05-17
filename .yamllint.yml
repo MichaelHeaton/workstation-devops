@@ -1,0 +1,17 @@
+---
+# CI and local: yamllint (see Makefile lint, .gitlab-ci.yml)
+extends: default
+
+rules:
+  line-length:
+    max: 160
+    allow-non-breakable-inline-mappings: true
+  document-start: disable
+  comments-indentation: disable
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

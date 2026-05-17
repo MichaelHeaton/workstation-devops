@@ -1,0 +1,41 @@
+# workstation-devops — Ansible lint and syntax validation on MRs and main.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - validate
+
+variables:
+  GIT_DEPTH: "20"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  ANSIBLE_FORCE_COLOR: "true"
+
+default:
+  image: python:3.12-slim-bookworm
+  cache:
+    key: pip-ansible-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
+
+.ansible_deps: &ansible_deps
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq git ssh-client >/dev/null
+    - pip install --quiet ansible ansible-lint yamllint
+
+validate:yaml:
+  stage: validate
+  before_script:
+    - pip install --quiet yamllint
+  script:
+    - yamllint .
+
+validate:ansible:
+  stage: validate
+  <<: *ansible_deps
+  script:
+    - ansible-playbook playbook.yml --syntax-check
+    - ansible-lint

@@ -1,0 +1,13 @@
+---
+# CI and local: ansible-lint (see Makefile lint, .gitlab-ci.yml)
+profile: production
+exclude_paths:
+  - .cache/
+  - .git/
+skip_list:
+  # Registers use readable names; role prefix adds noise in small roles.
+  - var-naming[no-role-prefix]
+  # brew/mas/chezmoi install tasks are gated by when:; changed_when is set where needed.
+  - no-changed-when
+  # managed_repos clones are create-only (update: false).
+  - latest[git]

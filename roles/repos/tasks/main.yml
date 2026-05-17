@@ -41,7 +41,10 @@
 
 - name: Show repos that would be cloned (dry-run)
   ansible.builtin.debug:
-    msg: "Would clone {{ item.item.repo }} → {{ projects_root }}/{{ item.item.dest }}{{ ' and run: ' + item.item.install_cmd if item.item.install_cmd is defined else '' }}"
+    msg: >-
+      Would clone {{ item.item.repo }} → {{ projects_root }}/{{ item.item.dest }}{{
+        ' and run: ' + item.item.install_cmd if item.item.install_cmd is defined else ''
+      }}
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
