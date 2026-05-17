@@ -1,0 +1,28 @@
+# Same checks as `make lint` — install once: pre-commit install
+# Run manually: pre-commit run --all-files
+
+minimum_pre_commit_version: "3.6.0"
+
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        files: \.(ya?ml)$
+        exclude: ^\.pre-commit-config\.yaml$
+
+  - repo: https://github.com/ansible-community/ansible-lint
+    rev: v26.4.0
+    hooks:
+      - id: ansible-lint
+        files: \.(ya?ml)$
+        exclude: ^\.pre-commit-config\.yaml$
+
+  - repo: local
+    hooks:
+      - id: ansible-playbook-syntax-check
+        name: ansible-playbook syntax-check
+        entry: ansible-playbook playbook.yml --syntax-check
+        language: system
+        pass_filenames: false
+        files: ^(playbook\.yml|roles/.*/(tasks|defaults|handlers|vars)/.*\.ya?ml|vars/.*\.ya?ml)$
