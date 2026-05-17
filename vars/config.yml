@@ -132,6 +132,7 @@ homebrew_go_binaries:
 homebrew_casks:
   # tier 1
   - 1password
+  - brave-browser
   - claude
   - cursor
   - github
