@@ -1,27 +1,54 @@
 ---
-- name: Show directories that would be created (dry-run)
-  ansible.builtin.debug:
-    msg: >-
-      Would create {{ projects_root }}/{{ item.name }}{{
-        ' (Finder tag: ' ~ item.finder_tag ~ ')' if item.finder_tag is defined
-        else ' (clear Finder tag)'
-      }}
+- name: Stat project directories
+  ansible.builtin.stat:
+    path: "{{ projects_root }}/{{ item.name }}"
   loop: "{{ projects_buckets }}"
   loop_control:
     label: "{{ item.name }}"
-  when: dry_run | default(false) | bool
+  register: dir_state
+
+- name: Show directories that would be created (dry-run)
+  ansible.builtin.debug:
+    msg: >-
+      Would create {{ projects_root }}/{{ item.item.name }}{{
+        ' (Finder tag: ' ~ item.item.finder_tag ~ ')' if item.item.finder_tag is defined
+        else ' (clear Finder tag)'
+      }}
+  loop: "{{ dir_state.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - dry_run | default(false) | bool
+    - not item.stat.exists
+
+- name: Get current Finder tags (dry-run)
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ role_path }}/files/get_finder_tag.py"
+      - "{{ projects_root }}/{{ item.name }}"
+  loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: current_finder_tags
+  changed_when: false
+  when:
+    - dry_run | default(false) | bool
+    - is_mac | bool
 
 - name: Show Finder tags that would be synced (dry-run)
   ansible.builtin.debug:
     msg: >-
-      Would {{ 'set Finder tag ' ~ item.finder_tag if item.finder_tag is defined else 'clear Finder tag' }}
-      on {{ projects_root }}/{{ item.name }}
-  loop: "{{ projects_buckets }}"
+      Would {{ 'set Finder tag ' ~ item.item.finder_tag if item.item.finder_tag is defined else 'clear Finder tag' }}
+      on {{ projects_root }}/{{ item.item.name }}
+  loop: "{{ current_finder_tags.results | default([]) }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.item.name }}"
   when:
     - dry_run | default(false) | bool
     - is_mac | bool
+    - item.item.name in (dir_state.results | selectattr('stat.exists') | map(attribute='item.name') | list)
+    - (item.item.finder_tag | default('clear')) != (item.stdout | default('') | trim)
 
 - name: Create Projects directory structure
   ansible.builtin.file:
