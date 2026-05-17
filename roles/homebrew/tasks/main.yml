@@ -3,56 +3,107 @@
   ansible.builtin.command: "{{ brew_bin }} list --formula"
   register: brew_formulae
   changed_when: false
-  when: ansible_facts['os_family'] == 'Darwin'
+  when: is_mac | bool
 
 - name: List installed Homebrew casks
   ansible.builtin.command: "{{ brew_bin }} list --cask"
   register: brew_casks
   changed_when: false
-  when: ansible_facts['os_family'] == 'Darwin'
+  when: is_mac | bool
 
 - name: Show formulae that would be installed (dry-run)
   ansible.builtin.debug:
     msg: "Would install formula: {{ item }}"
-  loop:
-    - gh
-    - glab
+  loop: "{{ homebrew_formulae }}"
   when:
-    - ansible_facts['os_family'] == 'Darwin'
+    - is_mac | bool
     - dry_run | default(false) | bool
     - item not in brew_formulae.stdout_lines
 
 - name: Install Homebrew formulae
   ansible.builtin.command: "{{ brew_bin }} install {{ item }}"
-  loop:
-    - gh
-    - glab
+  loop: "{{ homebrew_formulae }}"
   when:
-    - ansible_facts['os_family'] == 'Darwin'
+    - is_mac | bool
     - not (dry_run | default(false) | bool)
     - item not in brew_formulae.stdout_lines
+
+- name: Get installed Mac App Store app IDs
+  ansible.builtin.shell: |
+    set -euo pipefail
+    command -v mas >/dev/null 2>&1 || exit 0
+    mas list | awk '{print $1}'
+  args:
+    executable: /bin/bash
+  register: mas_installed_ids
+  changed_when: false
+  when: is_mac | bool
+
+- name: Show MAS apps that would be installed (dry-run)
+  ansible.builtin.debug:
+    msg: "Would install MAS app {{ item.name }} ({{ item.id }})"
+  loop: "{{ homebrew_mas_apps }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - is_mac | bool
+    - dry_run | default(false) | bool
+    - item.id not in mas_installed_ids.stdout_lines | default([])
+
+- name: Install Mac App Store apps
+  ansible.builtin.command: mas install {{ item.id }}
+  loop: "{{ homebrew_mas_apps }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - is_mac | bool
+    - not (dry_run | default(false) | bool)
+    - item.id not in mas_installed_ids.stdout_lines | default([])
+  changed_when: true
+
+- name: Check application bundles for cask skip policy
+  ansible.builtin.stat:
+    path: "/Applications/{{ item.value }}"
+  loop: "{{ homebrew_cask_app_bundles | default({}) | dict2items }}"
+  register: cask_bundle_checks
+  when: is_mac | bool
+
+- name: Build casks to skip when app bundle already present
+  ansible.builtin.set_fact:
+    homebrew_casks_skip_bundles: >-
+      {{ cask_bundle_checks.results
+         | selectattr('stat.exists', 'defined')
+         | selectattr('stat.exists')
+         | map(attribute='item.key')
+         | list }}
+  when: is_mac | bool
 
 - name: Show casks that would be installed (dry-run)
   ansible.builtin.debug:
     msg: "Would install cask: {{ item }}"
-  loop:
-    - github
-    - visual-studio-code
-    - claude
-    - 1password
+  loop: "{{ homebrew_casks }}"
   when:
-    - ansible_facts['os_family'] == 'Darwin'
+    - is_mac | bool
     - dry_run | default(false) | bool
     - item not in brew_casks.stdout_lines
+    - item not in homebrew_casks_skip_bundles | default([])
+
+- name: Show casks skipped (app bundle already present)
+  ansible.builtin.debug:
+    msg: >-
+      Skipping cask {{ item }} —
+      /Applications/{{ homebrew_cask_app_bundles[item] }} already installed
+  loop: "{{ homebrew_casks }}"
+  when:
+    - is_mac | bool
+    - dry_run | default(false) | bool
+    - item in homebrew_casks_skip_bundles | default([])
 
 - name: Install Homebrew casks
   ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
-  loop:
-    - github
-    - visual-studio-code
-    - claude
-    - 1password
+  loop: "{{ homebrew_casks }}"
   when:
-    - ansible_facts['os_family'] == 'Darwin'
+    - is_mac | bool
     - not (dry_run | default(false) | bool)
     - item not in brew_casks.stdout_lines
+    - item not in homebrew_casks_skip_bundles | default([])
