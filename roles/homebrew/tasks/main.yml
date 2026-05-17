@@ -28,6 +28,36 @@
     - not (dry_run | default(false) | bool)
     - item not in brew_formulae.stdout_lines
 
+- name: Check Go-installed binaries
+  ansible.builtin.stat:
+    path: "{{ homebrew_go_bin_path }}/{{ item.name }}"
+  loop: "{{ homebrew_go_binaries | default([]) }}"
+  register: go_binary_checks
+  when: is_mac | bool
+
+- name: Show Go binaries that would be installed (dry-run)
+  ansible.builtin.debug:
+    msg: "Would go install {{ item.item.module }} → {{ homebrew_go_bin_path }}/{{ item.item.name }}"
+  loop: "{{ go_binary_checks.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - is_mac | bool
+    - dry_run | default(false) | bool
+    - not item.stat.exists | default(false)
+
+- name: Install Go binaries
+  ansible.builtin.command: "{{ brew_prefix }}/bin/go install {{ item.item.module }}"
+  environment:
+    GOBIN: "{{ homebrew_go_bin_path }}"
+  loop: "{{ go_binary_checks.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - is_mac | bool
+    - not (dry_run | default(false) | bool)
+    - not item.stat.exists | default(false)
+
 - name: Get installed Mac App Store app IDs
   ansible.builtin.shell: |
     set -euo pipefail

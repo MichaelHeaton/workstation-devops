@@ -120,6 +120,14 @@ homebrew_formulae:
   - kubernetes-cli
   - minikube
   - consul
+  # gaming — modpack dev (packwiz has no Homebrew formula; installed via go install below)
+  - go
+
+# Go modules installed with `go install` into homebrew_go_bin_path (default: brew bin).
+homebrew_go_bin_path: "{{ brew_prefix }}/bin"
+homebrew_go_binaries:
+  - module: github.com/packwiz/packwiz@latest
+    name: packwiz
 
 homebrew_casks:
   # tier 1
