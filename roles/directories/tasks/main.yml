@@ -1,14 +1,49 @@
 ---
 - name: Show directories that would be created (dry-run)
   ansible.builtin.debug:
-    msg: "Would create {{ projects_root }}/{{ item }}"
+    msg: >-
+      Would create {{ projects_root }}/{{ item.name }}{{
+        ' (Finder tag: ' ~ item.finder_tag ~ ')' if item.finder_tag is defined
+        else ' (clear Finder tag)'
+      }}
   loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
   when: dry_run | default(false) | bool
+
+- name: Show Finder tags that would be synced (dry-run)
+  ansible.builtin.debug:
+    msg: >-
+      Would {{ 'set Finder tag ' ~ item.finder_tag if item.finder_tag is defined else 'clear Finder tag' }}
+      on {{ projects_root }}/{{ item.name }}
+  loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - dry_run | default(false) | bool
+    - is_mac | bool
 
 - name: Create Projects directory structure
   ansible.builtin.file:
-    path: "{{ projects_root }}/{{ item }}"
+    path: "{{ projects_root }}/{{ item.name }}"
     state: directory
     mode: "0755"
   loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
   when: not (dry_run | default(false) | bool)
+
+- name: Sync Finder tags on project buckets (macOS)
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ role_path }}/files/set_finder_tag.py"
+      - "{{ projects_root }}/{{ item.name }}"
+      - "{{ item.finder_tag | default('clear') }}"
+  loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - not (dry_run | default(false) | bool)
+    - is_mac | bool
+  changed_when: true
