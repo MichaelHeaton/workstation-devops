@@ -84,6 +84,17 @@
     - not (dry_run | default(false) | bool)
     - not chezmoi_config.stat.exists
 
+- name: Check for pending chezmoi dotfile changes
+  ansible.builtin.command:
+    cmd: "{{ chezmoi_bin }} diff --source={{ playbook_dir }}/dotfiles"
+  environment:
+    PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+  register: chezmoi_diff
+  changed_when: false
+  when:
+    - not (dry_run | default(false) | bool)
+    - chezmoi_available | default(false) | bool
+
 - name: Apply chezmoi dotfiles from repo
   ansible.builtin.command:
     cmd: >
@@ -93,7 +104,9 @@
   environment:
     PATH: "{{ brew_prefix }}/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   register: chezmoi_apply
-  changed_when: not (dry_run | default(false) | bool)
+  changed_when: >-
+    not (dry_run | default(false) | bool) and
+    (chezmoi_diff.stdout | default('') | trim | length > 0)
   when: chezmoi_available | default(false) | bool
 
 - name: Show dry-run diff

@@ -21,7 +21,7 @@
     - dry_run | default(false) | bool
     - not item.stat.exists
 
-- name: Get current Finder tags (dry-run)
+- name: Get current Finder tags
   ansible.builtin.command:
     argv:
       - python3
@@ -32,9 +32,7 @@
     label: "{{ item.name }}"
   register: current_finder_tags
   changed_when: false
-  when:
-    - dry_run | default(false) | bool
-    - is_mac | bool
+  when: is_mac | bool
 
 - name: Show Finder tags that would be synced (dry-run)
   ansible.builtin.debug:
@@ -65,12 +63,13 @@
     argv:
       - python3
       - "{{ role_path }}/files/set_finder_tag.py"
-      - "{{ projects_root }}/{{ item.name }}"
-      - "{{ item.finder_tag | default('clear') }}"
-  loop: "{{ projects_buckets }}"
+      - "{{ projects_root }}/{{ item.item.name }}"
+      - "{{ item.item.finder_tag | default('clear') }}"
+  loop: "{{ current_finder_tags.results | default([]) }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.item.name }}"
   when:
     - not (dry_run | default(false) | bool)
     - is_mac | bool
+    - (item.item.finder_tag | default('clear')) != (item.stdout | default('') | trim)
   changed_when: true
