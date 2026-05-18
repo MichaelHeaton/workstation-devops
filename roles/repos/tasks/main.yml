@@ -9,27 +9,21 @@
     mode: "0700"
   when: not (dry_run | default(false) | bool)
 
-- name: Scan SSH host keys for git providers
-  ansible.builtin.command:
-    cmd: ssh-keyscan -H -t ed25519,ecdsa,rsa {{ item }}
-  register: git_host_keyscan
+- name: Add git provider SSH host keys to known_hosts
+  ansible.builtin.shell:
+    cmd: |
+      if ssh-keygen -F {{ item }} &>/dev/null; then
+        exit 0
+      fi
+      ssh-keyscan -H -t ed25519 {{ item }} 2>/dev/null >> ~/.ssh/known_hosts && echo added
   loop: "{{ git_ssh_hosts }}"
-  changed_when: false
+  loop_control:
+    label: "{{ item }}"
+  register: known_hosts_result
+  changed_when: "'added' in (known_hosts_result.stdout | default(''))"
   when:
     - not (dry_run | default(false) | bool)
     - managed_repos | selectattr('repo', 'search', 'git@|ssh://') | list | length > 0
-
-- name: Add git provider host keys to known_hosts
-  ansible.builtin.known_hosts:
-    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts"
-    name: "{{ item.item }}"
-    key: "{{ item.stdout }}"
-    state: present
-  loop: "{{ git_host_keyscan.results }}"
-  when:
-    - not (dry_run | default(false) | bool)
-    - item.stdout is defined
-    - item.stdout | length > 0
 
 - name: Check which managed repos are already cloned
   ansible.builtin.stat:

@@ -32,6 +32,8 @@ managed_repos:
   # GitLab — Michael-Heaton
   - repo: git@gitlab.com:Michael-Heaton/workspace.git
     dest: workspace
+  - repo: git@gitlab.com:Michael-Heaton/nexus.git
+    dest: personal/nexus
 
   # GitHub — keeps
   - repo: git@github.com:MichaelHeaton/claude-skills.git
