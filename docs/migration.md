@@ -17,6 +17,7 @@ Set profile once: `make profile` (writes `~/.workstation_profile`).
 1. Edit `group_vars/<profile>.yml` if needed.
 2. `make dry-run` then `make apply`.
 3. Consolidate legacy `~/Projects/workspaces` (GitHub) into `~/Projects/workspace` (GitLab) when ready — update relative paths in each `.code-workspace` file for the bucket layout.
+4. Remove `~/Projects/adobe/workstation-ces_vault` if present — superseded by this repo ([docs/work/README.md](work/README.md)).
 
 ## Naming
 

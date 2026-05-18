@@ -40,9 +40,8 @@ make apply      # apply (installs missing items only when profile allows)
 
 | Profile | Typical machine | Extra installs |
 |---------|-----------------|----------------|
-| `personal` | Your Mac | Homelab repos, Steam, specterrealm layout |
-| `work` | Adobe laptop | Detect-only packages (IT installs); no MAS; `workstation-ces_vault`, MCP dotfiles |
-| `personal` | Your Mac | Homebrew installs + optional MAS (Slack) |
+| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack) |
+| `work` | Adobe laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
 **Override for one run:** `ansible-playbook site.yml -e workstation_profile=work`
 
@@ -71,9 +70,13 @@ roles/personal/          # personal-only hooks
 - **`personal/claude-skills`** — skills (`install.sh` on first clone and re-apply)
 - **`personal/memex`** — knowledge vault
 
-## Migrating from two repos
+## Work profile (CES Vault)
 
-`workstation-ces_vault` is being folded into this repo. Work dotfiles (MCP sync, Claude security merge) already live here; vault shell/teleport roles migrate into `roles/work/` over time. Until then, `group_vars/work.yml` clones the legacy repo for reference.
+Automates tooling described in the [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667). Dotfiles (MCP, Claude security) are applied today; Vault/Teleport/KLAM roles are tracked in [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).
+
+Legacy `workstation-ces_vault` on GitHub is deprecated — use this repo only.
+
+## Migrating an existing Mac
 
 See [docs/migration.md](docs/migration.md) for `~/Projects` layout changes.
 

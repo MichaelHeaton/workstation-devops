@@ -44,7 +44,15 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - **Work chezmoi identity** — first work run may need `adobe_username`, `full_name`, `adobe_email` extra-vars (see `group_vars/work.yml`).
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
+## Work profile (CES Vault)
+
+- Onboarding wiki: [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667)
+- Docs: [docs/work/](docs/work/) — roadmap, manual setup, planned `roles/work/` imports
+- **kubelogin v0.1.9 only** (Ethos); bastion aliases `scb`/`bcp`/`bcp2` deprecated — use Teleport
+- **KLAM** needs IAM groups before profiles work; **TELEPORT_LOGIN** = LDAP username (not email)
+- **Adobe VPN** for corp Git/Jenkins/internal Vault at runtime
+
 ## Migration
 
 Legacy `~/Projects` layout: [docs/migration.md](docs/migration.md).  
-Consolidating `workstation-ces_vault`: migrate roles into `roles/work/`, then drop the clone from `group_vars/work.yml` when done.
+`workstation-ces_vault` content is folded here; implement remaining roles per [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).

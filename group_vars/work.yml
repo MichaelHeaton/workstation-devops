@@ -8,8 +8,6 @@ projects_buckets:
   - name: workspace
 
 managed_repos:
-  - repo: git@github.com:ult35127_adobe/workstation-ces_vault.git
-    dest: adobe/workstation-ces_vault
   - repo: git@github.com:ult35127_adobe/adobe-cursor-rules.git
     dest: adobe/adobe-cursor-rules
 
