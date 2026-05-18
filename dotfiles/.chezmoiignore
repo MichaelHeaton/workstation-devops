@@ -1,1 +1,5 @@
 .DS_Store
+
+# MCP secrets and generated env files contain credentials — never manage with chezmoi
+dot_mcp/env/*.env
+dot_mcp/secrets/*.yml

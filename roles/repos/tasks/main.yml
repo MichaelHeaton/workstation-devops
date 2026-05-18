@@ -1,5 +1,5 @@
 ---
-# Clones repos listed in managed_repos (vars/config.yml).
+# Clones repos in managed_repos (managed_repos_common + group_vars/<profile>.yml).
 # Checks for .git — parent dirs may exist empty from the directories role.
 
 - name: Ensure .ssh directory exists
