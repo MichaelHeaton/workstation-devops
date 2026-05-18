@@ -1,0 +1,4 @@
+---
+- name: Mark work profile role applied
+  ansible.builtin.set_fact:
+    workstation_work_role_applied: true

@@ -1,0 +1,14 @@
+---
+# Always runs — layout, packages, clones, shared dotfiles.
+- name: Import directories role
+  ansible.builtin.import_role:
+    name: directories
+- name: Import homebrew role
+  ansible.builtin.import_role:
+    name: homebrew
+- name: Import repos role
+  ansible.builtin.import_role:
+    name: repos
+- name: Import chezmoi role
+  ansible.builtin.import_role:
+    name: chezmoi

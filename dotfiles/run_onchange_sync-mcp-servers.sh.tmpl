@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# sync-mcp-servers — merge ~/.mcp/servers.json into each LLM tool's config.
+# Triggered by chezmoi whenever dot_mcp/servers.json changes.
+#
+# Strategy: for each tool config, merge mcpServers from ~/.mcp/servers.json,
+# preserving all other keys in the tool config.
+#
+# Hash of source to trigger re-run on change:
+# {{ include "dot_mcp/servers.json.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+SERVERS="$HOME/.mcp/servers.json"
+
+if [[ ! -f "$SERVERS" ]]; then
+  echo "sync-mcp-servers: $SERVERS not found, skipping"
+  exit 0
+fi
+
+# merge_mcp_servers <config_file>
+# Merges $SERVERS into the file's mcpServers key, preserving all other keys.
+merge_mcp_servers() {
+  local config="$1"
+  local dir
+  dir="$(dirname "$config")"
+  mkdir -p "$dir"
+
+  if [[ ! -f "$config" ]]; then
+    jq -n --argjson s "$(cat "$SERVERS")" '{mcpServers: $s}' > "$config"
+    echo "  created $config"
+    return
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+  jq --argjson s "$(cat "$SERVERS")" '. + {mcpServers: $s}' "$config" > "$tmp"
+  mv "$tmp" "$config"
+  echo "  updated $config"
+}
+
+echo "sync-mcp-servers: syncing from $SERVERS"
+
+{{ if eq .chezmoi.os "darwin" -}}
+merge_mcp_servers "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+{{ end -}}
+
+merge_mcp_servers "$HOME/.claude/settings.json"
+
+if [[ -d "$HOME/.cursor" ]]; then
+  merge_mcp_servers "$HOME/.cursor/mcp.json"
+fi
+
+if [[ -d "$HOME/.codeium/windsurf" ]]; then
+  merge_mcp_servers "$HOME/.codeium/windsurf/mcp_settings.json"
+fi
+
+echo "sync-mcp-servers: done"

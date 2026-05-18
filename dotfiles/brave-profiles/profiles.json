@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "dir": "Default",
+      "name": "Personal",
+      "local_state": {
+        "profile_highlight_color": -13690100,
+        "default_avatar_stroke_color": -920588,
+        "default_avatar_fill_color": -13690100,
+        "profile_color_seed": -32768,
+        "avatar_icon": "chrome://theme/IDR_PROFILE_AVATAR_26"
+      },
+      "preferences": {
+        "profile": {
+          "avatar_index": 26,
+          "name": "Personal"
+        },
+        "browser": {
+          "theme": {
+            "color_variant2": 1,
+            "user_color2": -32768
+          }
+        },
+        "extensions": {
+          "theme": {
+            "id": "user_color_theme_id"
+          }
+        },
+        "brave": {
+          "new_tab_page": {
+            "show_brave_vpn": false,
+            "show_rewards": false,
+            "show_together": false,
+            "background": {
+              "random": false,
+              "selected_value": "linear-gradient(130.39deg, #FE6F4C 9.83%, #C53646 85.25%)",
+              "type": "color"
+            }
+          }
+        }
+      }
+    },
+    {
+      "dir": "Profile 1",
+      "name": "Adobe",
+      "local_state": {
+        "profile_highlight_color": -13625058,
+        "default_avatar_stroke_color": -920588,
+        "default_avatar_fill_color": -13625058,
+        "profile_color_seed": -806210,
+        "avatar_icon": "chrome://theme/IDR_PROFILE_AVATAR_84"
+      },
+      "preferences": {
+        "profile": {
+          "avatar_index": 84,
+          "name": "Adobe",
+          "is_using_default_name": false
+        },
+        "browser": {
+          "theme": {
+            "color_variant2": 1,
+            "color_scheme2": 0,
+            "user_color2": -806210
+          }
+        },
+        "extensions": {
+          "theme": {
+            "id": "user_color_theme_id"
+          }
+        },
+        "brave": {
+          "new_tab_page": {
+            "show_brave_vpn": false,
+            "show_rewards": false,
+            "show_together": false,
+            "background": {
+              "random": false,
+              "selected_value": "Desktop_Wallpaper_5.png",
+              "type": "custom_image"
+            },
+            "custom_background_image_list": [
+              "Desktop_Wallpaper_5.png"
+            ]
+          }
+        },
+        "bookmark_bar": {
+          "show_on_all_tabs": true
+        }
+      },
+      "background_image": "Desktop_Wallpaper_5.png"
+    },
+    {
+      "dir": "Profile 2",
+      "name": "UV Cyber",
+      "local_state": {
+        "profile_highlight_color": -14476241,
+        "default_avatar_stroke_color": -920588,
+        "default_avatar_fill_color": -14476241,
+        "profile_color_seed": -1714692,
+        "avatar_icon": "chrome://theme/IDR_PROFILE_AVATAR_74"
+      },
+      "preferences": {
+        "profile": {
+          "avatar_index": 74,
+          "name": "UV Cyber",
+          "is_using_default_name": false
+        },
+        "browser": {
+          "theme": {
+            "color_variant2": 1,
+            "color_scheme2": 0,
+            "user_color2": -1714692
+          }
+        },
+        "extensions": {
+          "theme": {
+            "id": "user_color_theme_id"
+          }
+        },
+        "brave": {
+          "new_tab_page": {
+            "show_brave_vpn": false,
+            "show_rewards": false,
+            "show_together": false,
+            "background": {
+              "random": false,
+              "selected_value": "linear-gradient(126.47deg, #A43CE4 16.99%, #A72B6D 86.15%)",
+              "type": "color"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

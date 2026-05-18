@@ -1,0 +1,100 @@
+---
+- name: Remove persisted profile when forcing re-profile
+  ansible.builtin.file:
+    path: "{{ workstation_profile_file }}"
+    state: absent
+  when: force_reprofile | default(false) | bool
+
+- name: Use CLI workstation_profile when provided
+  ansible.builtin.set_fact:
+    workstation_profile: "{{ workstation_profile | trim }}"
+  when:
+    - workstation_profile is defined
+    - workstation_profile | trim | length > 0
+
+- name: Check for persisted workstation profile
+  ansible.builtin.stat:
+    path: "{{ workstation_profile_file }}"
+  register: workstation_profile_stat
+  when: workstation_profile is not defined
+
+- name: Read persisted workstation profile
+  ansible.builtin.slurp:
+    path: "{{ workstation_profile_file }}"
+  register: workstation_profile_slurp
+  when:
+    - workstation_profile is not defined
+    - workstation_profile_stat.stat.exists | default(false)
+
+- name: Set profile from persisted file
+  ansible.builtin.set_fact:
+    workstation_profile: "{{ (workstation_profile_slurp.content | b64decode | trim) }}"
+  when:
+    - workstation_profile is not defined
+    - workstation_profile_slurp is not skipped
+    - workstation_profile_slurp.content is defined
+    - (workstation_profile_slurp.content | b64decode | trim) in ['work', 'personal']
+
+- name: Guess profile from hostname
+  ansible.builtin.set_fact:
+    workstation_profile_guess: >-
+      {{
+        'work' if (
+          ansible_facts['hostname'] is search('(?i)(adobe|corp|ces-|wkst-)')
+          or ansible_facts['nodename'] is search('(?i)(adobe|corp)')
+        ) else 'personal'
+      }}
+  when: workstation_profile is not defined
+
+- name: Accept guessed profile without prompt (non-interactive)
+  ansible.builtin.set_fact:
+    workstation_profile: "{{ workstation_profile_guess }}"
+  when:
+    - workstation_profile is not defined
+    - skip_profile_prompt | default(false) | bool
+
+- name: Confirm or override guessed profile
+  ansible.builtin.pause:
+    prompt: |2-
+
+      No ~/.workstation_profile found.
+      Detected profile: {{ workstation_profile_guess }} (hostname: {{ ansible_facts['hostname'] }})
+
+      Press Enter to accept, or type work / personal and press Enter:
+  register: workstation_profile_prompt
+  when:
+    - workstation_profile is not defined
+    - workstation_profile_guess is defined
+    - not (skip_profile_prompt | default(false) | bool)
+
+- name: Resolve profile from prompt
+  ansible.builtin.set_fact:
+    workstation_profile: >-
+      {{
+        workstation_profile_prompt.user_input | default('') | trim
+        if (workstation_profile_prompt.user_input | default('') | trim) in ['work', 'personal']
+        else workstation_profile_guess
+      }}
+  when:
+    - workstation_profile is not defined
+    - workstation_profile_prompt is defined
+
+- name: Validate workstation profile
+  ansible.builtin.assert:
+    that:
+      - workstation_profile in ['work', 'personal']
+    fail_msg: "workstation_profile must be 'work' or 'personal' (got '{{ workstation_profile | default('') }}')"
+  when: workstation_profile is defined
+
+- name: Persist workstation profile
+  ansible.builtin.copy:
+    dest: "{{ workstation_profile_file }}"
+    content: "{{ workstation_profile }}\n"
+    mode: "0644"
+  when:
+    - not (dry_run | default(false) | bool)
+    - workstation_profile is defined
+
+- name: Show active workstation profile
+  ansible.builtin.debug:
+    msg: "workstation_profile={{ workstation_profile }} ({{ workstation_profile_file }})"

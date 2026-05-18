@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # install.sh — minimal remote bootstrap: base Projects dir, clone this repo, make deps apply.
 #
-# Layout and repo lists live in Ansible vars/config.yml (applied via make apply).
+# Layout and repo lists live in Ansible group_vars/ (applied via make apply).
 #
 #   curl -fsSL "https://gitlab.com/Michael-Heaton/workstation-devops/-/raw/main/scripts/install.sh" | bash
 #
-# Optional env (defaults match vars/config.yml):
+# Optional env (defaults match group_vars/all.yml):
 #   PROJECTS_ROOT              base folder (default: ~/Projects)
 #   WORKSTATION_DEVOPS_DEST    full clone path (overrides REL + ROOT)
 #   WORKSTATION_DEVOPS_REL_DEST  path under PROJECTS_ROOT (default: personal/workstation-devops)

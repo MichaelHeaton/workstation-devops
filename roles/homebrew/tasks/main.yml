@@ -1,139 +1,341 @@
 ---
-- name: List installed Homebrew formulae
-  ansible.builtin.command: "{{ brew_bin }} list --formula"
-  register: brew_formulae
-  changed_when: false
+# Detect-first package management: PATH + /Applications satisfy requirements;
+# Homebrew installs only missing items when available and enabled for the profile.
+
+- name: Package management (macOS)
   when: is_mac | bool
+  block:
+    - name: Check if Homebrew is installed
+      ansible.builtin.stat:
+        path: "{{ brew_bin }}"
+      register: brew_binary
 
-- name: List installed Homebrew casks
-  ansible.builtin.command: "{{ brew_bin }} list --cask"
-  register: brew_casks
-  changed_when: false
-  when: is_mac | bool
+    - name: Set package manager facts
+      ansible.builtin.set_fact:
+        homebrew_available: "{{ brew_binary.stat.exists | default(false) }}"
 
-- name: Show formulae that would be installed (dry-run)
-  ansible.builtin.debug:
-    msg: "Would install formula: {{ item }}"
-  loop: "{{ homebrew_formulae }}"
-  when:
-    - is_mac | bool
-    - dry_run | default(false) | bool
-    - item not in brew_formulae.stdout_lines
+    - name: Report package manager mode
+      ansible.builtin.debug:
+        msg: >-
+          homebrew={{ 'yes' if homebrew_available else 'no' }} |
+          install_via_brew={{ homebrew_install_packages | default(true) }} |
+          mas_enabled={{ homebrew_mas_enabled | default(false) }} |
+          upgrade={{ homebrew_upgrade | default(false) }}
 
-- name: Install Homebrew formulae
-  ansible.builtin.command: "{{ brew_bin }} install {{ item }}"
-  loop: "{{ homebrew_formulae }}"
-  when:
-    - is_mac | bool
-    - not (dry_run | default(false) | bool)
-    - item not in brew_formulae.stdout_lines
+    - name: List installed Homebrew formulae
+      ansible.builtin.command: "{{ brew_bin }} list --formula"
+      register: brew_formulae
+      changed_when: false
+      when: homebrew_available | bool
 
-- name: Check Go-installed binaries
-  ansible.builtin.stat:
-    path: "{{ homebrew_go_bin_path }}/{{ item.name }}"
-  loop: "{{ homebrew_go_binaries | default([]) }}"
-  register: go_binary_checks
-  when: is_mac | bool
+    - name: List installed Homebrew casks
+      ansible.builtin.command: "{{ brew_bin }} list --cask"
+      register: brew_casks
+      changed_when: false
+      when: homebrew_available | bool
 
-- name: Show Go binaries that would be installed (dry-run)
-  ansible.builtin.debug:
-    msg: "Would go install {{ item.item.module }} → {{ homebrew_go_bin_path }}/{{ item.item.name }}"
-  loop: "{{ go_binary_checks.results | default([]) }}"
-  loop_control:
-    label: "{{ item.item.name }}"
-  when:
-    - is_mac | bool
-    - dry_run | default(false) | bool
-    - not item.stat.exists | default(false)
+    - name: Check formula CLIs on PATH
+      ansible.builtin.command: "command -v {{ homebrew_formula_bins[item] | default(item) }}"
+      loop: "{{ homebrew_formulae }}"
+      loop_control:
+        label: "{{ item }}"
+      register: formula_cli_checks
+      failed_when: false
+      changed_when: false
 
-- name: Install Go binaries
-  ansible.builtin.command: "{{ brew_prefix }}/bin/go install {{ item.item.module }}"
-  environment:
-    GOBIN: "{{ homebrew_go_bin_path }}"
-  loop: "{{ go_binary_checks.results | default([]) }}"
-  loop_control:
-    label: "{{ item.item.name }}"
-  when:
-    - is_mac | bool
-    - not (dry_run | default(false) | bool)
-    - not item.stat.exists | default(false)
+    - name: Record formulae satisfied via PATH
+      ansible.builtin.set_fact:
+        homebrew_formulae_satisfied: "{{ homebrew_formulae_satisfied | default([]) + [item.item] }}"
+      loop: "{{ formula_cli_checks.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: item.rc == 0
 
-- name: Get installed Mac App Store app IDs
-  ansible.builtin.shell: |
-    set -euo pipefail
-    command -v mas >/dev/null 2>&1 || exit 0
-    mas list | awk '{print $1}'
-  args:
-    executable: /bin/bash
-  register: mas_installed_ids
-  changed_when: false
-  when: is_mac | bool
+    - name: Record formulae satisfied via Homebrew
+      ansible.builtin.set_fact:
+        homebrew_formulae_satisfied: "{{ homebrew_formulae_satisfied | default([]) + [item] }}"
+      loop: "{{ homebrew_formulae }}"
+      when:
+        - homebrew_available | bool
+        - item in brew_formulae.stdout_lines
 
-- name: Show MAS apps that would be installed (dry-run)
-  ansible.builtin.debug:
-    msg: "Would install MAS app {{ item.name }} ({{ item.id }})"
-  loop: "{{ homebrew_mas_apps }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - is_mac | bool
-    - dry_run | default(false) | bool
-    - item.id not in mas_installed_ids.stdout_lines | default([])
+    - name: Compute formulae still needed
+      ansible.builtin.set_fact:
+        homebrew_formulae_to_install: >-
+          {{ homebrew_formulae
+             | difference(homebrew_formulae_satisfied | default([]) | unique) }}
 
-- name: Install Mac App Store apps
-  ansible.builtin.command: mas install {{ item.id }}
-  loop: "{{ homebrew_mas_apps }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - is_mac | bool
-    - not (dry_run | default(false) | bool)
-    - item.id not in mas_installed_ids.stdout_lines | default([])
-  changed_when: true
+    - name: Show formulae already present (dry-run)
+      ansible.builtin.debug:
+        msg: "Satisfied (PATH or existing install): {{ item }}"
+      loop: "{{ homebrew_formulae_satisfied | default([]) | unique }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_formulae_satisfied | default([]) | length > 0
 
-- name: Check application bundles for cask skip policy
-  ansible.builtin.stat:
-    path: "/Applications/{{ item.value }}"
-  loop: "{{ homebrew_cask_app_bundles | default({}) | dict2items }}"
-  register: cask_bundle_checks
-  when: is_mac | bool
+    - name: Show formulae that would be installed via Homebrew (dry-run)
+      ansible.builtin.debug:
+        msg: "Would install formula: {{ item }}"
+      loop: "{{ homebrew_formulae_to_install }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
 
-- name: Build casks to skip when app bundle already present
-  ansible.builtin.set_fact:
-    homebrew_casks_skip_bundles: >-
-      {{ cask_bundle_checks.results
-         | selectattr('stat.exists', 'defined')
-         | selectattr('stat.exists')
-         | map(attribute='item.key')
-         | list }}
-  when: is_mac | bool
+    - name: Warn about formulae missing with no Homebrew install path (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Missing {{ item }} (not on PATH). Install manually, via IT, or run make deps
+          to install Homebrew — profile has homebrew_install_packages=false.
+      loop: "{{ homebrew_formulae_to_install }}"
+      when:
+        - dry_run | default(false) | bool
+        - not (homebrew_install_packages | default(true) | bool)
+        - not (homebrew_available | bool)
 
-- name: Show casks that would be installed (dry-run)
-  ansible.builtin.debug:
-    msg: "Would install cask: {{ item }}"
-  loop: "{{ homebrew_casks }}"
-  when:
-    - is_mac | bool
-    - dry_run | default(false) | bool
-    - item not in brew_casks.stdout_lines
-    - item not in homebrew_casks_skip_bundles | default([])
+    - name: Warn about formulae missing — Homebrew not installed (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Missing {{ item }} (not on PATH; Homebrew not installed).
+          Run make deps or install manually.
+      loop: "{{ homebrew_formulae_to_install }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_install_packages | default(true) | bool
+        - not (homebrew_available | bool)
 
-- name: Show casks skipped (app bundle already present)
-  ansible.builtin.debug:
-    msg: >-
-      Skipping cask {{ item }} —
-      /Applications/{{ homebrew_cask_app_bundles[item] }} already installed
-  loop: "{{ homebrew_casks }}"
-  when:
-    - is_mac | bool
-    - dry_run | default(false) | bool
-    - item in homebrew_casks_skip_bundles | default([])
+    - name: Install missing Homebrew formulae
+      ansible.builtin.command: "{{ brew_bin }} install {{ item }}"
+      loop: "{{ homebrew_formulae_to_install }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
 
-- name: Install Homebrew casks
-  ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
-  loop: "{{ homebrew_casks }}"
-  when:
-    - is_mac | bool
-    - not (dry_run | default(false) | bool)
-    - item not in brew_casks.stdout_lines
-    - item not in homebrew_casks_skip_bundles | default([])
+    - name: Check application bundles for cask skip policy
+      ansible.builtin.stat:
+        path: "/Applications/{{ item.value }}"
+      loop: "{{ homebrew_cask_app_bundles | default({}) | dict2items }}"
+      register: cask_bundle_checks
+      when: homebrew_casks | length > 0
+
+    - name: Build casks to skip when app bundle already present
+      ansible.builtin.set_fact:
+        homebrew_casks_skip_bundles: >-
+          {{ cask_bundle_checks.results
+             | selectattr('stat.exists', 'defined')
+             | selectattr('stat.exists')
+             | map(attribute='item.key')
+             | list }}
+      when: cask_bundle_checks is defined
+
+    - name: Show casks skipped — app already installed (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Skipping cask {{ item }} —
+          /Applications/{{ homebrew_cask_app_bundles[item] }} already present
+      loop: "{{ homebrew_casks }}"
+      when:
+        - dry_run | default(false) | bool
+        - item in homebrew_casks_skip_bundles | default([])
+
+    - name: Show casks that would be installed via Homebrew (dry-run)
+      ansible.builtin.debug:
+        msg: "Would install cask: {{ item }}"
+      loop: "{{ homebrew_casks }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
+        - item not in brew_casks.stdout_lines | default([])
+        - item not in homebrew_casks_skip_bundles | default([])
+
+    - name: Install Homebrew casks
+      ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
+      loop: "{{ homebrew_casks }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
+        - item not in brew_casks.stdout_lines | default([])
+        - item not in homebrew_casks_skip_bundles | default([])
+
+    - name: Check Go-installed binaries
+      ansible.builtin.stat:
+        path: "{{ homebrew_go_bin_path }}/{{ item.name }}"
+      loop: "{{ homebrew_go_binaries | default([]) }}"
+      register: go_binary_checks
+
+    - name: Show Go binaries that would be installed (dry-run)
+      ansible.builtin.debug:
+        msg: "Would go install {{ item.item.module }} → {{ homebrew_go_bin_path }}/{{ item.item.name }}"
+      loop: "{{ go_binary_checks.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - dry_run | default(false) | bool
+        - not item.stat.exists | default(false)
+
+    - name: Install Go binaries
+      ansible.builtin.command: "{{ brew_prefix }}/bin/go install {{ item.item.module }}"
+      environment:
+        GOBIN: "{{ homebrew_go_bin_path }}"
+      loop: "{{ go_binary_checks.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - not item.stat.exists | default(false)
+
+    - name: Check Mac App Store CLI sign-in
+      ansible.builtin.command: mas account
+      register: mas_account
+      failed_when: false
+      changed_when: false
+      when:
+        - homebrew_mas_enabled | default(false) | bool
+        - homebrew_mas_apps | length > 0
+
+    - name: Set Mac App Store install readiness
+      ansible.builtin.set_fact:
+        mas_install_ready: "{{ (mas_account.rc | default(1)) == 0 }}"
+      when:
+        - homebrew_mas_enabled | default(false) | bool
+        - homebrew_mas_apps | length > 0
+
+    - name: Check Mac App Store app bundles
+      ansible.builtin.stat:
+        path: "/Applications/{{ item.bundle }}"
+      loop: "{{ homebrew_mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: mas_bundle_checks
+      when:
+        - homebrew_mas_enabled | default(false) | bool
+        - item.bundle is defined
+
+    - name: Get installed Mac App Store app IDs
+      ansible.builtin.shell: |
+        set -euo pipefail
+        command -v mas >/dev/null 2>&1 || exit 0
+        mas list | awk '{print $1}'
+      args:
+        executable: /bin/bash
+      register: mas_installed_ids
+      changed_when: false
+      when:
+        - homebrew_mas_enabled | default(false) | bool
+        - mas_install_ready | default(false) | bool
+
+    - name: Build MAS apps satisfied via bundle
+      ansible.builtin.set_fact:
+        homebrew_mas_satisfied_ids: >-
+          {{ mas_bundle_checks.results
+             | default([])
+             | selectattr('stat.exists', 'defined')
+             | selectattr('stat.exists')
+             | map(attribute='item.id')
+             | list }}
+      when: mas_bundle_checks is defined
+
+    - name: Show MAS apps skipped — already installed (dry-run)
+      ansible.builtin.debug:
+        msg: "Skipping MAS app {{ item.name }} — /Applications/{{ item.bundle }} present"
+      loop: "{{ homebrew_mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_mas_enabled | default(false) | bool
+        - item.id in homebrew_mas_satisfied_ids | default([])
+
+    - name: Show MAS disabled for profile (dry-run)
+      ansible.builtin.debug:
+        msg: Mac App Store installs disabled (homebrew_mas_enabled=false)
+      when:
+        - dry_run | default(false) | bool
+        - not (homebrew_mas_enabled | default(false) | bool)
+        - homebrew_mas_apps | length > 0
+
+    - name: Show MAS skipped — not signed in (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Skipping Mac App Store installs — mas account not ready
+          (sign in to App Store or set homebrew_mas_enabled=false).
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_mas_enabled | default(false) | bool
+        - homebrew_mas_apps | length > 0
+        - not (mas_install_ready | default(false) | bool)
+
+    - name: Show MAS apps that would be installed (dry-run)
+      ansible.builtin.debug:
+        msg: "Would install MAS app {{ item.name }} ({{ item.id }})"
+      loop: "{{ homebrew_mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_mas_enabled | default(false) | bool
+        - mas_install_ready | default(false) | bool
+        - item.id not in homebrew_mas_satisfied_ids | default([])
+        - item.id not in mas_installed_ids.stdout_lines | default([])
+
+    - name: Install Mac App Store apps
+      ansible.builtin.command: mas install {{ item.id }}
+      loop: "{{ homebrew_mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_mas_enabled | default(false) | bool
+        - mas_install_ready | default(false) | bool
+        - item.id not in homebrew_mas_satisfied_ids | default([])
+        - item.id not in mas_installed_ids.stdout_lines | default([])
+      changed_when: true
+
+    - name: Run Homebrew update (optional)
+      ansible.builtin.command: "{{ brew_bin }} update"
+      register: brew_update
+      failed_when: false
+      changed_when: brew_update.rc == 0
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_available | bool
+        - homebrew_upgrade | default(false) | bool
+
+    - name: Run Homebrew upgrade (optional, non-fatal)
+      ansible.builtin.shell: |
+        set -o pipefail
+        {{ brew_bin }} upgrade 2>&1 | tail -40
+        exit "${PIPESTATUS[0]}"
+      args:
+        executable: /bin/bash
+      register: brew_upgrade
+      failed_when: false
+      changed_when: brew_upgrade.rc == 0
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_available | bool
+        - homebrew_upgrade | default(false) | bool
+
+    - name: Warn when Homebrew upgrade reported errors
+      ansible.builtin.debug:
+        msg: >-
+          brew upgrade exited {{ brew_upgrade.rc }} (playbook continues).
+          Common on work Macs: tfenv vs terraform tap, or brew link permission errors.
+          Run `brew upgrade` manually and fix any `brew link` issues.
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_upgrade | default(false) | bool
+        - brew_upgrade is defined
+        - brew_upgrade.rc | default(0) != 0
+
+    - name: Show Homebrew upgrade (dry-run)
+      ansible.builtin.debug:
+        msg: Would run brew update && brew upgrade (homebrew_upgrade=true; failures are non-fatal)
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_available | bool
+        - homebrew_upgrade | default(false) | bool

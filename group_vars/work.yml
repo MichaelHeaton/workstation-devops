@@ -1,0 +1,33 @@
+---
+# Adobe / work machine profile — CES Vault team workstation.
+
+projects_buckets:
+  - name: adobe
+  - name: personal
+  - name: scratch
+  - name: workspace
+
+managed_repos:
+  - repo: git@github.com:ult35127_adobe/workstation-ces_vault.git
+    dest: adobe/workstation-ces_vault
+  - repo: git@github.com:ult35127_adobe/adobe-cursor-rules.git
+    dest: adobe/adobe-cursor-rules
+
+# Adobe IT often installs apps outside Homebrew — detect only, do not brew install.
+homebrew_install_packages: false
+homebrew_upgrade: false
+homebrew_mas_enabled: false
+
+homebrew_formulae_profile: []
+
+homebrew_casks_profile:
+  - microsoft-teams
+
+homebrew_cask_app_bundles:
+  microsoft-teams: Microsoft Teams.app
+
+# Chezmoi identity — override on first run:
+#   ansible-playbook site.yml -e 'adobe_username=ult35127 full_name="Mike Heaton" adobe_email="user@adobe.com"'
+adobe_username: "{{ ansible_facts['user_id'] }}"
+full_name: ""
+adobe_email: ""

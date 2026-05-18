@@ -1,14 +1,4 @@
 ---
-# Immutable entrypoint — customize vars/config.yml, not this file.
-- name: Personal workstation setup
-  hosts: localhost
-  connection: local
-
-  vars_files:
-    - vars/config.yml
-
-  roles:
-    - role: directories
-    - role: homebrew
-    - role: repos
-    - role: chezmoi
+# Backward-compatible alias — use site.yml for new runs.
+- name: Workstation bootstrap (import site.yml)
+  ansible.builtin.import_playbook: site.yml

@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: ansible-playbook-syntax-check
         name: ansible-playbook syntax-check
-        entry: ansible-playbook playbook.yml --syntax-check
+        entry: ansible-playbook site.yml --syntax-check -e workstation_profile=personal -e skip_profile_prompt=true
         language: system
         pass_filenames: false
-        files: ^(playbook\.yml|roles/.*/(tasks|defaults|handlers|vars)/.*\.ya?ml|vars/.*\.ya?ml)$
+        files: ^(site\.yml|playbook\.yml|profile_detect\.yml|group_vars/.*\.ya?ml|roles/.*/(tasks|defaults|handlers|vars)/.*\.ya?ml)$

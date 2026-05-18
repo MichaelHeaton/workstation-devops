@@ -37,5 +37,5 @@ validate:ansible:
   stage: validate
   <<: *ansible_deps
   script:
-    - ansible-playbook playbook.yml --syntax-check
+    - ansible-playbook site.yml --syntax-check -e workstation_profile=personal -e skip_profile_prompt=true
     - ansible-lint
