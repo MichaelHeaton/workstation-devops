@@ -77,6 +77,18 @@ homebrew_cask_app_bundles_common:
   visual-studio-code: Visual Studio Code.app
 
 homebrew_cask_app_bundles: {}
+
+# GitHub-release DMG apps (not Homebrew). Source may be Adobe-private; binaries are public.
+mac_dmg_apps_catalog:
+  ai-spend-tracker:
+    display_name: AI Spend Tracker
+    bundle: AISpendTracker.app
+    github_repo: roymerrill/ai-spend-tracker-releases
+    asset_name: AISpendTracker.dmg
+
+mac_dmg_apps_common: []
+mac_dmg_apps_install: false
+
 homebrew_mas_apps: []
 homebrew_go_bin_path: "{{ brew_prefix }}/bin"
 homebrew_go_binaries: []

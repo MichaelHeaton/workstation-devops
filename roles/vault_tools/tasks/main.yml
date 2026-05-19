@@ -1,0 +1,79 @@
+---
+# Deploy Vault CLI helpers from onboarding wiki (vl / vault_login / vault_mgmt).
+
+- name: Vault tools role
+  when: vault_tools_enabled | default(true) | bool
+  block:
+    - name: Ensure workstation-devops config directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Deploy Vault shell functions
+      ansible.builtin.template:
+        src: vault_functions.zsh.j2
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops/vault_functions.zsh"
+        mode: "0644"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Show Vault functions deploy (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would deploy ~/.config/workstation-devops/vault_functions.zsh
+          (vl, vault_login, vault_mgmt) for adobe_username={{ adobe_username }}.
+      when: dry_run | default(false) | bool
+
+    - name: Probe Vault Okta Keychain item
+      ansible.builtin.command:
+        argv:
+          - security
+          - find-generic-password
+          - -s
+          - "{{ vault_okta_keychain_service }}"
+          - -a
+          - "{{ adobe_username }}"
+          - -w
+      register: vault_okta_keychain_probe
+      changed_when: false
+      failed_when: false
+      no_log: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - vault_okta_use_password_store | default(false) | bool
+        - vault_okta_op_ref | default('') | length == 0
+
+    - name: Set Vault Okta password-store readiness
+      ansible.builtin.set_fact:
+        vault_okta_password_store_active: >-
+          {{
+            (vault_okta_use_password_store | default(false) | bool)
+            and (
+              (vault_okta_op_ref | default('') | length > 0)
+              or (vault_okta_keychain_probe.rc | default(1) | int == 0)
+            )
+          }}
+      when: not (dry_run | default(false) | bool)
+
+    - name: Remind to create Vault Okta Keychain item
+      ansible.builtin.debug:
+        msg: >-
+          vault_okta_use_password_store is enabled but Keychain item
+          "{{ vault_okta_keychain_service }}" (account {{ adobe_username }}) was not found.
+          Use Keychain Access (NOT the Passwords app — those are separate stores).
+          Keychain Access → File → New Password Item → service {{ vault_okta_keychain_service }},
+          account {{ adobe_username }} → make apply again. See docs/work/vault-tools.md
+      when:
+        - not (dry_run | default(false) | bool)
+        - vault_okta_use_password_store | default(false) | bool
+        - vault_okta_op_ref | default('') | length == 0
+        - vault_okta_keychain_probe.rc | default(1) | int != 0
+
+    - name: Source Vault functions from zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops vault-tools"
+        block: "{{ lookup('template', 'vault_tools_zshrc.sh.j2') }}"
+        insertafter: EOF
+      when: not (dry_run | default(false) | bool)

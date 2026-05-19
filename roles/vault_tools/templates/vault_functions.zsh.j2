@@ -1,0 +1,143 @@
+# Vault / Teleport CLI helpers — workstation-devops (work profile)
+# Wiki: Vault Engineer Onboarding → Tips/Shortcuts → Bash Functions and Aliases
+# Requires: vault, tsh on PATH; VPN for corp clusters
+
+# Drop stale session exports when Ansible has not enabled them in ~/.zshrc yet
+if ! grep -q '^export VAULT_OKTA_USE_PASSWORD_STORE=1' "${HOME}/.zshrc" 2>/dev/null; then
+  unset VAULT_OKTA_USE_PASSWORD_STORE VAULT_OKTA_PASSWORD_CMD VAULT_OKTA_OP_REF 2>/dev/null
+fi
+
+# --- Okta login (optional password from Keychain / 1Password) ----------------
+# Enabled via Ansible: group_vars/work.yml → vault_okta_use_password_store, vault_okta_keychain_service
+# One-time: Keychain Access → New Password Item (service adobe-vault-okta, account ult35127)
+
+_vault_adobe_password() {
+  [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]] || return 1
+  local pass=""
+
+  if [[ -n "${VAULT_OKTA_PASSWORD_CMD:-}" ]]; then
+    # stderr suppressed — failed lookup must not spam the terminal
+    pass="$(${=VAULT_OKTA_PASSWORD_CMD} 2>/dev/null)" || return 1
+  elif [[ -n "${VAULT_OKTA_OP_REF:-}" ]] && command -v op >/dev/null 2>&1; then
+    pass="$(op read "${VAULT_OKTA_OP_REF}" 2>/dev/null)" || return 1
+  elif command -v security >/dev/null 2>&1; then
+    local user="{{ adobe_username }}"
+    local svc="${VAULT_OKTA_KEYCHAIN_SERVICE:-}"
+    if [[ -n "$svc" ]]; then
+      pass="$(security find-generic-password -s "$svc" -w 2>/dev/null)" \
+        || pass="$(security find-generic-password -a "$user" -s "$svc" -w 2>/dev/null)" \
+        || pass="$(security find-internet-password -s "$svc" -a "$user" -w 2>/dev/null)" \
+        || return 1
+    else
+      # Try common Adobe/Okta keychain shapes (Apple Passwords title ≠ service name)
+      local try_svc try
+      for try_svc in "Adobe: ADOBENET" "adobe-vault-okta" "login.adobe.com" "okta.com"; do
+        try="$(security find-generic-password -s "$try_svc" -w 2>/dev/null)" && pass="$try" && break
+        try="$(security find-internet-password -s "$try_svc" -a "$user" -w 2>/dev/null)" && pass="$try" && break
+      done
+      [[ -n "$pass" ]] || return 1
+    fi
+  else
+    return 1
+  fi
+  [[ -n "$pass" ]] || return 1
+  print -r -- "$pass"
+}
+
+_vault_okta_login() {
+  local user="{{ adobe_username }}"
+  local pass
+  if pass="$(_vault_adobe_password)"; then
+    vault login -method=okta username="$user" password="$pass"
+  else
+    if [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]]; then
+      echo "Note: password store lookup failed — type ADOBENET password (MFA push still applies)." >&2
+      echo "  Fix: create Keychain item or adjust vault_okta_* in group_vars/work.yml — see docs/work/vault-tools.md" >&2
+    fi
+    vault login -method=okta username="$user"
+  fi
+}
+
+# --- Interactive cluster login (wiki: vault_login; alias vl) ---------------
+
+vl() {
+  local devamer="https://vault-amer.dev.adobe.net"
+  local prodamer="https://vault-amer.adobe.net"
+  local prodapac="https://vault-apac.adobe.net"
+  local prodemea="https://vault-emea.adobe.net"
+  local transit="https://vault-transit-amer.adobe.net"
+  local vaulta="https://vault.adobe.net"
+  local vaultadev="https://vault.dev.adobe.net"
+  local test="https://vault-test.dev.or2.adobe.net"
+  local viidev="https://vault-vii.dev.adobe.net"
+  local viidevint="https://vault-int-vii.dev.adobe.net"
+  local local_vault="http://127.0.0.1:8200"
+
+  local clusters=(
+    "DEV-AMER    | $devamer"
+    "PROD-AMER   | $prodamer"
+    "PROD-APAC   | $prodapac"
+    "PROD-EMEA   | $prodemea"
+    "TRANSIT     | $transit"
+    "VAULT-A     | $vaulta"
+    "VAULT-A-DEV | $vaultadev"
+    "TEST        | $test"
+    "VII-DEV     | $viidev"
+    "VII-DEV-INT | $viidevint"
+    "LOCAL       | $local_vault"
+  )
+
+  echo "Select a Vault cluster:"
+  local i=1
+  for entry in "${clusters[@]}"; do
+    printf "  %d) %s\n" "$i" "${entry%%|*}"
+    ((i++))
+  done
+
+  printf "Enter number: "
+  read -r choice
+  # zsh arrays are 1-indexed; menu numbers match cluster[$choice]
+  local selected="${clusters[$choice]}"
+  if [[ -z "$selected" ]]; then
+    echo "Invalid selection." >&2
+    return 1
+  fi
+
+  export VAULT_ADDR="${selected#*| }"
+  echo "VAULT_ADDR set to $VAULT_ADDR"
+
+  if [[ "$VAULT_ADDR" == *"127.0.0.1"* ]]; then
+    vault login
+  else
+    _vault_okta_login
+  fi
+}
+
+alias vault_login=vl
+
+# --- Vault MGMT (Teleport app vault-mgmt-access) -----------------------------
+
+vault_mgmt() {
+  echo "Logging into Teleport app 'vault-mgmt-access'..."
+  if ! tsh app login vault-mgmt-access > /dev/null 2>&1; then
+    echo "Error: Teleport app login failed." >&2
+    return 1
+  fi
+
+  echo "Starting Teleport tunnel on port 8222..."
+  tsh proxy app vault-mgmt-access -p 8222 &
+  local PROXY_PID=$!
+  sleep 2
+
+  export VAULT_ADDR="http://127.0.0.1:8222"
+  echo "VAULT_ADDR set to ${VAULT_ADDR}"
+
+  if ! _vault_okta_login; then
+    echo "Error: Vault login failed." >&2
+    kill $PROXY_PID
+    return 1
+  fi
+
+  echo "Vault auth succeeded. Tunnel active (PID: $PROXY_PID). Auto-closes in 4 hours."
+  ( sleep 14400 && echo "4 hours elapsed — closing tunnel (PID: $PROXY_PID)..." && kill $PROXY_PID ) &
+}

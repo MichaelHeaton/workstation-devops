@@ -26,6 +26,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - Idempotent roles — safe to re-run `make apply`.
 - `install.sh` bootstraps this repo on a new Mac; `managed_repos_common` in `all.yml` also lists it so `make apply` ensures the clone on every profile.
 - **Packages are detect-first** — `make check` and the `homebrew` role satisfy tools via PATH or `/Applications` before requiring Homebrew. Work profile sets `homebrew_install_packages: false` (Adobe IT). MAS is off by default; enable only on `personal` with a signed-in Apple ID. `homebrew_upgrade: true` opts into `brew update && brew upgrade` (default off).
+- **GitHub-release DMG apps** — `roles/mac_dmg_apps` installs apps from public release assets (catalog in `group_vars/all.yml`). Independent of Homebrew; see [docs/work/ai-spend-tracker.md](docs/work/ai-spend-tracker.md).
 - **Brave profiles** — `dotfiles/brave-profiles/profiles.json` holds icons, colors, and NTP backgrounds. After UI changes: quit Brave, run `./scripts/brave-profiles-export.sh`, commit, then `make apply` on other machines.
 
 ## Key commands

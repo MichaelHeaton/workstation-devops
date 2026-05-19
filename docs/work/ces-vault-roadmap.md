@@ -1,13 +1,13 @@
 # CES Vault roles — import roadmap
 
-Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and common roles already live in workstation-devops; the rows below are **not implemented yet**.
+Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and common roles already live in workstation-devops.
+
+**Implemented:** `vault-tools`, `klam` (wired in `roles/work/tasks/main.yml`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md).
 
 | Role | Target | Notes |
 |------|--------|-------|
 | `shell` | oh-my-zsh, zshrc fragments, PATH, `TELEPORT_LOGIN` | Shell fragments under `roles/work/shell/files/`, sourced from `.zshrc` via task — do not edit `.zshrc` directly |
-| `vault-tools` | `vl`, `vault_mgmt`, `vault_heartbeat_env` | `roles/work/vault-tools/files/vault_aliases.zsh` |
 | `teleport` | fzf, `t()`, `tshl` | `roles/work/teleport/files/` |
-| `klam` | KLAM CLI, `cstdev` / `cstprd` aliases | Requires IAM groups first — [setup-notes.md](setup-notes.md) |
 | `kubernetes` | kubelogin **v0.1.9 only** | Ethos requirement; install from GitHub release, not brew upgrade |
 | `git-github` | `gh`, GHEC SSH config fragment | Template username placeholder; key path per user at apply time |
 
@@ -19,7 +19,7 @@ Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and commo
    ```yaml
    - name: Import vault-tools role
      ansible.builtin.import_role:
-       name: work/vault-tools
+       name: vault_tools
    ```
 
    (Use the correct role path/name for your layout.)
