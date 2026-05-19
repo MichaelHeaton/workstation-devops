@@ -33,6 +33,15 @@
           {{ homebrew_cask_app_bundles_common | default({})
              | combine(homebrew_cask_app_bundles | default({})) }}
 
+    - name: Initialize mac_dmg_apps list
+      ansible.builtin.set_fact:
+        mac_dmg_apps: []
+
+    - name: Merge mac_dmg_apps from catalog
+      ansible.builtin.set_fact:
+        mac_dmg_apps: "{{ mac_dmg_apps + [mac_dmg_apps_catalog[item] | combine({'id': item})] }}"
+      loop: "{{ (mac_dmg_apps_common | default([]) + mac_dmg_apps_profile | default([])) | unique }}"
+
     - name: Show merged configuration summary
       ansible.builtin.debug:
         msg: >-
@@ -40,7 +49,8 @@
           buckets={{ projects_buckets | length }} |
           repos={{ managed_repos | length }} |
           formulae={{ homebrew_formulae | length }} |
-          casks={{ homebrew_casks | length }}
+          casks={{ homebrew_casks | length }} |
+          dmg_apps={{ mac_dmg_apps | length }}
 
   roles:
     - role: common

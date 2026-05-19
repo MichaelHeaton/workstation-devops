@@ -12,10 +12,14 @@ Adobe **work** machines use `workstation_profile=work` (see `group_vars/work.yml
 | Adobe cursor rules clone | `group_vars/work.yml` → `adobe/adobe-cursor-rules` |
 | Detect-first Homebrew (IT installs apps) | `group_vars/work.yml` |
 | Brave work profiles | `dotfiles/brave-profiles/` |
+| AI Spend Tracker (public DMG) | `roles/mac_dmg_apps` — [ai-spend-tracker.md](ai-spend-tracker.md) |
+| Vault CLI helpers (`vl`, Okta Keychain) | `roles/vault_tools` — [vault-tools.md](vault-tools.md) |
+| KLAM CLI + `ces_*` AWS aliases | `roles/klam` — [klam.md](klam.md) |
+| ADOBENET Keychain rotation | [runbooks/adobenet-keychain-rotation.md](runbooks/adobenet-keychain-rotation.md) |
 
 ## Planned (from legacy `workstation-ces_vault`)
 
-See [ces-vault-roadmap.md](ces-vault-roadmap.md). Implement as Ansible roles under `roles/work/` and wire them in `roles/work/tasks/main.yml`.
+See [ces-vault-roadmap.md](ces-vault-roadmap.md) for remaining roles (`shell`, `teleport`, `kubernetes`, `git-github`).
 
 ## Manual steps
 
