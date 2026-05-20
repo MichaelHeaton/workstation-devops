@@ -93,4 +93,4 @@
     - not (dry_run | default(false) | bool)
     - item.stat.exists
     - item.item.install_cmd is defined
-  changed_when: false
+  changed_when: true
