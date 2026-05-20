@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# merge-claude-allow — adds Claude Code allow-list entries to ~/.claude/settings.json.
+#
+# ADDITIVE ONLY: never removes existing entries except two explicit upgrades
+# (non-wildcard script paths → wildcard versions).
+# Idempotent: skips entries already present.
+# Requires: jq
+#
+# Bump this version string to force a re-run on next chezmoi apply:
+# allow-policy-version: v1.0.0
+
+set -euo pipefail
+
+SETTINGS="$HOME/.claude/settings.json"
+
+if [[ ! -f "$SETTINGS" ]]; then
+  echo "merge-claude-allow: $SETTINGS not found, skipping"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: merge-claude-allow: jq not installed, skipping" >&2
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Entries superseded by wildcard versions below — remove if present.
+# ---------------------------------------------------------------------------
+REMOVE_ENTRIES='[
+  "Bash(bash ~/.claude/skills/issue-create/scripts/detect-context.sh)",
+  "Bash(bash ~/.claude/skills/session-close/scripts/discover-repos.sh)"
+]'
+
+# ---------------------------------------------------------------------------
+# Allow entries to ensure are present.
+# ---------------------------------------------------------------------------
+ALLOW_ENTRIES='[
+  "mcp__ccd_session_mgmt__search_session_transcripts",
+  "mcp__Claude_in_Chrome__tabs_context_mcp",
+  "Bash(bash ~/.claude/skills/session-close/scripts/discover-repos.sh*)",
+  "Bash(bash ~/.claude/skills/session-close/scripts/git-ssh-fallback.sh *)",
+  "Bash(bash ~/.claude/skills/issue-create/scripts/detect-context.sh*)",
+  "Bash(bash ~/.claude/skills/issue-create/scripts/seed-labels.sh *)",
+  "Bash(bash ~/.claude/skills/repo-ai-init/scripts/discover.sh *)",
+  "Bash(git fetch *)",
+  "Bash(glab auth status*)",
+  "Bash(glab auth check *)",
+  "Bash(glab mr list *)",
+  "Bash(glab mr view *)",
+  "Bash(glab repo view *)",
+  "Bash(make help)",
+  "Bash(yamllint *)",
+  "Bash(shellcheck *)",
+  "Bash(jar tf *)"
+]'
+
+# ---------------------------------------------------------------------------
+# 1. Remove superseded non-wildcard entries
+# ---------------------------------------------------------------------------
+before=$(jq '(.permissions.allow // []) | length' "$SETTINGS")
+after_remove=$(jq --argjson remove "$REMOVE_ENTRIES" \
+  '(.permissions.allow // []) | map(select(. as $e | $remove | index($e) == null)) | length' \
+  "$SETTINGS")
+
+if [[ "$after_remove" -lt "$before" ]]; then
+  echo "merge-claude-allow: removing $((before - after_remove)) superseded entries..."
+  tmp=$(mktemp)
+  jq --argjson remove "$REMOVE_ENTRIES" \
+    '.permissions.allow = ((.permissions.allow // []) | map(select(. as $e | $remove | index($e) == null)))' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Add missing allow entries
+# ---------------------------------------------------------------------------
+current_count=$(jq '(.permissions.allow // []) | length' "$SETTINGS")
+merged_count=$(jq --argjson new "$ALLOW_ENTRIES" \
+  '((.permissions.allow // []) + $new | unique) | length' "$SETTINGS")
+
+if [[ "$merged_count" -gt "$current_count" ]]; then
+  echo "merge-claude-allow: adding $((merged_count - current_count)) new allow entries..."
+  tmp=$(mktemp)
+  jq --argjson new "$ALLOW_ENTRIES" \
+    '.permissions.allow = ((.permissions.allow // []) + $new | unique)' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done (allow total: $merged_count)"
+else
+  echo "merge-claude-allow: allow list up to date ($current_count entries)"
+fi
+
+echo "merge-claude-allow: done"
