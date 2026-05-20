@@ -27,7 +27,7 @@ managed_repos_common:
     dest: personal/workstation-devops
   - repo: git@github.com:MichaelHeaton/claude-skills.git
     dest: personal/claude-skills
-    install_cmd: bash install.sh
+    install_cmd: make install
   - repo: git@github.com:MichaelHeaton/memex.git
     dest: personal/memex
 
