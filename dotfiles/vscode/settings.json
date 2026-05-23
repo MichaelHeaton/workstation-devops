@@ -1,0 +1,35 @@
+{
+  // -------------------------------------------------------------------------
+  // Paste your VS Code settings here, then commit + re-run `make apply`.
+  // To capture your current settings on macOS:
+  //   cp ~/Library/Application\ Support/Code/User/settings.json \
+  //      ~/personal/workstation-devops/dotfiles/vscode/settings.json
+  // -------------------------------------------------------------------------
+
+  // --- Editor ---------------------------------------------------------------
+  "editor.fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.rulers": [100],
+  "editor.minimap.enabled": false,
+
+  // --- Files ----------------------------------------------------------------
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // --- Terminal -------------------------------------------------------------
+  "terminal.integrated.defaultProfile.osx": "zsh",
+
+  // --- Git ------------------------------------------------------------------
+  "git.autofetch": true,
+  "git.confirmSync": false,
+
+  // --- Claude Code ----------------------------------------------------------
+  // If `claude` is not on your PATH inside VS Code, set the full path here:
+  // "claude-code.executablePath": "/opt/homebrew/bin/claude",
+  //
+  // Keeping this unset uses whatever `claude` is found in your shell PATH.
+  // Run `which claude` in your terminal to find the path.
+  "claude-code.executablePath": ""
+}

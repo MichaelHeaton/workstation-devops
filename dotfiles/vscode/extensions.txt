@@ -1,0 +1,9 @@
+# VS Code extensions — one extension ID per line.
+# Get your current list on macOS: code --list-extensions >> dotfiles/vscode/extensions.txt
+# (remove this comment block first)
+#
+# Format: publisher.extensionName
+# Example:
+#   anthropics.claude-code
+#   esbenp.prettier-vscode
+#   dbaeumer.vscode-eslint

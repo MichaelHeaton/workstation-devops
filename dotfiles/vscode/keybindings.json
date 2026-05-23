@@ -1,0 +1,8 @@
+[
+  // -------------------------------------------------------------------------
+  // Paste your VS Code keybindings here, then commit + re-run `make apply`.
+  // To capture your current keybindings on macOS:
+  //   cp ~/Library/Application\ Support/Code/User/keybindings.json \
+  //      ~/personal/workstation-devops/dotfiles/vscode/keybindings.json
+  // -------------------------------------------------------------------------
+]

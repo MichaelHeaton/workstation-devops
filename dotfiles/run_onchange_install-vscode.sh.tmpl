@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# install-vscode — applies settings.json, keybindings.json, and installs extensions.
+#
+# Re-runs automatically when any file in dotfiles/vscode/ changes
+# (chezmoi hashes the template body for the run_onchange_ trigger).
+#
+# Source files: dotfiles/vscode/{settings.json,keybindings.json,extensions.txt}
+# Targets:      ~/Library/Application Support/Code/User/{settings.json,keybindings.json}
+#
+# hash: {{ include "vscode/settings.json" | sha256sum }} {{ include "vscode/keybindings.json" | sha256sum }} {{ include "vscode/extensions.txt" | sha256sum }}
+
+set -euo pipefail
+
+# macOS only — VS Code user config lives in ~/Library/Application Support
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "install-vscode: skipping on non-macOS ($(uname))"
+  exit 0
+fi
+
+VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
+REPO_VSCODE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/vscode"
+
+# ---------------------------------------------------------------------------
+# 1. settings.json
+# ---------------------------------------------------------------------------
+if [[ -f "$REPO_VSCODE_DIR/settings.json" ]]; then
+  echo "install-vscode: copying settings.json..."
+  cp "$REPO_VSCODE_DIR/settings.json" "$VSCODE_USER_DIR/settings.json"
+  echo "  done → $VSCODE_USER_DIR/settings.json"
+fi
+
+# ---------------------------------------------------------------------------
+# 2. keybindings.json
+# ---------------------------------------------------------------------------
+if [[ -f "$REPO_VSCODE_DIR/keybindings.json" ]]; then
+  echo "install-vscode: copying keybindings.json..."
+  cp "$REPO_VSCODE_DIR/keybindings.json" "$VSCODE_USER_DIR/keybindings.json"
+  echo "  done → $VSCODE_USER_DIR/keybindings.json"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Extensions — install any not already present (skip already-installed)
+# ---------------------------------------------------------------------------
+if [[ -f "$REPO_VSCODE_DIR/extensions.txt" ]] && command -v code >/dev/null 2>&1; then
+  echo "install-vscode: checking extensions..."
+  installed=$(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
+  while IFS= read -r ext; do
+    # skip blank lines and comments
+    [[ -z "$ext" || "$ext" == \#* ]] && continue
+    if ! echo "$installed" | grep -qi "^${ext}$"; then
+      echo "  installing: $ext"
+      code --install-extension "$ext" --force 2>&1 | tail -1
+    else
+      echo "  already installed: $ext"
+    fi
+  done < "$REPO_VSCODE_DIR/extensions.txt"
+  echo "  extensions done"
+elif ! command -v code >/dev/null 2>&1; then
+  echo "WARN: install-vscode: 'code' CLI not found — skipping extension install."
+  echo "  To fix: open VS Code → Cmd+Shift+P → 'Shell Command: Install code command in PATH'"
+fi
+
+echo "install-vscode: done"
