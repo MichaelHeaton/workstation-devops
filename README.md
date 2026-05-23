@@ -1,24 +1,16 @@
 # workstation-devops
 
-Personal Ansible workstation bootstrap — fast setup across your machines.
+Single Ansible workstation bootstrap for **personal** and **work** machines. Profile gates what gets installed; shared tooling always runs.
 
-**Edit [vars/config.yml](vars/config.yml)** for paths, project buckets, and git clones.
-**Do not** scatter changes across roles or `playbook.yml`.
+**Edit configuration in `group_vars/`** — not roles or `site.yml`.
 
-## Configuration
+| File | Purpose |
+|------|---------|
+| `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, memex) |
+| `group_vars/personal.yml` | Homelab repos, gaming, personal buckets |
+| `group_vars/work.yml` | Adobe layout, CES Vault repos, work identity |
 
-| Variable | Purpose |
-|----------|---------|
-| `projects_root` | Base directory (default `~/Projects`) |
-| `projects_buckets` | Top-level folders to create |
-| `managed_repos` | Repos to clone (`dest` relative to `projects_root`) |
-| `git_ssh_hosts` | Hosts added to `~/.ssh/known_hosts` before clone |
-| `workstation_devops_*` | Clone URL/path for `scripts/install.sh` |
-
-Content lives in separate repos (cloned via `managed_repos`):
-
-- **`workspace`** — Cursor `.code-workspace` files
-- **`personal/claude-skills`** — IA rules (`install.sh` after clone)
+Machine identity is stored in **`~/.workstation_profile`** (`work` or `personal`).
 
 ## Quick start (new Mac)
 
@@ -26,7 +18,7 @@ Content lives in separate repos (cloned via `managed_repos`):
 curl -fsSL "https://gitlab.com/Michael-Heaton/workstation-devops/-/raw/main/scripts/install.sh" | bash
 ```
 
-Creates `projects_root`, clones this repo, installs Ansible (`make deps`), runs the playbook (`make apply`).
+Creates `~/Projects`, clones this repo, installs Ansible (`make deps`), detects profile, runs the playbook (`make apply`).
 
 Or manually:
 
@@ -38,19 +30,56 @@ cd ~/Projects/personal/workstation-devops
 ```
 
 ```bash
-make dry-run   # preview changes
-make apply     # apply
+make profile    # first-time or change work | personal
+make check      # detect-first preflight (PATH, /Applications, then Homebrew)
+make dry-run    # preview changes
+make apply      # apply (installs missing items only when profile allows)
 ```
 
-Existing repos elsewhere under `~/Projects` are untouched. See [docs/migration.md](docs/migration.md) if you are moving off an older layout.
+## Profiles
 
-## Roles
+| Profile | Typical machine | Extra installs |
+|---------|-----------------|----------------|
+| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack) |
+| `work` | Adobe laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
-| Role | What it does |
-|------|----------------|
-| `directories` | Creates `projects_buckets` under `projects_root` |
-| `homebrew` | `gh`, `glab`; GitHub Desktop, VS Code, Claude, 1Password |
-| `repos` | SSH known_hosts + clones `managed_repos` |
-| `chezmoi` | Claude Code security dotfiles |
+**Override for one run:** `ansible-playbook site.yml -e workstation_profile=work`
 
-See [AGENT.md](AGENT.md) for agent context.
+**Extra vars via Make:** `make apply EXTRA_VARS='-e homebrew_upgrade=true'` (`-e` after `make apply` is not forwarded to Ansible)
+
+**Re-detect:** `make profile` or `ansible-playbook profile_detect.yml -e force_reprofile=true`
+
+**Non-interactive (CI / no TTY):** `-e skip_profile_prompt=true -e workstation_profile=personal`
+
+## Layout
+
+```
+site.yml                 # main entry (profile detect + apply)
+profile_detect.yml       # profile only
+group_vars/all.yml       # shared
+group_vars/work.yml      # work overrides
+group_vars/personal.yml  # personal overrides
+roles/common/            # always: directories, homebrew, repos, chezmoi
+roles/work/              # work-only (extend with vault-tools, etc.)
+roles/personal/          # personal-only hooks
+```
+
+**Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs Adobe).
+
+- **`workspace`** — Cursor `.code-workspace` files (multi-domain)
+- **`personal/claude-skills`** — skills (`install.sh` on first clone and re-apply)
+- **`personal/memex`** — knowledge vault
+
+## Work profile (CES Vault)
+
+Automates tooling described in the [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667). Dotfiles (MCP, Claude security) are applied today; Vault/Teleport/KLAM roles are tracked in [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).
+
+Legacy `workstation-ces_vault` on GitHub is deprecated — use this repo only.
+
+## Migrating an existing Mac
+
+See [docs/migration.md](docs/migration.md) for `~/Projects` layout changes.
+
+## For agents
+
+See [AGENT.md](AGENT.md).

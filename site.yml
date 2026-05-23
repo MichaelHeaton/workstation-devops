@@ -1,0 +1,60 @@
+---
+# Main entrypoint — profile detection, then profile-gated roles.
+# Override profile: ansible-playbook site.yml -e workstation_profile=work
+# Re-detect: ansible-playbook profile_detect.yml -e force_reprofile=true
+
+- name: Detect workstation profile
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: Run profile detection tasks
+      ansible.builtin.include_tasks: tasks/profile_detect.yml
+
+- name: Apply workstation configuration
+  hosts: localhost
+  connection: local
+  vars_files:
+    - group_vars/all.yml
+  pre_tasks:
+    - name: Load profile-specific variables
+      ansible.builtin.include_vars:
+        file: "group_vars/{{ workstation_profile }}.yml"
+
+    - name: Merge profile configuration lists
+      ansible.builtin.set_fact:
+        projects_buckets: "{{ projects_buckets | default([]) }}"
+        managed_repos: "{{ managed_repos_common | default([]) + (managed_repos | default([])) }}"
+        homebrew_formulae: "{{ homebrew_formulae_common + homebrew_formulae_profile | default([]) }}"
+        homebrew_casks: "{{ homebrew_casks_common + homebrew_casks_profile | default([]) }}"
+        homebrew_cask_app_bundles: >-
+          {{ homebrew_cask_app_bundles_common | default({})
+             | combine(homebrew_cask_app_bundles | default({})) }}
+
+    - name: Initialize mac_dmg_apps list
+      ansible.builtin.set_fact:
+        mac_dmg_apps: []
+
+    - name: Merge mac_dmg_apps from catalog
+      ansible.builtin.set_fact:
+        mac_dmg_apps: "{{ mac_dmg_apps + [mac_dmg_apps_catalog[item] | combine({'id': item})] }}"
+      loop: "{{ (mac_dmg_apps_common | default([]) + mac_dmg_apps_profile | default([])) | unique }}"
+
+    - name: Show merged configuration summary
+      ansible.builtin.debug:
+        msg: >-
+          profile={{ workstation_profile }} |
+          buckets={{ projects_buckets | length }} |
+          repos={{ managed_repos | length }} |
+          formulae={{ homebrew_formulae | length }} |
+          casks={{ homebrew_casks | length }} |
+          dmg_apps={{ mac_dmg_apps | length }}
+
+  roles:
+    - role: common
+    - role: work
+      when: workstation_profile == 'work'
+    - role: personal
+      when: workstation_profile == 'personal'

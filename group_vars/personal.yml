@@ -1,0 +1,105 @@
+---
+# Personal machine profile — homelab, gaming, personal repos.
+
+projects_buckets:
+  - name: personal
+    finder_tag: Orange
+  - name: scratch
+  - name: workspace
+  - name: adobe
+    finder_tag: Red
+  - name: specterrealm
+    finder_tag: Green
+  - name: uvcyber
+    finder_tag: Purple
+  - name: archive
+
+managed_repos:
+  - repo: git@gitlab.com:Michael-Heaton/nexus.git  # not yet on GitHub
+    dest: personal/nexus
+  - repo: git@github.com:MichaelHeaton/MichaelHeaton.git
+    dest: personal/MichaelHeaton
+  - repo: git@github.com:MichaelHeaton/homelab-core.git
+    dest: specterrealm/homelab/homelab-core
+  - repo: git@github.com:MichaelHeaton/homelab-automation.git
+    dest: specterrealm/homelab/homelab-automation
+  - repo: git@github.com:MichaelHeaton/homelab-esports.git
+    dest: specterrealm/homelab/homelab-esports
+  - repo: git@github.com:MichaelHeaton/homelab-identity.git
+    dest: specterrealm/homelab/homelab-identity
+  - repo: git@github.com:MichaelHeaton/homelab-infra.git
+    dest: specterrealm/homelab/homelab-infra
+  - repo: git@github.com:MichaelHeaton/homelab-observability.git
+    dest: specterrealm/homelab/homelab-observability
+  - repo: git@github.com:MichaelHeaton/homelab-streaming.git
+    dest: specterrealm/homelab/homelab-streaming
+  - repo: git@github.com:MichaelHeaton/homelab-cicd-templates.git
+    dest: specterrealm/homelab/homelab-cicd-templates
+  - repo: git@github.com:MichaelHeaton/ansible-role-base-server.git
+    dest: specterrealm/homelab/ansible-role-base-server
+  - repo: git@github.com:MichaelHeaton/ansible-role-cloudflared.git
+    dest: specterrealm/homelab/ansible-role-cloudflared
+  - repo: git@github.com:MichaelHeaton/ansible-role-factorio.git
+    dest: specterrealm/homelab/ansible-role-factorio
+  - repo: git@github.com:MichaelHeaton/ansible-role-minecraft.git
+    dest: specterrealm/homelab/ansible-role-minecraft
+  - repo: git@github.com:MichaelHeaton/ansible-role-traefik.git
+    dest: specterrealm/homelab/ansible-role-traefik
+  - repo: git@github.com:MichaelHeaton/tf-module-cloudflare-tunnel.git
+    dest: specterrealm/homelab/tf-module-cloudflare-tunnel
+  - repo: git@github.com:MichaelHeaton/tf-module-dns-record.git
+    dest: specterrealm/homelab/tf-module-dns-record
+  - repo: git@github.com:MichaelHeaton/tf-module-docker-service.git
+    dest: specterrealm/homelab/tf-module-docker-service
+  - repo: git@github.com:MichaelHeaton/tf-module-game-server.git
+    dest: specterrealm/homelab/tf-module-game-server
+  - repo: git@github.com:MichaelHeaton/tf-module-ssl-cert.git
+    dest: specterrealm/homelab/tf-module-ssl-cert
+  - repo: git@github.com:MichaelHeaton/tf-module-vm-lxc.git
+    dest: specterrealm/homelab/tf-module-vm-lxc
+  - repo: git@github.com:MichaelHeaton/factorio-blueprints.git
+    dest: specterrealm/esport/factorio-blueprints
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-family.git
+    dest: specterrealm/esport/minecraft-modpack-family
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-cp-verdant.git
+    dest: specterrealm/esport/minecraft-modpack-cp-verdant
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-ltm.git
+    dest: specterrealm/esport/minecraft-modpack-ltm
+
+homebrew_install_packages: true
+homebrew_mas_enabled: true
+
+homebrew_formulae_profile:
+  - mas
+  - packer
+  - kubernetes-cli
+  - minikube
+  - consul
+  - go
+
+homebrew_go_binaries:
+  - module: github.com/packwiz/packwiz@latest
+    name: packwiz
+
+homebrew_casks_profile:
+  - lens
+  - balenaetcher
+  - synology-drive
+  - steam
+  - curseforge
+  - prismlauncher
+  - microsoft-teams
+  - signal
+  - sublime-text
+
+homebrew_cask_app_bundles:
+  microsoft-teams: Microsoft Teams.app
+
+mac_dmg_apps_profile:
+  - ai-spend-tracker
+mac_dmg_apps_install: true
+
+homebrew_mas_apps:
+  - id: "803453959"
+    name: Slack
+    bundle: Slack.app

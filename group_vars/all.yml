@@ -1,0 +1,101 @@
+---
+# Shared workstation configuration — profile-specific lists live in work.yml / personal.yml.
+
+workstation_profile_file: "{{ ansible_facts['env']['HOME'] }}/.workstation_profile"
+
+# --- Projects layout ---------------------------------------------------------
+
+projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
+
+git_ssh_hosts:
+  - github.com
+  - gitlab.com  # still needed for nexus + workspace (not yet on GitHub)
+
+# --- Bootstrap / install.sh --------------------------------------------------
+
+workstation_devops_repo: git@github.com:MichaelHeaton/workstation-devops.git
+workstation_devops_repo_https: https://github.com/MichaelHeaton/workstation-devops.git
+workstation_devops_dest: personal/workstation-devops
+workstation_devops_branch: main
+
+# Cloned on every profile (work + personal); merged with profile managed_repos in site.yml.
+managed_repos_common:
+  - repo: git@gitlab.com:Michael-Heaton/workspace.git
+    dest: workspace
+  # dest must match workstation_devops_dest (preflight reads YAML without Jinja)
+  - repo: git@github.com:MichaelHeaton/workstation-devops.git
+    dest: personal/workstation-devops
+  - repo: git@github.com:MichaelHeaton/claude-skills.git
+    dest: personal/claude-skills
+    install_cmd: make install
+  - repo: git@github.com:MichaelHeaton/memex.git
+    dest: personal/memex
+
+# --- Packages (detect-first; merged with profile extras in site.yml) ----------
+#
+# homebrew_install_packages — when false (work/Adobe), only detect PATH/apps; no brew install
+# homebrew_mas_enabled      — personal only by default; avoids MAS on locked-down Apple IDs
+# homebrew_upgrade          — opt-in brew update && brew upgrade on apply (default off)
+
+homebrew_install_packages: true
+homebrew_upgrade: false
+homebrew_mas_enabled: false
+
+homebrew_formulae_common:
+  - gh
+  - glab
+  - jq
+  - yq
+  - direnv
+  - terraform
+  - yamllint
+  - ansible-lint
+  - pre-commit
+  - shellcheck
+
+homebrew_casks_common:
+  - 1password
+  - brave-browser
+  - claude
+  - cursor
+  - github
+  - iterm2
+  - visual-studio-code
+  - docker-desktop
+  - obsidian
+
+# If the .app exists, homebrew/preflight skip brew install --cask (manual installs count).
+homebrew_cask_app_bundles_common:
+  1password: 1Password.app
+  brave-browser: Brave Browser.app
+  claude: Claude.app
+  cursor: Cursor.app
+  docker-desktop: Docker.app
+  github: GitHub Desktop.app
+  iterm2: iTerm.app
+  obsidian: Obsidian.app
+  visual-studio-code: Visual Studio Code.app
+
+homebrew_cask_app_bundles: {}
+
+# GitHub-release DMG apps (not Homebrew). Source may be Adobe-private; binaries are public.
+mac_dmg_apps_catalog:
+  ai-spend-tracker:
+    display_name: AI Spend Tracker
+    bundle: AISpendTracker.app
+    github_repo: roymerrill/ai-spend-tracker-releases
+    asset_name: AISpendTracker.dmg
+
+mac_dmg_apps_common: []
+mac_dmg_apps_install: false
+
+homebrew_mas_apps: []
+homebrew_go_bin_path: "{{ brew_prefix }}/bin"
+homebrew_go_binaries: []
+
+# --- Platform ------------------------------------------------------------------
+
+is_mac: "{{ ansible_facts['os_family'] == 'Darwin' }}"
+is_linux: "{{ ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'RedHat' }}"
+brew_prefix: "{{ '/opt/homebrew' if ansible_facts['machine'] == 'arm64' else '/usr/local' }}"
+brew_bin: "{{ brew_prefix }}/bin/brew"

@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# brave-profiles — apply Personal / Adobe / UV Cyber from dotfiles/brave-profiles/profiles.json
+# profile-version: v3.0.0
+
+set -euo pipefail
+
+BRAVE_APP="/Applications/Brave Browser.app"
+CONFIG_DIR="{{ .chezmoi.sourceDir }}/brave-profiles"
+CONFIG="${CONFIG_DIR}/profiles.json"
+BACKGROUNDS="${CONFIG_DIR}/backgrounds"
+
+if [[ ! -d "$BRAVE_APP" ]]; then
+  echo "brave-profiles: Brave Browser not installed, skipping"
+  exit 0
+fi
+
+if [[ ! -f "$CONFIG" ]]; then
+  echo "brave-profiles: missing ${CONFIG}"
+  exit 1
+fi
+
+if pgrep -xq "Brave Browser" 2>/dev/null; then
+  echo "brave-profiles: quit Brave Browser, then run make apply again"
+  exit 1
+fi
+
+echo "brave-profiles: applying from ${CONFIG}..."
+
+export CONFIG BACKGROUNDS
+python3 <<'PY'
+import json
+import os
+import shutil
+from pathlib import Path
+
+CONFIG = Path(os.environ["CONFIG"])
+BACKGROUNDS = Path(os.environ["BACKGROUNDS"])
+BRAVE_DATA = Path.home() / "Library/Application Support/BraveSoftware/Brave-Browser"
+
+spec = json.loads(CONFIG.read_text(encoding="utf-8"))
+
+
+def deep_merge(base: dict, patch: dict) -> dict:
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+for entry in spec["profiles"]:
+    dir_name = entry["dir"]
+    name = entry["name"]
+    prof_dir = BRAVE_DATA / dir_name
+    prof_dir.mkdir(parents=True, exist_ok=True)
+
+    prefs_path = prof_dir / "Preferences"
+    prefs: dict = {}
+    if prefs_path.exists():
+        prefs = json.loads(prefs_path.read_text(encoding="utf-8"))
+    deep_merge(prefs, entry.get("preferences", {}))
+    prefs_path.write_text(
+        json.dumps(prefs, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    print(f"  ✓ preferences: {name} ({dir_name})")
+
+    image_name = entry.get("background_image")
+    if image_name:
+        src = BACKGROUNDS / image_name
+        dest_dir = prof_dir / "sanitized_background_images"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / image_name
+        if src.is_file():
+            shutil.copy2(src, dest)
+            print(f"  ✓ background: {name} → {image_name}")
+        else:
+            print(f"  ⚠ missing background asset: {src}")
+
+local_state_path = BRAVE_DATA / "Local State"
+state: dict = {}
+if local_state_path.exists():
+    state = json.loads(local_state_path.read_text(encoding="utf-8"))
+
+profile_node = state.setdefault("profile", {})
+info_cache = profile_node.setdefault("info_cache", {})
+order: list[str] = profile_node.setdefault("profiles_order", [])
+
+for entry in spec["profiles"]:
+    dir_name = entry["dir"]
+    name = entry["name"]
+    meta = {
+        "is_using_default_name": False,
+        "name": name,
+        **entry.get("local_state", {}),
+    }
+    info_cache[dir_name] = {**info_cache.get(dir_name, {}), **meta}
+    if dir_name not in order:
+        order.append(dir_name)
+    print(f"  ✓ local state: {name} ({dir_name})")
+
+profile_node.setdefault("last_used", "Default")
+local_state_path.write_text(
+    json.dumps(state, ensure_ascii=False, separators=(",", ":")) + "\n",
+    encoding="utf-8",
+)
+
+print("brave-profiles: done")
+PY
