@@ -99,6 +99,30 @@
     - item.item.install_cmd is defined
   changed_when: true
 
+- name: Show repos that would be pulled (dry-run)
+  ansible.builtin.debug:
+    msg: "Would pull: {{ projects_root }}/{{ item.item.dest }}"
+  loop: "{{ repo_state.results }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  when:
+    - dry_run | default(false) | bool
+    - item.stat.exists
+    - item.item.install_cmd is defined
+
+- name: Pull latest commits for existing repos
+  ansible.builtin.git:
+    repo: "{{ item.item.repo }}"
+    dest: "{{ projects_root }}/{{ item.item.dest }}"
+    update: true
+  loop: "{{ repo_state.results }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  when:
+    - not (dry_run | default(false) | bool)
+    - item.stat.exists
+    - item.item.install_cmd is defined
+
 - name: Show install commands that would re-run for existing repos (dry-run)
   ansible.builtin.debug:
     msg: "Would re-run: {{ item.item.install_cmd }} in {{ projects_root }}/{{ item.item.dest }}"
