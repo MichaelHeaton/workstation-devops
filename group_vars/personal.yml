@@ -15,8 +15,6 @@ projects_buckets:
   - name: archive
 
 managed_repos:
-  - repo: git@gitlab.com:Michael-Heaton/nexus.git  # not yet on GitHub
-    dest: personal/nexus
   - repo: git@github.com:MichaelHeaton/MichaelHeaton.git
     dest: personal/MichaelHeaton
   - repo: git@github.com:MichaelHeaton/homelab-core.git
