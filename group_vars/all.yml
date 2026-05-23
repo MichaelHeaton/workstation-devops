@@ -9,12 +9,12 @@ projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
 
 git_ssh_hosts:
   - github.com
-  - gitlab.com
+  - gitlab.com  # still needed for nexus + workspace (not yet on GitHub)
 
 # --- Bootstrap / install.sh --------------------------------------------------
 
-workstation_devops_repo: git@gitlab.com:Michael-Heaton/workstation-devops.git
-workstation_devops_repo_https: https://gitlab.com/Michael-Heaton/workstation-devops.git
+workstation_devops_repo: git@github.com:MichaelHeaton/workstation-devops.git
+workstation_devops_repo_https: https://github.com/MichaelHeaton/workstation-devops.git
 workstation_devops_dest: personal/workstation-devops
 workstation_devops_branch: main
 
@@ -23,7 +23,7 @@ managed_repos_common:
   - repo: git@gitlab.com:Michael-Heaton/workspace.git
     dest: workspace
   # dest must match workstation_devops_dest (preflight reads YAML without Jinja)
-  - repo: git@gitlab.com:Michael-Heaton/workstation-devops.git
+  - repo: git@github.com:MichaelHeaton/workstation-devops.git
     dest: personal/workstation-devops
   - repo: git@github.com:MichaelHeaton/claude-skills.git
     dest: personal/claude-skills

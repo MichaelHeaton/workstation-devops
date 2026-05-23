@@ -15,55 +15,55 @@ projects_buckets:
   - name: archive
 
 managed_repos:
-  - repo: git@gitlab.com:Michael-Heaton/nexus.git
+  - repo: git@gitlab.com:Michael-Heaton/nexus.git  # not yet on GitHub
     dest: personal/nexus
   - repo: git@github.com:MichaelHeaton/MichaelHeaton.git
     dest: personal/MichaelHeaton
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-core.git
+  - repo: git@github.com:MichaelHeaton/homelab-core.git
     dest: specterrealm/homelab/homelab-core
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-automation.git
+  - repo: git@github.com:MichaelHeaton/homelab-automation.git
     dest: specterrealm/homelab/homelab-automation
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-esports.git
+  - repo: git@github.com:MichaelHeaton/homelab-esports.git
     dest: specterrealm/homelab/homelab-esports
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-identity.git
+  - repo: git@github.com:MichaelHeaton/homelab-identity.git
     dest: specterrealm/homelab/homelab-identity
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-infra.git
+  - repo: git@github.com:MichaelHeaton/homelab-infra.git
     dest: specterrealm/homelab/homelab-infra
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-observability.git
+  - repo: git@github.com:MichaelHeaton/homelab-observability.git
     dest: specterrealm/homelab/homelab-observability
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-streaming.git
+  - repo: git@github.com:MichaelHeaton/homelab-streaming.git
     dest: specterrealm/homelab/homelab-streaming
-  - repo: git@gitlab.com:specterrealm/homelab/homelab-cicd-templates.git
+  - repo: git@github.com:MichaelHeaton/homelab-cicd-templates.git
     dest: specterrealm/homelab/homelab-cicd-templates
-  - repo: git@gitlab.com:specterrealm/homelab/ansible-role-base-server.git
+  - repo: git@github.com:MichaelHeaton/ansible-role-base-server.git
     dest: specterrealm/homelab/ansible-role-base-server
-  - repo: git@gitlab.com:specterrealm/homelab/ansible-role-cloudflared.git
+  - repo: git@github.com:MichaelHeaton/ansible-role-cloudflared.git
     dest: specterrealm/homelab/ansible-role-cloudflared
-  - repo: git@gitlab.com:specterrealm/homelab/ansible-role-factorio.git
+  - repo: git@github.com:MichaelHeaton/ansible-role-factorio.git
     dest: specterrealm/homelab/ansible-role-factorio
-  - repo: git@gitlab.com:specterrealm/homelab/ansible-role-minecraft.git
+  - repo: git@github.com:MichaelHeaton/ansible-role-minecraft.git
     dest: specterrealm/homelab/ansible-role-minecraft
-  - repo: git@gitlab.com:specterrealm/homelab/ansible-role-traefik.git
+  - repo: git@github.com:MichaelHeaton/ansible-role-traefik.git
     dest: specterrealm/homelab/ansible-role-traefik
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-cloudflare-tunnel.git
+  - repo: git@github.com:MichaelHeaton/tf-module-cloudflare-tunnel.git
     dest: specterrealm/homelab/tf-module-cloudflare-tunnel
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-dns-record.git
+  - repo: git@github.com:MichaelHeaton/tf-module-dns-record.git
     dest: specterrealm/homelab/tf-module-dns-record
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-docker-service.git
+  - repo: git@github.com:MichaelHeaton/tf-module-docker-service.git
     dest: specterrealm/homelab/tf-module-docker-service
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-game-server.git
+  - repo: git@github.com:MichaelHeaton/tf-module-game-server.git
     dest: specterrealm/homelab/tf-module-game-server
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-ssl-cert.git
+  - repo: git@github.com:MichaelHeaton/tf-module-ssl-cert.git
     dest: specterrealm/homelab/tf-module-ssl-cert
-  - repo: git@gitlab.com:specterrealm/homelab/tf-module-vm-lxc.git
+  - repo: git@github.com:MichaelHeaton/tf-module-vm-lxc.git
     dest: specterrealm/homelab/tf-module-vm-lxc
-  - repo: git@gitlab.com:specterrealm/esports/factorio/factorio-blueprints.git
+  - repo: git@github.com:MichaelHeaton/factorio-blueprints.git
     dest: specterrealm/esport/factorio-blueprints
-  - repo: git@gitlab.com:specterrealm/esports/minecraft/minecraft-modpack-family.git
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-family.git
     dest: specterrealm/esport/minecraft-modpack-family
-  - repo: git@gitlab.com:specterrealm/esports/minecraft/minecraft-modpack-cp-verdant.git
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-cp-verdant.git
     dest: specterrealm/esport/minecraft-modpack-cp-verdant
-  - repo: git@gitlab.com:specterrealm/esports/minecraft/minecraft-modpack-ltm.git
+  - repo: git@github.com:MichaelHeaton/minecraft-modpack-ltm.git
     dest: specterrealm/esport/minecraft-modpack-ltm
 
 homebrew_install_packages: true
