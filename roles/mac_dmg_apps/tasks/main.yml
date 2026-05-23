@@ -157,7 +157,7 @@
           fi
         }
         trap cleanup EXIT
-        mount=$(hdiutil attach -nobrowse -quiet "$dmg" | awk 'END {print $NF}')
+        mount=$(hdiutil attach -nobrowse -quiet "$dmg" | awk -F'\t' '/\/Volumes/{print $NF}')
         if [[ ! -d "$mount/$bundle" ]]; then
           echo "Expected $mount/$bundle inside DMG" >&2
           exit 1
