@@ -15,7 +15,7 @@ Machine identity is stored in **`~/.workstation_profile`** (`work` or `personal`
 ## Quick start (new Mac)
 
 ```bash
-curl -fsSL "https://gitlab.com/Michael-Heaton/workstation-devops/-/raw/main/scripts/install.sh" | bash
+curl -fsSL "https://raw.githubusercontent.com/MichaelHeaton/workstation-devops/main/scripts/install.sh" | bash
 ```
 
 Creates `~/Projects`, clones this repo, installs Ansible (`make deps`), detects profile, runs the playbook (`make apply`).
@@ -24,7 +24,7 @@ Or manually:
 
 ```bash
 mkdir -p ~/Projects/personal
-git clone git@gitlab.com:Michael-Heaton/workstation-devops.git ~/Projects/personal/workstation-devops
+git clone git@github.com-personal:MichaelHeaton/workstation-devops.git ~/Projects/personal/workstation-devops
 cd ~/Projects/personal/workstation-devops
 ./setup.sh
 ```

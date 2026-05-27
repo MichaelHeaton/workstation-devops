@@ -16,12 +16,12 @@ Set profile once: `make profile` (writes `~/.workstation_profile`).
 
 1. Edit `group_vars/<profile>.yml` if needed.
 2. `make dry-run` then `make apply`.
-3. Consolidate legacy `~/Projects/workspaces` (GitHub) into `~/Projects/workspace` (GitLab) when ready — update relative paths in each `.code-workspace` file for the bucket layout.
+3. If you still have a duplicate tree at `~/Projects/workspaces/`, point `origin` at `git@github.com-personal:MichaelHeaton/workspaces.git` and use a single checkout at `~/Projects/workspace/` (playbook `dest`).
 4. Remove `~/Projects/adobe/workstation-ces_vault` if present — superseded by this repo ([docs/work/README.md](work/README.md)).
 
 ## Naming
 
 | Path | Remote |
 |------|--------|
-| `~/Projects/workspace/` | GitLab `workspace` (managed by playbook) |
-| `~/Projects/workspaces/` | Legacy GitHub repo — do not merge blindly |
+| `~/Projects/workspace/` | GitHub [MichaelHeaton/workspaces](https://github.com/MichaelHeaton/workspaces) (playbook `dest: workspace`) |
+| `~/Projects/personal/workstation-devops/` | GitHub [MichaelHeaton/workstation-devops](https://github.com/MichaelHeaton/workstation-devops) |
