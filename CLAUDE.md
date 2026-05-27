@@ -3,15 +3,16 @@
 > Claude Code configuration for workstation-devops.
 > For full project context, read [AGENT.md](AGENT.md) first.
 
-## Branch and MR rules
+## Branch and PR rules
 
-**Never push directly to `main`.** All changes go through a branch and merge request — no exceptions, even for single-file documentation changes.
+**Never push directly to `main`.** All changes go through a branch and pull request — no exceptions, even for single-file documentation changes.
 
 - Create a feature branch: `git checkout -b <type>/<short-description>`
-- Commit, push the branch, open an MR with `glab mr create`
+- Commit, push the branch, open a PR with `gh pr create`
+- Remote: `git@github.com-personal:MichaelHeaton/workstation-devops.git` on multi-account Macs
 - Do not merge without review
 
-This is a GitLab repo. The branch + MR rule applies regardless of how small the change feels.
+This repo is on GitHub. Homelab repos in `group_vars/personal.yml` may still use GitLab.
 
 ## Claude Code settings
 

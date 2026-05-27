@@ -3,3 +3,8 @@
 # MCP secrets and generated env files contain credentials — never manage with chezmoi
 dot_mcp/env/*.env
 dot_mcp/secrets/*.yml
+
+# AI workspace private answers — created by claude-skills make install on the machine
+.config/claude-skills/local.json
+.config/claude-skills/accounts.shell
+.config/claude-skills/leak-patterns

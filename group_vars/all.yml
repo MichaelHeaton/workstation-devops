@@ -7,27 +7,39 @@ workstation_profile_file: "{{ ansible_facts['env']['HOME'] }}/.workstation_profi
 
 projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
 
+# Finder color tags (work + personal). Profile bucket lists reference these by name.
+projects_bucket_finder_tags:
+  adobe: Red
+  personal: Orange
+  specterrealm: Green
+  uvcyber: Purple
+
 git_ssh_hosts:
   - github.com
+  - gitlab.com
 
 # --- Bootstrap / install.sh --------------------------------------------------
 
-workstation_devops_repo: git@github.com:MichaelHeaton/workstation-devops.git
+# Personal GitHub on multi-account Macs: git@github.com-personal:… (see memex Agents/11-development-standards.md)
+workstation_devops_repo: git@github.com-personal:MichaelHeaton/workstation-devops.git
 workstation_devops_repo_https: https://github.com/MichaelHeaton/workstation-devops.git
 workstation_devops_dest: personal/workstation-devops
 workstation_devops_branch: main
 
 # Cloned on every profile (work + personal); merged with profile managed_repos in site.yml.
 managed_repos_common:
-  - repo: git@github.com:MichaelHeaton/workspaces.git
+  # GitHub repo is "workspaces"; local bucket stays ~/Projects/workspace
+  - repo: git@github.com-personal:MichaelHeaton/workspaces.git
     dest: workspace
   # dest must match workstation_devops_dest (preflight reads YAML without Jinja)
-  - repo: git@github.com:MichaelHeaton/workstation-devops.git
+  - repo: git@github.com-personal:MichaelHeaton/workstation-devops.git
     dest: personal/workstation-devops
-  - repo: git@github.com:MichaelHeaton/claude-skills.git
+  - repo: git@github.com-personal:MichaelHeaton/claude-skills.git
     dest: personal/claude-skills
     install_cmd: make install
-  - repo: git@github.com:MichaelHeaton/memex.git
+  - repo: git@github.com-personal:MichaelHeaton/ai-skills.git
+    dest: personal/ai-skills
+  - repo: git@github.com-personal:MichaelHeaton/memex.git
     dest: personal/memex
 
 # --- Packages (detect-first; merged with profile extras in site.yml) ----------
