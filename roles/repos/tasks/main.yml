@@ -106,7 +106,9 @@
 
 - name: Show repos that would be pulled (dry-run)
   ansible.builtin.debug:
-    msg: "Would pull: {{ projects_root }}/{{ item.item.dest }}"
+    msg: >-
+      Would pull {{ projects_root }}/{{ item.item.dest }}
+      (skipped when working tree has local changes)
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
@@ -114,19 +116,50 @@
     - dry_run | default(false) | bool
     - item.stat.exists
     - item.item.install_cmd is defined
+    - managed_repos_pull | default(true) | bool
 
-- name: Pull latest commits for existing repos
-  ansible.builtin.git:
-    repo: "{{ item.item.repo }}"
-    dest: "{{ projects_root }}/{{ item.item.dest }}"
-    update: true
+- name: Check working tree before pull
+  ansible.builtin.command:
+    cmd: git status --porcelain
+    chdir: "{{ projects_root }}/{{ item.item.dest }}"
+  register: repo_worktree_status
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
+  changed_when: false
   when:
     - not (dry_run | default(false) | bool)
     - item.stat.exists
     - item.item.install_cmd is defined
+    - managed_repos_pull | default(true) | bool
+
+- name: Warn when pull skipped due to local changes
+  ansible.builtin.debug:
+    msg: >-
+      Skipping pull for {{ item.item.item.dest }} — local modifications present.
+      Commit, stash, or discard changes, then re-run make apply.
+  loop: "{{ repo_worktree_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.dest }}"
+  when:
+    - not item.skipped | default(false)
+    - item.stdout | default('') | trim | length > 0
+
+- name: Pull latest commits for existing repos (ff-only, clean tree only)
+  ansible.builtin.command:
+    cmd: git pull --ff-only
+    chdir: "{{ projects_root }}/{{ item.item.item.dest }}"
+  register: pull_result
+  loop: "{{ repo_worktree_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.dest }}"
+  when:
+    - not item.skipped | default(false)
+    - item.stdout | default('') | trim | length == 0
+  changed_when: >-
+    pull_result.rc == 0
+    and 'Already up to date' not in (pull_result.stdout | default(''))
+  failed_when: pull_result.rc != 0
 
 - name: Show install commands that would re-run for existing repos (dry-run)
   ansible.builtin.debug:
