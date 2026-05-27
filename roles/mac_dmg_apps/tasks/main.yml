@@ -1,0 +1,177 @@
+---
+# Install macOS apps from public GitHub release DMGs (detect-first; optional install).
+
+- name: MacOS DMG apps
+  when: is_mac | bool
+  block:
+    - name: Check DMG app bundles in /Applications
+      ansible.builtin.stat:
+        path: "/Applications/{{ item.bundle }}"
+      loop: "{{ mac_dmg_apps | default([]) }}"
+      loop_control:
+        label: "{{ item.display_name | default(item.id) }}"
+      register: mac_dmg_bundle_checks
+      when: mac_dmg_apps | default([]) | length > 0
+
+    - name: Record DMG apps already installed
+      ansible.builtin.set_fact:
+        mac_dmg_apps_present: >-
+          {{ mac_dmg_bundle_checks.results
+             | selectattr('stat.exists', 'defined')
+             | selectattr('stat.exists')
+             | map(attribute='item.id')
+             | list }}
+      when: mac_dmg_bundle_checks is defined
+
+    - name: Record DMG apps still needed
+      ansible.builtin.set_fact:
+        mac_dmg_apps_needed: >-
+          {{ mac_dmg_apps | default([])
+             | rejectattr('id', 'in', mac_dmg_apps_present | default([]))
+             | list }}
+      when: mac_dmg_apps | default([]) | length > 0
+
+    - name: Show DMG apps already installed (dry-run)
+      ansible.builtin.debug:
+        msg: "Satisfied: {{ item }} (/Applications present)"
+      loop: "{{ mac_dmg_apps_present | default([]) }}"
+      when:
+        - dry_run | default(false) | bool
+        - mac_dmg_apps_present | default([]) | length > 0
+
+    - name: Show DMG apps that would be installed (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would install {{ item.display_name | default(item.id) }}
+          from https://github.com/{{ item.github_repo }}/releases/latest
+          ({{ item.asset_name }})
+      loop: "{{ mac_dmg_apps_needed | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when:
+        - dry_run | default(false) | bool
+        - mac_dmg_apps_install | default(false) | bool
+        - mac_dmg_apps_needed | default([]) | length > 0
+
+    - name: Warn DMG app missing — install disabled (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Missing {{ item.display_name | default(item.id) }}.
+          Install from https://github.com/{{ item.github_repo }}/releases
+          or set mac_dmg_apps_install=true.
+      loop: "{{ mac_dmg_apps_needed | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when:
+        - dry_run | default(false) | bool
+        - not (mac_dmg_apps_install | default(false) | bool)
+        - mac_dmg_apps_needed | default([]) | length > 0
+
+    - name: Warn DMG app missing — install disabled
+      ansible.builtin.debug:
+        msg: >-
+          Missing {{ item.display_name | default(item.id) }} —
+          https://github.com/{{ item.github_repo }}/releases
+      loop: "{{ mac_dmg_apps_needed | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - not (mac_dmg_apps_install | default(false) | bool)
+        - mac_dmg_apps_needed | default([]) | length > 0
+
+    - name: Fetch latest GitHub release metadata
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/{{ item.github_repo }}/releases/latest"
+        headers:
+          Accept: application/vnd.github+json
+        return_content: true
+        status_code: 200
+      loop: "{{ mac_dmg_apps_needed | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      register: mac_dmg_release_meta
+      when:
+        - not (dry_run | default(false) | bool)
+        - mac_dmg_apps_install | default(false) | bool
+        - mac_dmg_apps_needed | default([]) | length > 0
+
+    - name: Resolve DMG download URL from release assets
+      ansible.builtin.set_fact:
+        mac_dmg_install_jobs: >-
+          {{
+            mac_dmg_install_jobs | default([])
+            + [{
+                'id': item.item.id,
+                'bundle': item.item.bundle,
+                'display_name': item.item.display_name | default(item.item.id),
+                'asset_name': item.item.asset_name,
+                'dmg_url': (
+                  item.json.assets
+                  | selectattr('name', 'equalto', item.item.asset_name)
+                  | map(attribute='browser_download_url')
+                  | list
+                  | first
+                  | default('')
+                )
+              }]
+          }}
+      loop: "{{ mac_dmg_release_meta.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.id }}"
+      when:
+        - item.json is defined
+        - item.status == 200
+
+    - name: Fail when release asset is missing
+      ansible.builtin.fail:
+        msg: >-
+          Release for {{ item.id }} has no asset named {{ item.asset_name }}.
+          Check https://github.com/{{ item.github_repo }}/releases
+      loop: "{{ mac_dmg_install_jobs | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when: item.dmg_url | default('') | length == 0
+
+    - name: Download release DMG
+      ansible.builtin.get_url:
+        url: "{{ item.dmg_url }}"
+        dest: "/tmp/{{ item.id }}-install.dmg"
+        mode: "0644"
+      loop: "{{ mac_dmg_install_jobs | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when:
+        - mac_dmg_install_jobs | default([]) | length > 0
+        - item.dmg_url | length > 0
+
+    - name: Install app from DMG into /Applications
+      ansible.builtin.shell: |
+        set -euo pipefail
+        dmg="{{ dmg_path }}"
+        bundle="{{ bundle }}"
+        mount=""
+        cleanup() {
+          if [[ -n "$mount" && -d "$mount" ]]; then
+            hdiutil detach "$mount" -quiet || true
+          fi
+        }
+        trap cleanup EXIT
+        mount=$(hdiutil attach -nobrowse "$dmg" | awk -F'\t' '/\/Volumes/{print $NF}')
+        if [[ ! -d "$mount/$bundle" ]]; then
+          echo "Expected $mount/$bundle inside DMG" >&2
+          exit 1
+        fi
+        cp -R "$mount/$bundle" /Applications/
+      args:
+        executable: /bin/bash
+        creates: "/Applications/{{ item.bundle }}"
+      vars:
+        dmg_path: "/tmp/{{ item.id }}-install.dmg"
+        bundle: "{{ item.bundle }}"
+      loop: "{{ mac_dmg_install_jobs | default([]) }}"
+      loop_control:
+        label: "{{ item.id }}"
+      when:
+        - mac_dmg_install_jobs | default([]) | length > 0
+        - item.dmg_url | length > 0

@@ -24,6 +24,11 @@ homebrew_casks_profile:
 homebrew_cask_app_bundles:
   microsoft-teams: Microsoft Teams.app
 
+# AI Spend Tracker — public DMG (no Adobe GitHub SSO). Detect always; install via make apply.
+mac_dmg_apps_profile:
+  - ai-spend-tracker
+mac_dmg_apps_install: true
+
 # Chezmoi identity — override on first run:
 #   ansible-playbook site.yml -e 'adobe_username=ult35127 full_name="Mike Heaton" adobe_email="user@adobe.com"'
 adobe_username: "{{ ansible_facts['user_id'] }}"

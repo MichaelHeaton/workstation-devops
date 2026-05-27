@@ -1,0 +1,3 @@
+---
+# GitHub-release DMG apps (not Homebrew casks). Binaries are public; source may be Adobe-private.
+mac_dmg_apps_install: false

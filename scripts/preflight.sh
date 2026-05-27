@@ -39,6 +39,7 @@ yq_bool() {
 }
 
 install_packages=$(yq_bool homebrew_install_packages "$PROFILE_CONFIG" true)
+mac_dmg_install=$(yq_bool mac_dmg_apps_install "$PROFILE_CONFIG" false)
 mas_enabled=$(yq_bool homebrew_mas_enabled "$PROFILE_CONFIG" false)
 
 brew_available=false
@@ -166,6 +167,36 @@ done < <({
   yq '.homebrew_casks_profile[]' "$PROFILE_CONFIG" 2>/dev/null || true
 })
 
+# ── GitHub-release DMG apps (not Homebrew) ────────────────────────────────────
+dmg_ids=()
+while IFS= read -r id; do
+  [[ -z "$id" ]] && continue
+  dmg_ids+=("$id")
+done < <({
+  yq '.mac_dmg_apps_common[]' "$ALL_CONFIG" 2>/dev/null || true
+  yq '.mac_dmg_apps_profile[]' "$PROFILE_CONFIG" 2>/dev/null || true
+})
+
+if [[ ${#dmg_ids[@]} -eq 0 ]]; then
+  note "DMG apps: none configured for profile"
+else
+  declare -A dmg_seen=()
+  for id in "${dmg_ids[@]}"; do
+    [[ -n "${dmg_seen[$id]:-}" ]] && continue
+    dmg_seen[$id]=1
+    bundle=$(yq ".mac_dmg_apps_catalog.${id}.bundle" "$ALL_CONFIG" 2>/dev/null || true)
+    display=$(yq ".mac_dmg_apps_catalog.${id}.display_name // \"${id}\"" "$ALL_CONFIG" 2>/dev/null || true)
+    repo=$(yq ".mac_dmg_apps_catalog.${id}.github_repo" "$ALL_CONFIG" 2>/dev/null || true)
+    if [[ -n "$bundle" && -d "/Applications/$bundle" ]]; then
+      ok "$display"
+    elif [[ "$mac_dmg_install" == "true" ]]; then
+      miss "$display" "run make apply (installs from github.com/${repo}/releases)"
+    else
+      miss "$display" "install from github.com/${repo}/releases or set mac_dmg_apps_install=true"
+    fi
+  done
+fi
+
 # ── Mac App Store apps (optional per profile) ─────────────────────────────────
 mas_count=$(yq '.homebrew_mas_apps | length' "$PROFILE_CONFIG" 2>/dev/null || echo 0)
 if [[ "$mas_enabled" != "true" || "$mas_count" -eq 0 ]]; then
@@ -197,6 +228,15 @@ else
         miss "$name" "mas install $id"
       fi
     done
+  fi
+fi
+
+# ── Work profile: KLAM CLI ────────────────────────────────────────────────────
+if [[ "$PROFILE" == "work" ]]; then
+  if command -v klam &>/dev/null; then
+    ok "klam"
+  else
+    miss "klam" "make apply with KLAM_ARTIFACTORY_API_KEY (see docs/work/klam.md)"
   fi
 fi
 

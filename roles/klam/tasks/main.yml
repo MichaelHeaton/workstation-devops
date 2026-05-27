@@ -1,0 +1,217 @@
+---
+# Install KLAM CLI from Adobe Artifactory and deploy ces_* credential aliases.
+# IAM groups must exist before profiles authenticate; install can run earlier.
+
+- name: KLAM role
+  when: klam_enabled | default(true) | bool
+  block:
+    - name: Resolve KLAM Artifactory API key (extra-var or env, not committed)
+      ansible.builtin.set_fact:
+        klam_artifactory_api_key_resolved: >-
+          {{ klam_artifactory_api_key
+             | default(lookup('env', 'KLAM_ARTIFACTORY_API_KEY'), true)
+             | default('', true) }}
+
+    - name: Check if KLAM CLI is on PATH
+      ansible.builtin.command: command -v klam
+      register: klam_cli_check
+      changed_when: false
+      failed_when: false
+
+    - name: Record whether KLAM CLI needs install
+      ansible.builtin.set_fact:
+        klam_install_needed: "{{ klam_cli_check.rc != 0 }}"
+
+    - name: Resolve Python user base for pip --user installs
+      ansible.builtin.command: python3 -m site --user-base
+      register: klam_python_user_base
+      changed_when: false
+      when: klam_install_needed | bool
+
+    - name: Show KLAM pip install plan (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would install {{ klam_pip_package }} via pip3 from Artifactory
+          (user={{ adobe_username }}, index={{ klam_artifactory_host }}/{{ klam_artifactory_pypi_path }}).
+          Pass -e klam_artifactory_api_key=... from your Artifactory profile API key.
+      when:
+        - dry_run | default(false) | bool
+        - klam_install_needed | bool
+
+    - name: KLAM install skipped — Artifactory API key not provided
+      ansible.builtin.debug:
+        msg: >-
+          klam not on PATH. Get an API key at https://artifactory.corp.adobe.com/artifactory/webapp/#/profile
+          (Edit Profile → API Key). This is not your ADOBENET password.
+          Then: export KLAM_ARTIFACTORY_API_KEY=... && make apply
+          (or EXTRA_VARS='-e klam_artifactory_api_key=...'). Manual: docs/work/klam.md
+      when:
+        - not (dry_run | default(false) | bool)
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length == 0
+
+    - name: Check pip3 is available for KLAM install
+      ansible.builtin.command: command -v pip3
+      register: klam_pip3_check
+      changed_when: false
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+
+    - name: Resolve KLAM Artifactory LDAP username
+      ansible.builtin.set_fact:
+        klam_artifactory_username_resolved: >-
+          {{ lookup('env', 'ADOBE_USERNAME')
+             | default(klam_artifactory_username, true)
+             | default(adobe_username, true) }}
+
+    - name: Warn when Artifactory username may be macOS account (not Adobe LDAP)
+      ansible.builtin.debug:
+        msg: >-
+          klam_artifactory_username is "{{ klam_artifactory_username_resolved }}"
+          (same as macOS login {{ ansible_facts['user_id'] }}).
+          Artifactory pip auth usually needs Adobe LDAP, e.g. ult35127:
+          export ADOBE_USERNAME=ult35127
+          or make apply EXTRA_VARS='-e adobe_username=ult35127'
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+        - klam_artifactory_username_resolved == ansible_facts['user_id']
+
+    - name: Fail when pip3 missing and KLAM install requested
+      ansible.builtin.fail:
+        msg: >-
+          pip3 is required to install KLAM. Install Python 3 / pip3, then re-run make apply
+          with -e klam_artifactory_api_key=...
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+        - not (klam_pip3_check.skipped | default(false))
+        - (klam_pip3_check.rc | default(1)) != 0
+
+    - name: Build KLAM Artifactory pip index URL (credentials URL-encoded)
+      ansible.builtin.set_fact:
+        klam_pip_index_url: >-
+          https://{{ klam_artifactory_username_resolved | urlencode }}:{{
+            klam_artifactory_api_key_resolved | urlencode
+          }}@{{ klam_artifactory_host }}/{{ klam_artifactory_pypi_path }}
+      no_log: true
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+        - not (klam_pip3_check.skipped | default(false))
+        - (klam_pip3_check.rc | default(1)) == 0
+
+    - name: Build pip argv for KLAM install
+      ansible.builtin.set_fact:
+        klam_pip_argv: >-
+          {{
+            ['python3', '-m', 'pip', 'install', '--user']
+            + (['--break-system-packages'] if klam_pip_break_system_packages | bool else [])
+            + [klam_pip_package, '-i', klam_pip_index_url]
+          }}
+      no_log: true
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+        - not (klam_pip3_check.skipped | default(false))
+        - (klam_pip3_check.rc | default(1)) == 0
+
+    - name: Install KLAM CLI from Artifactory (pip --user)
+      ansible.builtin.command:
+        argv: "{{ klam_pip_argv }}"
+      environment:
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        PIP_BREAK_SYSTEM_PACKAGES: "{{ '1' if klam_pip_break_system_packages | bool else '0' }}"
+      register: klam_pip_install
+      changed_when: >-
+        klam_pip_install.rc == 0 and (
+          'Successfully installed' in (klam_pip_install.stdout | default(''))
+          or 'Requirement already satisfied' not in (klam_pip_install.stdout | default(''))
+        )
+      no_log: true
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+        - not (klam_pip3_check.skipped | default(false))
+        - (klam_pip3_check.rc | default(1)) == 0
+
+    - name: Report KLAM pip install failure (credentials redacted)
+      ansible.builtin.fail:
+        msg: >-
+          KLAM pip install failed (rc={{ klam_pip_install.rc }}).
+          LDAP user={{ klam_artifactory_username_resolved }}.
+          Common fixes: (1) export ADOBE_USERNAME=ult35127 if Artifactory 401,
+          (2) regenerate Artifactory API key if expired,
+          (3) VPN on, (4) manual: docs/work/klam.md.
+          pip: >-
+            {{ (klam_pip_install.stderr | default('') + klam_pip_install.stdout | default(''))
+               | regex_replace(klam_artifactory_api_key_resolved, '***')
+               | truncate(800, True) }}
+      when:
+        - klam_pip_install is defined
+        - not (klam_pip_install.skipped | default(false))
+        - (klam_pip_install.rc | default(0)) != 0
+
+    - name: Re-check KLAM CLI after pip install
+      ansible.builtin.command: command -v klam
+      register: klam_cli_recheck
+      changed_when: false
+      failed_when: false
+      when:
+        - klam_install_needed | bool
+        - klam_artifactory_api_key_resolved | length > 0
+        - not (dry_run | default(false) | bool)
+
+    - name: Warn when KLAM still missing after pip install
+      ansible.builtin.debug:
+        msg: >-
+          pip finished but klam is not on PATH. Open a new shell or add
+          {{ klam_python_user_base.stdout | default('$(python3 -m site --user-base)') }}/bin to PATH.
+          Aliases in ~/.config/workstation-devops/klam_aliases.zsh prepend this path automatically.
+      when:
+        - klam_install_needed | bool
+        - not (dry_run | default(false) | bool)
+        - klam_pip_install is defined
+        - not (klam_pip_install.skipped | default(false))
+        - klam_cli_recheck is defined
+        - not (klam_cli_recheck.skipped | default(false))
+        - (klam_cli_recheck.rc | default(0)) != 0
+
+    - name: Ensure workstation-devops config directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Deploy KLAM shell aliases
+      ansible.builtin.copy:
+        src: klam_aliases.zsh
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops/klam_aliases.zsh"
+        mode: "0644"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Show KLAM aliases deploy (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would deploy ~/.config/workstation-devops/klam_aliases.zsh
+          and source it from ~/.zshrc (ces_sandbox / ces_dev / ces_prd aliases).
+      when: dry_run | default(false) | bool
+
+    - name: Source KLAM aliases from zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops klam"
+        block: |
+          # KLAM AWS credential aliases (workstation-devops work profile)
+          export CES_KLAM_TERM_BG="${CES_KLAM_TERM_BG:-1}"
+          [[ -f "$HOME/.config/workstation-devops/klam_aliases.zsh" ]] && source "$HOME/.config/workstation-devops/klam_aliases.zsh"
+        insertafter: EOF
+      when: not (dry_run | default(false) | bool)
