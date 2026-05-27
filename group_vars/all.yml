@@ -42,6 +42,9 @@ managed_repos_common:
   - repo: git@github.com-personal:MichaelHeaton/memex.git
     dest: personal/memex
 
+# ff-only pull for repos with install_cmd; skipped when the working tree is dirty
+managed_repos_pull: true
+
 # --- Packages (detect-first; merged with profile extras in site.yml) ----------
 #
 # homebrew_install_packages — when false (work/Adobe), only detect PATH/apps; no brew install
