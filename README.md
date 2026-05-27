@@ -67,8 +67,8 @@ roles/personal/          # personal-only hooks
 **Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs Adobe).
 
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
-- **`personal/claude-skills`** — skills (`install.sh` on first clone and re-apply)
-- **`personal/ai-skills`** — portable AI skills workspace (clone only until install story exists)
+- **`personal/ai-skills`** — portable AI workspace (`make install-system` on clone and re-apply)
+- **`personal/claude-skills`** — legacy mirror (clone only; deploy from ai-skills)
 - **`personal/memex`** — knowledge vault
 
 ## Work profile (CES Vault)
