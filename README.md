@@ -6,7 +6,7 @@ Single Ansible workstation bootstrap for **personal** and **work** machines. Pro
 
 | File | Purpose |
 |------|---------|
-| `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, memex) |
+| `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, ai-skills, memex) |
 | `group_vars/personal.yml` | Homelab repos, gaming, personal buckets |
 | `group_vars/work.yml` | Adobe layout, CES Vault repos, work identity |
 
@@ -68,6 +68,7 @@ roles/personal/          # personal-only hooks
 
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
 - **`personal/claude-skills`** — skills (`install.sh` on first clone and re-apply)
+- **`personal/ai-skills`** — portable AI skills workspace (clone only until install story exists)
 - **`personal/memex`** — knowledge vault
 
 ## Work profile (CES Vault)

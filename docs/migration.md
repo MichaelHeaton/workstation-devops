@@ -7,7 +7,7 @@ The playbook only creates buckets and clones for the active profile in **`group_
 Edit profile vars in [group_vars/personal.yml](../group_vars/personal.yml) or [group_vars/work.yml](../group_vars/work.yml):
 
 - **`projects_buckets`** — top-level folders (e.g. `personal`, `workspace`, `adobe`)
-- **`managed_repos_common`** (`all.yml`) — workspace, workstation-devops, claude-skills, memex on every machine
+- **`managed_repos_common`** (`all.yml`) — workspace, workstation-devops, claude-skills, ai-skills, memex on every machine
 - **`managed_repos`** (profile yml) — additional clones per profile (`dest` relative to `projects_root`)
 
 Set profile once: `make profile` (writes `~/.workstation_profile`).

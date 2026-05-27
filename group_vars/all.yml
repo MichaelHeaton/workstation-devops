@@ -7,6 +7,13 @@ workstation_profile_file: "{{ ansible_facts['env']['HOME'] }}/.workstation_profi
 
 projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
 
+# Finder color tags (work + personal). Profile bucket lists reference these by name.
+projects_bucket_finder_tags:
+  adobe: Red
+  personal: Orange
+  specterrealm: Green
+  uvcyber: Purple
+
 git_ssh_hosts:
   - github.com
   - gitlab.com
@@ -28,6 +35,8 @@ managed_repos_common:
   - repo: git@github.com:MichaelHeaton/claude-skills.git
     dest: personal/claude-skills
     install_cmd: make install
+  - repo: git@github.com:MichaelHeaton/ai-skills.git
+    dest: personal/ai-skills
   - repo: git@github.com:MichaelHeaton/memex.git
     dest: personal/memex
 

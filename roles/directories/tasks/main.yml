@@ -1,4 +1,15 @@
 ---
+# Tag resolution: bucket finder_tag override → projects_bucket_finder_tags (all.yml) → clear.
+
+- name: Build resolved Finder tag lookup
+  ansible.builtin.set_fact:
+    resolved_finder_tags: >-
+      {{ resolved_finder_tags | default({})
+         | combine({item.name: item.finder_tag | default(projects_bucket_finder_tags.get(item.name, 'clear'))}) }}
+  loop: "{{ projects_buckets }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 - name: Stat project directories
   ansible.builtin.stat:
     path: "{{ projects_root }}/{{ item.name }}"
@@ -11,7 +22,8 @@
   ansible.builtin.debug:
     msg: >-
       Would create {{ projects_root }}/{{ item.item.name }}{{
-        ' (Finder tag: ' ~ item.item.finder_tag ~ ')' if item.item.finder_tag is defined
+        ' (Finder tag: ' ~ resolved_finder_tags[item.item.name] ~ ')'
+        if resolved_finder_tags[item.item.name] != 'clear'
         else ' (clear Finder tag)'
       }}
   loop: "{{ dir_state.results }}"
@@ -37,7 +49,9 @@
 - name: Show Finder tags that would be synced (dry-run)
   ansible.builtin.debug:
     msg: >-
-      Would {{ 'set Finder tag ' ~ item.item.finder_tag if item.item.finder_tag is defined else 'clear Finder tag' }}
+      Would {{ 'set Finder tag ' ~ resolved_finder_tags[item.item.name]
+        if resolved_finder_tags[item.item.name] != 'clear'
+        else 'clear Finder tag' }}
       on {{ projects_root }}/{{ item.item.name }}
   loop: "{{ current_finder_tags.results | default([]) }}"
   loop_control:
@@ -46,7 +60,7 @@
     - dry_run | default(false) | bool
     - is_mac | bool
     - item.item.name in (dir_state.results | selectattr('stat.exists') | map(attribute='item.name') | list)
-    - (item.item.finder_tag | default('clear')) != (item.stdout | default('') | trim)
+    - resolved_finder_tags[item.item.name] != (item.stdout | default('') | trim)
 
 - name: Create Projects directory structure
   ansible.builtin.file:
@@ -64,12 +78,12 @@
       - python3
       - "{{ role_path }}/files/set_finder_tag.py"
       - "{{ projects_root }}/{{ item.item.name }}"
-      - "{{ item.item.finder_tag | default('clear') }}"
+      - "{{ resolved_finder_tags[item.item.name] }}"
   loop: "{{ current_finder_tags.results | default([]) }}"
   loop_control:
     label: "{{ item.item.name }}"
   when:
     - not (dry_run | default(false) | bool)
     - is_mac | bool
-    - (item.item.finder_tag | default('clear')) != (item.stdout | default('') | trim)
+    - resolved_finder_tags[item.item.name] != (item.stdout | default('') | trim)
   changed_when: true

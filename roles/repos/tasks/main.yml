@@ -46,17 +46,22 @@
     - dry_run | default(false) | bool
     - not item.stat.exists
 
+# ansible.builtin.git always checks out init.defaultBranch (e.g. Main) after clone;
+# that fails on empty remotes with no refs. Plain git clone matches manual behavior.
 - name: Clone managed repos
-  ansible.builtin.git:
-    repo: "{{ item.item.repo }}"
-    dest: "{{ projects_root }}/{{ item.item.dest }}"
-    update: false
+  ansible.builtin.command:
+    cmd: >-
+      git clone
+      {% if item.item.version is defined %}-b {{ item.item.version | quote }}{% endif %}
+      {{ item.item.repo | quote }}
+      {{ (projects_root ~ '/' ~ item.item.dest) | quote }}
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
   when:
     - not (dry_run | default(false) | bool)
     - not item.stat.exists
+  changed_when: true
 
 - name: Run post-clone install commands
   ansible.builtin.command:

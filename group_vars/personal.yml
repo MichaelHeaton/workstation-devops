@@ -3,15 +3,11 @@
 
 projects_buckets:
   - name: personal
-    finder_tag: Orange
   - name: scratch
   - name: workspace
   - name: adobe
-    finder_tag: Red
   - name: specterrealm
-    finder_tag: Green
   - name: uvcyber
-    finder_tag: Purple
   - name: archive
 
 managed_repos:
