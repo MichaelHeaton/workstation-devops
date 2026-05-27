@@ -4,7 +4,11 @@
 dot_mcp/env/*.env
 dot_mcp/secrets/*.yml
 
-# AI workspace private answers — created by claude-skills make install on the machine
+# AI workspace private answers — created by ai-skills make install-system on the machine
+.config/ai-skills/local.json
+.config/ai-skills/accounts.shell
+.config/ai-skills/leak-patterns
+# Legacy path (migrate to ai-skills)
 .config/claude-skills/local.json
 .config/claude-skills/accounts.shell
 .config/claude-skills/leak-patterns

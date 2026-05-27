@@ -1,39 +1,43 @@
 # AI local configuration (private answers)
 
-Both **claude-skills** and **workstation-devops** are **public** repositories. Do not store employer-specific metadata in either repo.
+**ai-skills**, **workstation-devops**, and **claude-skills** are **public** repositories. Do not store employer-specific metadata in any of them.
 
 ## Where answers live
 
 | File | Created by | Committed? |
 |------|------------|------------|
-| `~/.config/claude-skills/local.json` | `make install` in claude-skills | **Never** |
-| `~/.config/claude-skills/accounts.shell` | `make install` (shell/direnv) | **Never** |
-| `~/.config/claude-skills/leak-patterns` | optional private pre-commit regexes | **Never** |
-| `~/.claude/CLAUDE.local.md` | claude-skills install (optional) | **Never** |
+| `~/.config/ai-skills/local.json` | `make install-system` in ai-skills | **Never** |
+| `~/.config/ai-skills/accounts.shell` | copy from template (optional) | **Never** |
+| `~/.config/ai-skills/leak-patterns` | optional private pre-commit regexes | **Never** |
+| `~/.claude/CLAUDE.local.md` | manual (optional) | **Never** |
 
-Templates (safe to commit) live in claude-skills:
+Templates (safe to commit) live in **ai-skills**:
 
 - `config/local.template.json`
 - `config/accounts.shell.template`
 
 ## Workstation playbook role
 
-`group_vars/all.yml` clones claude-skills and runs `make install`. That only deploys **templates** and symlinks — not your filled-in answers.
+`group_vars/all.yml` clones ai-skills and runs `make install-system`. That deploys **copies** to `~/.claude/` and creates `local.json` from the template if missing — not your filled-in answers.
 
 After a playbook run:
 
-1. Edit `~/.config/claude-skills/local.yaml` with Jira base URL, project key, SharePoint deck URL, channel names, repo paths, etc.
-2. Edit `~/.config/claude-skills/local.env` for shell scripts (`setup-account.sh`, `SKILLS_WORK_ORGS`).
+1. Edit `~/.config/ai-skills/local.json` with Jira base URL, project key, channel names, repo paths, etc.
+2. Copy `config/accounts.shell.template` → `~/.config/ai-skills/accounts.shell` if you use shell exports.
 3. Re-run `direnv allow` in repos that use `.envrc`.
+
+## Migration from `~/.config/claude-skills/`
+
+Copy values into `~/.config/ai-skills/local.json` once, then use the new path only. See ai-skills `docs/guides/local-config.md`.
 
 ## Optional: backup private config
 
-- Time Machine / workstation backup including `~/.config/claude-skills/`
+- Time Machine / workstation backup including `~/.config/ai-skills/`
 - Encrypted chezmoi data source (advanced)
-- Private git repo (e.g. GitLab private) — **do not** add to public workstation-devops
+- Private git repo — **do not** add to public workstation-devops
 
-Chezmoi in this repo ignores MCP secrets under `dot_mcp/secrets/` — treat `local.yaml` the same way: **never** add it under `dotfiles/`.
+Chezmoi in this repo ignores MCP secrets under `dot_mcp/secrets/` — treat `local.json` the same way: **never** add it under `dotfiles/`.
 
 ## See also
 
-- claude-skills: `references/local-config.md`, `docs/multi-ai.md`
+- ai-skills: `docs/guides/local-config.md`, `docs/multi-ai.md`
