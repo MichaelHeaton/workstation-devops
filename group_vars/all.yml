@@ -39,6 +39,7 @@ managed_repos_common:
     install_cmd: make install
   - repo: git@github.com-personal:MichaelHeaton/ai-skills.git
     dest: personal/ai-skills
+    version: main
   - repo: git@github.com-personal:MichaelHeaton/memex.git
     dest: personal/memex
 
