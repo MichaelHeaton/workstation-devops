@@ -1,0 +1,159 @@
+---
+# Pin Azure/kubelogin to v0.1.9 for Ethos kubectl OIDC (do not use brew upgrade).
+
+- name: Kubernetes role (kubelogin)
+  when: kubernetes_enabled | default(true) | bool
+  tags:
+    - work
+  block:
+    - name: Resolve kubelogin release asset for this platform
+      ansible.builtin.set_fact:
+        kubelogin_zip_asset: >-
+          {{
+            'kubelogin-darwin-arm64.zip' if ansible_facts['os_family'] == 'Darwin' and ansible_facts['machine'] == 'arm64'
+            else 'kubelogin-darwin-amd64.zip' if ansible_facts['os_family'] == 'Darwin'
+            else 'kubelogin-linux-arm64.zip' if ansible_facts['machine'] == 'arm64'
+            else 'kubelogin-linux-amd64.zip'
+          }}
+        kubelogin_bin_subpath: >-
+          {{
+            'bin/darwin_arm64/kubelogin' if ansible_facts['os_family'] == 'Darwin' and ansible_facts['machine'] == 'arm64'
+            else 'bin/darwin_amd64/kubelogin' if ansible_facts['os_family'] == 'Darwin'
+            else 'bin/linux_arm64/kubelogin' if ansible_facts['machine'] == 'arm64'
+            else 'bin/linux_amd64/kubelogin'
+          }}
+
+    - name: Ensure kubelogin install directory exists
+      ansible.builtin.file:
+        path: "{{ kubelogin_install_dir }}"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Probe kubelogin version in install directory
+      ansible.builtin.command:
+        argv:
+          - "{{ kubelogin_install_dir }}/kubelogin"
+          - --version
+      register: kubelogin_managed_version_probe
+      changed_when: false
+      failed_when: false
+      when: not (dry_run | default(false) | bool)
+
+    - name: Set kubelogin install requirement
+      ansible.builtin.set_fact:
+        kubelogin_install_needed: >-
+          {{
+            (kubelogin_managed_version_probe.skipped | default(false))
+            or ((kubelogin_managed_version_probe.rc | default(1)) != 0)
+            or (('v' ~ kubelogin_version ~ '/') not in (kubelogin_managed_version_probe.stdout | default('')))
+          }}
+      when: not (dry_run | default(false) | bool)
+
+    - name: Assume kubelogin install needed for dry-run preview
+      ansible.builtin.set_fact:
+        kubelogin_install_needed: true
+      when: dry_run | default(false) | bool
+
+    - name: Check kubectl is on PATH
+      ansible.builtin.command: command -v kubectl
+      register: kubernetes_kubectl_check
+      changed_when: false
+      failed_when: false
+
+    - name: Remind when kubectl is missing
+      ansible.builtin.debug:
+        msg: >-
+          kubectl not on PATH. kubelogin will install to {{ kubelogin_install_dir }}
+          but Ethos kubeconfig steps need kubectl too (IT install or kubernetes-cli formula).
+      when: (kubernetes_kubectl_check.rc | default(1)) != 0
+
+    - name: Warn when Homebrew kubelogin may override PATH
+      ansible.builtin.command: "{{ brew_bin }} list kubelogin"
+      register: kubernetes_brew_kubelogin
+      changed_when: false
+      failed_when: false
+      when:
+        - ansible_facts['os_family'] == 'Darwin'
+        - brew_bin is defined
+
+    - name: Show Homebrew kubelogin PATH note
+      ansible.builtin.debug:
+        msg: >-
+          Homebrew kubelogin is installed. This role pins v{{ kubelogin_version }} under
+          {{ kubelogin_install_dir }} (prepended via shell-common PATH). Do not brew upgrade kubelogin.
+      when:
+        - kubernetes_brew_kubelogin is defined
+        - not (kubernetes_brew_kubelogin.skipped | default(false))
+        - (kubernetes_brew_kubelogin.rc | default(1)) == 0
+
+    - name: Show kubelogin install plan (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would install kubelogin v{{ kubelogin_version }} from
+          https://github.com/{{ kubelogin_github_repo }}/releases/download/v{{ kubelogin_version }}/{{ kubelogin_zip_asset }}
+          → {{ kubelogin_install_dir }}/kubelogin (+ kubectl-oidc_login symlink).
+      when:
+        - dry_run | default(false) | bool
+        - kubelogin_install_needed | default(true) | bool
+
+    - name: Skip kubelogin download — correct version already installed
+      ansible.builtin.debug:
+        msg: "kubelogin v{{ kubelogin_version }} already installed at {{ kubelogin_install_dir }}/kubelogin"
+      when:
+        - not (dry_run | default(false) | bool)
+        - not (kubelogin_install_needed | default(true) | bool)
+
+    - name: Download kubelogin release zip
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/{{ kubelogin_github_repo }}/releases/download/v{{ kubelogin_version }}/{{ kubelogin_zip_asset }}
+        dest: "/tmp/kubelogin-v{{ kubelogin_version }}-install.zip"
+        mode: "0644"
+      when:
+        - not (dry_run | default(false) | bool)
+        - kubelogin_install_needed | default(true) | bool
+
+    - name: Install kubelogin binary from release zip
+      ansible.builtin.shell: |
+        set -euo pipefail
+        zip="/tmp/kubelogin-v{{ kubelogin_version }}-install.zip"
+        extract="/tmp/kubelogin-v{{ kubelogin_version }}-extract"
+        bin="{{ kubelogin_bin_subpath }}"
+        install -d "{{ kubelogin_install_dir }}"
+        rm -rf "$extract"
+        unzip -q "$zip" -d "$extract"
+        install -m 0755 "$extract/$bin" "{{ kubelogin_install_dir }}/kubelogin"
+        ln -sf kubelogin "{{ kubelogin_install_dir }}/kubectl-oidc_login"
+        rm -rf "$extract" "$zip"
+      args:
+        executable: /bin/bash
+      register: kubelogin_install
+      changed_when: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - kubelogin_install_needed | default(true) | bool
+
+    - name: Verify kubelogin version after install
+      ansible.builtin.command:
+        argv:
+          - "{{ kubelogin_install_dir }}/kubelogin"
+          - --version
+      register: kubelogin_post_install_version
+      changed_when: false
+      failed_when: >-
+        ('v' ~ kubelogin_version ~ '/') not in (kubelogin_post_install_version.stdout | default(''))
+      when:
+        - not (dry_run | default(false) | bool)
+        - kubelogin_install is defined
+        - not (kubelogin_install.skipped | default(false))
+
+    - name: Ensure kubectl oidc-login plugin symlink exists
+      ansible.builtin.file:
+        src: kubelogin
+        dest: "{{ kubelogin_install_dir }}/kubectl-oidc_login"
+        state: link
+        force: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - not (kubelogin_install_needed | default(true) | bool)

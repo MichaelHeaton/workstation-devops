@@ -1,0 +1,2 @@
+# Work profile only — Adobe internal extension (Cursor + VS Code when available).
+adobe-pass-aide-netra.adobe-developer-toolkit

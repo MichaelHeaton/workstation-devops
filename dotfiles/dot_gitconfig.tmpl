@@ -1,0 +1,20 @@
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+[user]
+	name = {{ .full_name | default "Michael Heaton" }}
+	email = {{ .email | default (printf "%s@adobe.com" .adobe_username) }}
+[credential "https://github.com"]
+	helper =
+	helper = !{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
+[includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal/"]
+	path = ~/.gitconfig-personal
+[includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal-gitlab/"]
+	path = ~/.gitconfig-personal
+[core]
+	excludesfile = {{ .chezmoi.homeDir }}/.gitignore_global

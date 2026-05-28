@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# install-editor-extensions — sync extension lists to Cursor and VS Code.
+#
+# Lists live under {{ .chezmoi.sourceDir }}/editors/*.txt (one extension id per line).
+# Idempotent: --install-extension skips already-installed extensions.
+#
+# Bump to force re-run:
+# editor-extensions-version: v1.0.0
+# {{ include "editors/extensions-common.txt" | sha256sum }}
+# {{ include "editors/extensions-cursor.txt" | sha256sum }}
+# {{ include "editors/extensions-work.txt" | sha256sum }}
+
+set -euo pipefail
+
+SOURCE_DIR="{{ .chezmoi.sourceDir }}/editors"
+COMMON="${SOURCE_DIR}/extensions-common.txt"
+CURSOR_ONLY="${SOURCE_DIR}/extensions-cursor.txt"
+WORK="${SOURCE_DIR}/extensions-work.txt"
+
+install_from_list() {
+  local bin="$1" label="$2" list="$3"
+  [[ -x "$bin" ]] || { echo "install-editor-extensions: $label not found at $bin, skipping"; return 0; }
+  [[ -f "$list" ]] || { echo "install-editor-extensions: missing $list"; return 0; }
+
+  echo "install-editor-extensions: $label"
+  while IFS= read -r ext || [[ -n "$ext" ]]; do
+    ext="${ext%%#*}"
+    ext="$(echo "$ext" | xargs)"
+    [[ -z "$ext" ]] && continue
+    if "$bin" --install-extension "$ext" --force 2>/dev/null; then
+      echo "  ✓ $ext"
+    else
+      echo "  ⚠ $ext (install failed or unavailable for $label)" >&2
+    fi
+  done < "$list"
+}
+
+CURSOR_BIN="/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
+CODE_BIN="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+
+install_from_list "$CURSOR_BIN" "Cursor" "$COMMON"
+install_from_list "$CODE_BIN" "VS Code" "$COMMON"
+install_from_list "$CURSOR_BIN" "Cursor (cursor-only)" "$CURSOR_ONLY"
+
+{{ if .feature_work -}}
+install_from_list "$CURSOR_BIN" "Cursor (work)" "$WORK"
+install_from_list "$CODE_BIN" "VS Code (work)" "$WORK"
+{{ end -}}
+
+echo "install-editor-extensions: done"

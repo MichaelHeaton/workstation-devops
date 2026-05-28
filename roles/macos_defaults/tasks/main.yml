@@ -67,16 +67,16 @@
               - "{{ macos_defaults_apple_notes_plist }}"
           register: macos_defaults_notes_plist_apply
           changed_when: "'summary=changed' in macos_defaults_notes_plist_apply.stdout"
-          failed_when: macos_defaults_notes_plist_apply.rc != 0
+          failed_when: false
 
-      rescue:
         - name: Warn — could not write Apple Notes sandbox plist
           ansible.builtin.debug:
             msg: >-
               PlistBuddy could not update {{ macos_defaults_apple_notes_plist }}
               (common on sandboxed Notes — grant Full Disk Access to your terminal,
               or rely on NSGlobalDomain fallback).
-              {{ ansible_failed_result.msg | default('unknown error') }}
+              {{ macos_defaults_notes_plist_apply.stderr | default('unknown error') | trim }}
+          when: macos_defaults_notes_plist_apply.rc != 0
 
         - name: Apply smart quote/dash overrides via NSGlobalDomain (fallback)
           community.general.osx_defaults:
@@ -87,7 +87,9 @@
           loop: "{{ macos_defaults_apple_notes | dict2items }}"
           loop_control:
             label: "{{ item.key }}"
-          when: macos_defaults_apple_notes_global_fallback | bool
+          when:
+            - macos_defaults_apple_notes_global_fallback | bool
+            - macos_defaults_notes_plist_apply.rc != 0
 
     - name: Show NSGlobalDomain smart typography defaults that would be applied (dry-run)
       ansible.builtin.debug:

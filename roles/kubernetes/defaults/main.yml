@@ -1,0 +1,5 @@
+---
+kubernetes_enabled: true
+kubelogin_version: "0.1.9"
+kubelogin_install_dir: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+kubelogin_github_repo: Azure/kubelogin

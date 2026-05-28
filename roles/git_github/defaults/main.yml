@@ -1,0 +1,4 @@
+---
+git_github_enabled: true
+# Private key basename under ~/.ssh/ (upload .pub to GHEC — never commit keys)
+ghec_ssh_key: id_ed25519_github

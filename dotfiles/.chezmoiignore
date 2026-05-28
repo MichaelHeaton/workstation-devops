@@ -12,3 +12,9 @@ dot_mcp/secrets/*.yml
 .config/claude-skills/local.json
 .config/claude-skills/accounts.shell
 .config/claude-skills/leak-patterns
+
+# Cursor MCP secrets — copy from dot_cursor/.env.example
+dot_cursor/.env
+
+# gh auth tokens — created by gh auth login; never manage with chezmoi
+.config/gh/hosts.yml

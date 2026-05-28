@@ -1,0 +1,4 @@
+# Work-tagged shell exports (workstation-devops) — Teleport, Confluence, Vault SSH
+export TELEPORT_LOGIN={{ adobe_username }}
+export CONFLUENCE_USER={{ adobe_username }}
+alias vssh='tsh ssh --request-reason="Vault admin" -- -t bash'

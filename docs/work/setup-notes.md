@@ -21,25 +21,20 @@ If `~/.config/chezmoi/chezmoi.yaml` is not seeded:
 make apply EXTRA_VARS='-e adobe_username=YOUR_LDAP full_name="Your Name" adobe_email="YOUR_LDAP@adobe.com"'
 ```
 
-## Global gitignore (optional, manual)
+## Global gitignore
 
-```bash
-cat > ~/.gitignore_global << 'EOF'
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
+Managed by chezmoi: `dotfiles/dot_gitignore_global` → `~/.gitignore_global` (macOS, Terraform, Ansible, Claude local settings).
 
-# Terraform
-*.tfstate
-*.tfstate.backup
-.terraform/
-.terraform.lock.hcl
+## Editor extensions (Cursor + VS Code)
 
-# Ansible
-*.retry
-vault_pass.txt
-EOF
-git config --global core.excludesfile ~/.gitignore_global
-```
+Extension IDs live in `dotfiles/editors/`:
+
+| File | Scope |
+|------|--------|
+| `extensions-common.txt` | Both editors |
+| `extensions-cursor.txt` | Cursor only |
+| `extensions-work.txt` | Work profile only (Adobe extension) |
+
+After adding an extension in the UI: update the list, commit, `make apply`. The install script is idempotent.
+
+Settings templates: `dotfiles/Library/Application Support/Cursor/User/settings.json.tmpl` and `Code/User/settings.json.tmpl`.

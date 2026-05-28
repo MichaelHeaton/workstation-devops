@@ -3,6 +3,13 @@
 
 workstation_profile_file: "{{ ansible_facts['env']['HOME'] }}/.workstation_profile"
 
+# Feature tag allowlist — merged in site.yml with profile + extra tags (see docs/tags.md).
+# Baseline runs on every machine unless skipped via make apply SKIP_TAGS=…
+workstation_tags_baseline:
+  - dotfiles
+  - shell
+  - editors
+
 # --- Projects layout ---------------------------------------------------------
 
 projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"

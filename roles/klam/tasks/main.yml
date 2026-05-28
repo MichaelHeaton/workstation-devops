@@ -4,6 +4,8 @@
 
 - name: KLAM role
   when: klam_enabled | default(true) | bool
+  tags:
+    - work
   block:
     - name: Resolve KLAM Artifactory API key (extra-var or env, not committed)
       ansible.builtin.set_fact:

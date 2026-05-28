@@ -2,14 +2,14 @@
 
 Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and common roles already live in workstation-devops.
 
-**Implemented:** `vault-tools`, `klam` (wired in `roles/work/tasks/main.yml`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md).
+**Implemented:** `vault-tools`, `klam`, `shell`, `teleport`, `kubernetes`, `git-github` (tagged in `roles/common/`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md), [teleport.md](teleport.md), [kubernetes.md](kubernetes.md), [git-github.md](git-github.md), [tags.md](../tags.md).
 
 | Role | Target | Notes |
 |------|--------|-------|
-| `shell` | oh-my-zsh, zshrc fragments, PATH, `TELEPORT_LOGIN` | Shell fragments under `roles/work/shell/files/`, sourced from `.zshrc` via task — do not edit `.zshrc` directly |
-| `teleport` | fzf, `t()`, `tshl` | `roles/work/teleport/files/` |
-| `kubernetes` | kubelogin **v0.1.9 only** | Ethos requirement; install from GitHub release, not brew upgrade |
-| `git-github` | `gh`, GHEC SSH config fragment | Template username placeholder; key path per user at apply time |
+| ~~`shell`~~ | ~~oh-my-zsh, zshrc fragments~~ | **Done** — `roles/shell/` (`shell` + `work` tags) |
+| ~~`teleport`~~ | ~~fzf, `t()`, `tshl`~~ | **Done** — `roles/teleport/` (`work` tag) |
+| ~~`kubernetes`~~ | ~~kubelogin **v0.1.9 only**~~ | **Done** — `roles/kubernetes/` (`work` tag) |
+| ~~`git-github`~~ | ~~GHEC SSH + gh~~ | **Done** — `roles/git_github/` + chezmoi gh config (`work` / `dotfiles`) |
 
 ## Wiring when a role is ready
 

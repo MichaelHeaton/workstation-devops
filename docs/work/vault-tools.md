@@ -92,5 +92,5 @@ vault_mgmt      # MGMT via Teleport
 ## Not in this role (see roadmap)
 
 - `vault_heartbeat_env`, `vault_rw_loop` — add later if needed
-- Teleport `tshl` / `t` fzf helpers → `roles/work/teleport`
+- Teleport `tshl` / `t` fzf helpers → [teleport.md](teleport.md) (`roles/teleport`)
 - Deprecated bastion `scb` / `bcp` — use Teleport

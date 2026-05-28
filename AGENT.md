@@ -11,9 +11,9 @@ group_vars/all.yml          ← shared vars
 group_vars/work.yml         ← work profile
 group_vars/personal.yml     ← personal profile
 ~/.workstation_profile      ← persisted machine identity (work | personal)
-roles/common/               ← directories, homebrew, repos, chezmoi, macos_defaults (always)
-roles/work/                 ← work-only (vault-tools, teleport — migrate here)
-roles/personal/             ← personal-only extensions
+roles/common/               ← directories, homebrew, repos, tagged dotfiles/shell/work tools
+roles/work/                 ← work profile marker (+ future work-only tasks tagged `work`)
+roles/personal/             ← personal profile marker (+ future home-only tasks tagged `home`)
 scripts/install.sh          ← remote bootstrap
 ```
 
@@ -28,7 +28,9 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - **Packages are detect-first** — `make check` and the `homebrew` role satisfy tools via PATH or `/Applications` before requiring Homebrew. Work profile sets `homebrew_install_packages: false` (Adobe IT). MAS is off by default; enable only on `personal` with a signed-in Apple ID. `homebrew_upgrade: true` opts into `brew update && brew upgrade` (default off).
 - **GitHub-release DMG apps** — `roles/mac_dmg_apps` installs apps from public release assets (catalog in `group_vars/all.yml`). Independent of Homebrew; see [docs/work/ai-spend-tracker.md](docs/work/ai-spend-tracker.md).
 - **Brave profiles** — `dotfiles/brave-profiles/profiles.json` holds icons, colors, and NTP backgrounds. After UI changes: quit Brave, run `./scripts/brave-profiles-export.sh`, commit, then `make apply` on other machines.
-- **Apple Notes (code snippets)** — `roles/macos_defaults` uses PlistBuddy on the Notes sandbox plist (`~/Library/Containers/com.apple.Notes/...`); if that fails, falls back to `NSGlobalDomain`. `defaults write com.apple.Notes` does not work on modern sandboxed Notes. Apply quits Notes first.
+- **Apple Notes (code snippets)** — `roles/macos_defaults` uses PlistBuddy on the Notes sandbox plist; `defaults write com.apple.Notes` does not work on modern sandboxed Notes. Apply quits Notes first.
+- **Editor extensions** — lists in `dotfiles/editors/*.txt`; installed when `editors` tag is allowed. Adobe extensions require `work` tag. See [docs/editors.md](docs/editors.md).
+- **Git / SSH / shell** — chezmoi (`dotfiles` tag) for git/SSH/gh/zprofile; `shell` tag for zshrc fragments. Work tooling (`work` tag): Teleport, kubelogin, KLAM, Vault. See [docs/tags.md](docs/tags.md).
 
 ## Key commands
 
@@ -36,14 +38,17 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 |---------|---------|
 | `make profile` | Detect or change `~/.workstation_profile` |
 | `make dry-run` | Preview without writes |
-| `make apply` | Apply configuration |
+| `make apply` | Apply configuration (respects tag allowlist for profile) |
+| `make apply TAGS=dotfiles` | Chezmoi/dotfiles only |
+| `make apply SKIP_TAGS=work` | Skip work-tagged tooling |
+| `make apply EXTRA_VARS='-e workstation_tags_extra=[work]'` | Add work tools on any profile |
 | `make check` | Preflight against active profile |
 
 ## Gotchas
 
 - **`make dry-run` must not write** — chezmoi/repos/directories respect `dry_run`.
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
-- **Work chezmoi identity** — first work run may need `adobe_username`, `full_name`, `adobe_email` extra-vars (see `group_vars/work.yml`).
+- **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e adobe_username=ult35127 -e adobe_email=ult35127@adobe.com'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e adobe_username=…` still overrides.
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
 ## Work profile (CES Vault)

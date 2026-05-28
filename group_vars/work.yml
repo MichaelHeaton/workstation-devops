@@ -1,6 +1,10 @@
 ---
 # Adobe / work machine profile — CES Vault team workstation.
 
+# Default feature tags for work machines (override: -e 'workstation_tags_extra=[home]').
+workstation_tags_profile:
+  - work
+
 projects_buckets:
   - name: adobe
   - name: personal
@@ -16,7 +20,9 @@ homebrew_install_packages: false
 homebrew_upgrade: false
 homebrew_mas_enabled: false
 
-homebrew_formulae_profile: []
+homebrew_formulae_profile:
+  - fzf
+  - kubernetes-cli
 
 homebrew_casks_profile:
   - microsoft-teams
@@ -34,3 +40,6 @@ mac_dmg_apps_install: true
 adobe_username: "{{ ansible_facts['user_id'] }}"
 full_name: ""
 adobe_email: ""
+
+# GHEC SSH — private key basename under ~/.ssh/ (see docs/work/git-github.md)
+ghec_ssh_key: id_ed25519_github

@@ -3,6 +3,8 @@
 
 - name: Vault tools role
   when: vault_tools_enabled | default(true) | bool
+  tags:
+    - work
   block:
     - name: Ensure workstation-devops config directory exists
       ansible.builtin.file:

@@ -1,0 +1,46 @@
+---
+# Shell zshrc fragments — tag allowlist controls what is deployed (see docs/tags.md).
+
+- name: Shell role
+  when: shell_enabled | default(true) | bool
+  block:
+    - name: Show common shell block (dry-run)
+      ansible.builtin.debug:
+        msg: Would add common shell block to ~/.zshrc (PATH, ai-skills accounts.shell).
+      when:
+        - dry_run | default(false) | bool
+        - "'shell' in workstation_tags"
+
+    - name: Deploy common shell fragment to zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops shell-common"
+        block: "{{ lookup('template', 'shell_common.zsh.j2') }}"
+        insertafter: EOF
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'shell' in workstation_tags"
+      tags:
+        - shell
+
+    - name: Show work shell block (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would add work shell block to ~/.zshrc
+          (TELEPORT_LOGIN={{ adobe_username }}, vssh alias).
+      when:
+        - dry_run | default(false) | bool
+        - "'work' in workstation_tags"
+
+    - name: Deploy work shell fragment to zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops shell-work"
+        block: "{{ lookup('template', 'shell_work.zsh.j2') }}"
+        insertafter: EOF
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'work' in workstation_tags"
+      tags:
+        - shell
+        - work

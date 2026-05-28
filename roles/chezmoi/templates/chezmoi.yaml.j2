@@ -3,3 +3,13 @@ data:
   adobe_username: "{{ adobe_username | default(ansible_facts['user_id']) }}"
   full_name: "{{ full_name | default('') }}"
   email: "{{ adobe_email | default('') }}"
+  workstation_tags:
+{% for tag in workstation_tags %}
+    - {{ tag }}
+{% endfor %}
+  feature_work: {{ 'work' in workstation_tags }}
+  feature_home: {{ 'home' in workstation_tags }}
+  feature_shell: {{ 'shell' in workstation_tags }}
+  feature_editors: {{ 'editors' in workstation_tags }}
+  feature_dotfiles: {{ 'dotfiles' in workstation_tags }}
+  ghec_ssh_key: "{{ ghec_ssh_key | default('id_ed25519_github') }}"

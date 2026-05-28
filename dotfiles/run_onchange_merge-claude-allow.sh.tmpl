@@ -7,7 +7,7 @@
 # Requires: jq
 #
 # Bump this version string to force a re-run on next chezmoi apply:
-# allow-policy-version: v1.0.0
+# allow-policy-version: v1.0.1
 
 set -euo pipefail
 
@@ -35,16 +35,31 @@ REMOVE_ENTRIES='[
 # Allow entries to ensure are present.
 # ---------------------------------------------------------------------------
 ALLOW_ENTRIES='[
+  "Skill(git-ops)",
+  "Skill(git-ops:*)",
+  "mcp__atlassian__confluence_get_page",
+  "mcp__atlassian__confluence_search",
+  "mcp__atlassian__jira_get_issue",
+  "mcp__atlassian__jira_search",
   "mcp__ccd_session_mgmt__search_session_transcripts",
   "mcp__Claude_in_Chrome__tabs_context_mcp",
   "Bash(bash ~/.claude/skills/session-close/scripts/discover-repos.sh*)",
   "Bash(bash ~/.claude/skills/session-close/scripts/git-ssh-fallback.sh *)",
   "Bash(bash ~/.claude/skills/issue-create/scripts/detect-context.sh*)",
   "Bash(bash ~/.claude/skills/issue-create/scripts/seed-labels.sh *)",
+  "Bash(bash ~/.claude/skills/issue-create/scripts/seed-labels-gitlab.sh *)",
   "Bash(bash ~/.claude/skills/repo-ai-init/scripts/discover.sh *)",
+  "Bash(export GH_TOKEN=$(gh auth token))",
+  "Bash(gh auth *)",
   "Bash(git fetch *)",
+  "Bash(git -C * diff*)",
+  "Bash(git -C * log*)",
+  "Bash(git -C * status*)",
+  "Bash(git -C * worktree list*)",
   "Bash(glab auth status*)",
   "Bash(glab auth check *)",
+  "Bash(glab issue list *)",
+  "Bash(glab issue view *)",
   "Bash(glab mr list *)",
   "Bash(glab mr view *)",
   "Bash(glab repo view *)",

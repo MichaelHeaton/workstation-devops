@@ -1,17 +1,13 @@
-# roles/work — CES Vault (Adobe work profile)
+# Work profile role
 
 Runs when `workstation_profile == 'work'` (see `site.yml`).
 
-**Docs:** [docs/work/README.md](../../docs/work/README.md) · **Roadmap:** [docs/work/ces-vault-roadmap.md](../../docs/work/ces-vault-roadmap.md)
+Work-tagged capabilities (shell work fragment, KLAM, Vault tools) are imported from **`roles/common/`** when `work` is in the tag allowlist — see [docs/tags.md](../tags.md).
 
-## Current behavior
+This role is a profile marker; add work-only Ansible tasks here with `tags: [work]`.
 
-`tasks/main.yml` only sets a fact marker today. Dotfiles (MCP, Claude security, Brave) are applied by `roles/common` → `chezmoi`.
+## Adding work-only automation
 
-## Adding a role
-
-1. Create `roles/work/<name>/tasks/main.yml` (+ `files/` for shell fragments).
-2. Add `import_role` entries to `tasks/main.yml` (see roadmap doc).
-3. Run `make dry-run` with `-e workstation_profile=work`.
-
-Planned role names: `shell`, `vault-tools`, `teleport`, `klam`, `kubernetes`, `git-github`.
+1. Create or extend a role under `roles/`.
+2. Import from `roles/common/tasks/main.yml` with `when: "'work' in workstation_tags"` and `tags: [work]`, **or** add tasks here with the same tag/when guards.
+3. `make dry-run` with `-e workstation_profile=work`.

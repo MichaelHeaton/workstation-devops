@@ -1,0 +1,58 @@
+---
+# Verify GHEC SSH key and refresh chezmoi identity (SSH block lives in chezmoi config.tmpl).
+
+- name: Git GitHub role (GHEC SSH)
+  when: git_github_enabled | default(true) | bool
+  tags:
+    - work
+  block:
+    - name: Check GHEC SSH private key exists
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh/{{ ghec_ssh_key }}"
+      register: git_github_ghec_key
+      when: not (dry_run | default(false) | bool)
+
+    - name: Remind to create and upload GHEC SSH key
+      ansible.builtin.debug:
+        msg: >-
+          GHEC SSH key not found: ~/.ssh/{{ ghec_ssh_key }}.
+          Generate: ssh-keygen -t ed25519 -f ~/.ssh/{{ ghec_ssh_key }} -C "{{ adobe_username }}@adobe.com"
+          Upload ~/.ssh/{{ ghec_ssh_key }}.pub to GitHub (enterprise SSO).
+          Override: EXTRA_VARS='-e ghec_ssh_key=your_key_basename'
+          Then: make apply TAGS=dotfiles,work
+          See docs/work/git-github.md
+      when:
+        - not (dry_run | default(false) | bool)
+        - git_github_ghec_key is defined
+        - not (git_github_ghec_key.stat.exists | default(false))
+
+    - name: Show GHEC SSH chezmoi plan (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would set ghec_ssh_key={{ ghec_ssh_key }} in ~/.config/chezmoi/chezmoi.yaml
+          and apply ~/.ssh/config Host github.com block (AddKeysToAgent, UseKeychain).
+          Run with dotfiles tag: make apply TAGS=dotfiles,work
+      when: dry_run | default(false) | bool
+
+    - name: Check gh CLI is on PATH
+      ansible.builtin.command: command -v gh
+      register: git_github_gh_check
+      changed_when: false
+      failed_when: false
+
+    - name: Remind when gh is missing
+      ansible.builtin.debug:
+        msg: >-
+          gh not on PATH. Wiki recommends gh for cloning across git.corp.adobe.com and GHEC
+          without SSH key swapping. gh config is deployed via chezmoi (dotfiles tag).
+      when: (git_github_gh_check.rc | default(1)) != 0
+
+    - name: Remind to apply dotfiles after GHEC key or path change
+      ansible.builtin.debug:
+        msg: >-
+          GHEC Host github.com is in chezmoi (~/.ssh/config). After changing ghec_ssh_key,
+          run: make apply TAGS=dotfiles
+      when:
+        - not (dry_run | default(false) | bool)
+        - git_github_ghec_key is defined
+        - git_github_ghec_key.stat.exists | default(false)

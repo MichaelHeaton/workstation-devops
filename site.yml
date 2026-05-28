@@ -22,6 +22,36 @@
     - name: Load profile-specific variables
       ansible.builtin.include_vars:
         file: "group_vars/{{ workstation_profile }}.yml"
+      tags: [always]
+
+    - name: Merge workstation feature tag allowlist
+      ansible.builtin.set_fact:
+        workstation_tags: >-
+          {{ (workstation_tags_baseline | default([]))
+             + (workstation_tags_profile | default([]))
+             + (workstation_tags_extra | default([])) | unique | list }}
+      tags: [always]
+
+    - name: Read persisted chezmoi identity
+      ansible.builtin.slurp:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
+      register: workstation_chezmoi_identity_file
+      failed_when: false
+      tags: [always]
+
+    - name: Apply persisted chezmoi identity (when seeded)
+      ansible.builtin.set_fact:
+        adobe_username: "{{ _chezmoi_identity.adobe_username }}"
+        full_name: "{{ _chezmoi_identity.full_name | default(full_name, true) }}"
+        adobe_email: "{{ _chezmoi_identity.email | default(adobe_email, true) }}"
+      vars:
+        _chezmoi_identity: "{{ (workstation_chezmoi_identity_file.content | b64decode | from_yaml).data | default({}) }}"
+      when:
+        - not (workstation_chezmoi_identity_file.failed | default(true))
+        - workstation_chezmoi_identity_file.content is defined
+        - _chezmoi_identity.adobe_username is defined
+        - _chezmoi_identity.adobe_username | length > 0
+      tags: [always]
 
     - name: Merge profile configuration lists
       ansible.builtin.set_fact:
@@ -46,6 +76,7 @@
       ansible.builtin.debug:
         msg: >-
           profile={{ workstation_profile }} |
+          tags={{ workstation_tags | join(',') }} |
           buckets={{ projects_buckets | length }} |
           repos={{ managed_repos | length }} |
           formulae={{ homebrew_formulae | length }} |
