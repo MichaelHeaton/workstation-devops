@@ -108,6 +108,18 @@ homebrew_mas_apps: []
 homebrew_go_bin_path: "{{ brew_prefix }}/bin"
 homebrew_go_binaries: []
 
+# --- macOS defaults (Darwin only; roles/macos_defaults) ------------------------
+
+macos_defaults_enabled: true
+macos_defaults_apple_notes_enabled: true
+# Monostyled code blocks (⌘⇧M) have no known defaults key; smart-quote/dash off helps pasted code.
+macos_defaults_apple_notes_domain: com.apple.Notes
+macos_defaults_apple_notes:
+  NSAutomaticQuoteSubstitutionEnabled: false
+  NSAutomaticDashSubstitutionEnabled: false
+# Set true only if you want NSGlobalDomain smart typography disabled repo-wide.
+macos_defaults_global_smart_typography: false
+
 # --- Platform ------------------------------------------------------------------
 
 is_mac: "{{ ansible_facts['os_family'] == 'Darwin' }}"

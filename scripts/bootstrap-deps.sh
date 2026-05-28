@@ -33,3 +33,10 @@ if ! command -v ansible-playbook &>/dev/null; then
   brew install ansible
 fi
 echo "✓ Ansible"
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${REPO_ROOT}/requirements.yml" ]]; then
+  echo "→ Installing Ansible collections (community.general)..."
+  ansible-galaxy collection install -r "${REPO_ROOT}/requirements.yml"
+fi
+echo "✓ Ansible collections"

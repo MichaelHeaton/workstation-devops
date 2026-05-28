@@ -11,7 +11,7 @@ group_vars/all.yml          ← shared vars
 group_vars/work.yml         ← work profile
 group_vars/personal.yml     ← personal profile
 ~/.workstation_profile      ← persisted machine identity (work | personal)
-roles/common/               ← directories, homebrew, repos, chezmoi (always)
+roles/common/               ← directories, homebrew, repos, chezmoi, macos_defaults (always)
 roles/work/                 ← work-only (vault-tools, teleport — migrate here)
 roles/personal/             ← personal-only extensions
 scripts/install.sh          ← remote bootstrap
@@ -28,6 +28,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - **Packages are detect-first** — `make check` and the `homebrew` role satisfy tools via PATH or `/Applications` before requiring Homebrew. Work profile sets `homebrew_install_packages: false` (Adobe IT). MAS is off by default; enable only on `personal` with a signed-in Apple ID. `homebrew_upgrade: true` opts into `brew update && brew upgrade` (default off).
 - **GitHub-release DMG apps** — `roles/mac_dmg_apps` installs apps from public release assets (catalog in `group_vars/all.yml`). Independent of Homebrew; see [docs/work/ai-spend-tracker.md](docs/work/ai-spend-tracker.md).
 - **Brave profiles** — `dotfiles/brave-profiles/profiles.json` holds icons, colors, and NTP backgrounds. After UI changes: quit Brave, run `./scripts/brave-profiles-export.sh`, commit, then `make apply` on other machines.
+- **Apple Notes (code snippets)** — `roles/macos_defaults` uses PlistBuddy on the Notes sandbox plist (`~/Library/Containers/com.apple.Notes/...`); if that fails, falls back to `NSGlobalDomain`. `defaults write com.apple.Notes` does not work on modern sandboxed Notes. Apply quits Notes first.
 
 ## Key commands
 
