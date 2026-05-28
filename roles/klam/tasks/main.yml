@@ -73,9 +73,9 @@
         msg: >-
           klam_artifactory_username is "{{ klam_artifactory_username_resolved }}"
           (same as macOS login {{ ansible_facts['user_id'] }}).
-          Artifactory pip auth usually needs Adobe LDAP, e.g. ult35127:
-          export ADOBE_USERNAME=ult35127
-          or make apply EXTRA_VARS='-e adobe_username=ult35127'
+          Artifactory pip auth usually needs Adobe LDAP, e.g. YOUR_LDAP:
+          export ADOBE_USERNAME=YOUR_LDAP
+          or make apply EXTRA_VARS='-e adobe_username=YOUR_LDAP'
       when:
         - klam_install_needed | bool
         - klam_artifactory_api_key_resolved | length > 0
@@ -149,7 +149,7 @@
         msg: >-
           KLAM pip install failed (rc={{ klam_pip_install.rc }}).
           LDAP user={{ klam_artifactory_username_resolved }}.
-          Common fixes: (1) export ADOBE_USERNAME=ult35127 if Artifactory 401,
+          Common fixes: (1) export ADOBE_USERNAME=YOUR_LDAP if Artifactory 401,
           (2) regenerate Artifactory API key if expired,
           (3) VPN on, (4) manual: docs/work/klam.md.
           pip: >-

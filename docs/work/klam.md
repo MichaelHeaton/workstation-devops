@@ -32,7 +32,7 @@ The CLI is **not** installed until you pass an Artifactory API key. Aliases alon
 ```bash
 # VPN on; API key from Artifactory profile page (not ADOBENET)
 export KLAM_ARTIFACTORY_API_KEY='paste-key-here'
-export ADOBE_USERNAME=ult35127   # Artifactory LDAP — not your macOS login name
+export ADOBE_USERNAME=YOUR_LDAP   # Artifactory LDAP — not your macOS login name
 cd ~/Projects/personal/workstation-devops
 make apply
 source ~/.zshrc
@@ -44,14 +44,14 @@ klam --help
 Or via extra-var:
 
 ```bash
-make apply EXTRA_VARS='-e klam_artifactory_api_key=YOUR_ARTIFACTORY_API_KEY adobe_username=ult35127'
+make apply EXTRA_VARS='-e klam_artifactory_api_key=YOUR_ARTIFACTORY_API_KEY adobe_username=YOUR_LDAP'
 ```
 
 ## Manual pip install (same as wiki)
 
 ```bash
 pip3 install --user --break-system-packages klam \
-  -i "https://ULT35127:YOUR_API_KEY@artifactory.corp.adobe.com/artifactory/api/pypi/pypi-klam-cli-release/simple"
+  -i "https://YOUR_LDAP:YOUR_API_KEY@artifactory.corp.adobe.com/artifactory/api/pypi/pypi-klam-cli-release/simple"
 ```
 
 ## After install (manual, one-time)

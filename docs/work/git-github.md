@@ -25,7 +25,7 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
 1. Generate a dedicated GHEC key (if you do not already have one):
 
    ```bash
-   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C "ult35127@adobe.com"
+   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C "YOUR_LDAP@adobe.com"
    ```
 
 2. Upload `~/.ssh/id_ed25519_github.pub` to [GitHub SSH keys](https://github.com/settings/keys) (authorize for Adobe enterprise SSO).
@@ -42,7 +42,7 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
 
    ```bash
    ssh -T git@github.com
-   git ls-remote git@github.com:ult35127_adobe/adobe-cursor-rules.git HEAD
+   git ls-remote git@github.com:YOUR_LDAP_adobe/adobe-cursor-rules.git HEAD
    ```
 
 ## Multi-account layout

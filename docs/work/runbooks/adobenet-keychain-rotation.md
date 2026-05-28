@@ -50,10 +50,10 @@ If you cannot find the item, it was never created in Keychain Access (Passwords 
 Check that `security` can read the item (you may get a **Touch ID / permission** prompt once per Terminal/iTerm):
 
 ```bash
-security find-generic-password -s adobe-vault-okta -a ult35127 -w >/dev/null && echo "Keychain read OK"
+security find-generic-password -s adobe-vault-okta -a YOUR_LDAP -w >/dev/null && echo "Keychain read OK"
 ```
 
-Replace `adobe-vault-okta` and `ult35127` with your `vault_okta_keychain_service` and `adobe_username` if different.
+Replace `adobe-vault-okta` and `YOUR_LDAP` with your `vault_okta_keychain_service` and `adobe_username` if different.
 
 **Do not** paste `-w` output into tickets, chat, or screen recordings.
 

@@ -14,7 +14,7 @@ Automated by `roles/vault_tools` on `make apply` when `workstation_profile=work`
 
 Deployed to `~/.config/workstation-devops/vault_functions.zsh`, sourced from `~/.zshrc`.
 
-**Username:** templated from `adobe_username` in `group_vars/work.yml` (default `ult35127`).
+**Username:** templated from `adobe_username` in `group_vars/work.yml` (your Adobe LDAP username).
 
 **Okta password store:** Ansible writes `VAULT_OKTA_*` exports into the vault-tools block in `~/.zshrc` from `group_vars/work.yml` — do not edit that block by hand.
 
@@ -51,7 +51,7 @@ vault_okta_keychain_service: adobe-vault-okta   # Keychain "service" name (not A
 
 1. **Keychain Access** → **File → New Password Item** (not Passwords app → New Password)
 2. **Keychain Item Name:** `adobe-vault-okta` — this becomes the **service** name (must match `vault_okta_keychain_service`)
-3. **Account Name:** `ult35127` (must match `adobe_username`)
+3. **Account Name:** your `adobe_username` (Adobe LDAP)
 4. **Password:** ADOBENET
 5. **Keychain:** login (default)
 6. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
@@ -59,7 +59,7 @@ vault_okta_keychain_service: adobe-vault-okta   # Keychain "service" name (not A
 Verify:
 
 ```bash
-security find-generic-password -s adobe-vault-okta -a ult35127 -w && echo found
+security find-generic-password -s adobe-vault-okta -a YOUR_LDAP -w && echo found
 ```
 
 If you already added `adobe-vault-okta` in the Passwords app, leave it there for autofill in browsers and **duplicate** the password into a Keychain Access item as above (same values).

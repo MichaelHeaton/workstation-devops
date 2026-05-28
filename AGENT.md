@@ -48,7 +48,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 
 - **`make dry-run` must not write** — chezmoi/repos/directories respect `dry_run`.
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
-- **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e adobe_username=ult35127 -e adobe_email=ult35127@adobe.com'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e adobe_username=…` still overrides.
+- **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e adobe_username=YOUR_LDAP -e adobe_email=YOUR_LDAP@adobe.com'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e adobe_username=…` still overrides.
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
 ## Work profile (CES Vault)

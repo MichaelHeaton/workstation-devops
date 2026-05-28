@@ -9,7 +9,7 @@ fi
 
 # --- Okta login (optional password from Keychain / 1Password) ----------------
 # Enabled via Ansible: group_vars/work.yml → vault_okta_use_password_store, vault_okta_keychain_service
-# One-time: Keychain Access → New Password Item (service adobe-vault-okta, account ult35127)
+# One-time: Keychain Access → New Password Item (service adobe-vault-okta, account {{ adobe_username }})
 
 _vault_adobe_password() {
   [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]] || return 1

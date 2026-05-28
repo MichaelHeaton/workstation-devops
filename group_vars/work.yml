@@ -12,7 +12,7 @@ projects_buckets:
   - name: workspace
 
 managed_repos:
-  - repo: git@github.com:ult35127_adobe/adobe-cursor-rules.git
+  - repo: "git@github.com:{{ adobe_username }}_adobe/adobe-cursor-rules.git"
     dest: adobe/adobe-cursor-rules
 
 # Adobe IT often installs apps outside Homebrew — detect only, do not brew install.
@@ -36,7 +36,7 @@ mac_dmg_apps_profile:
 mac_dmg_apps_install: true
 
 # Chezmoi identity — override on first run:
-#   ansible-playbook site.yml -e 'adobe_username=ult35127 full_name="Mike Heaton" adobe_email="user@adobe.com"'
+#   ansible-playbook site.yml -e 'adobe_username=YOUR_LDAP full_name="Your Name" adobe_email="YOUR_LDAP@adobe.com"'
 adobe_username: "{{ ansible_facts['user_id'] }}"
 full_name: ""
 adobe_email: ""
