@@ -6,7 +6,7 @@ The playbook only creates buckets and clones for the active profile in **`group_
 
 Edit profile vars in [group_vars/personal.yml](../group_vars/personal.yml) or [group_vars/work.yml](../group_vars/work.yml):
 
-- **`projects_buckets`** — top-level folders (e.g. `personal`, `workspace`, `adobe`)
+- **`projects_buckets`** — top-level folders (e.g. `personal`, `workspace`, `work`)
 - **`managed_repos_common`** (`all.yml`) — workspace, workstation-devops, ai-skills (`make install-system`), claude-skills (clone), memex on every machine
 - **`managed_repos`** (profile yml) — additional clones per profile (`dest` relative to `projects_root`)
 
@@ -17,7 +17,7 @@ Set profile once: `make profile` (writes `~/.workstation_profile`).
 1. Edit `group_vars/<profile>.yml` if needed.
 2. `make dry-run` then `make apply`.
 3. If you still have a duplicate tree at `~/Projects/workspaces/`, point `origin` at `git@github.com-personal:MichaelHeaton/workspaces.git` and use a single checkout at `~/Projects/workspace/` (playbook `dest`).
-4. Remove `~/Projects/adobe/workstation-ces_vault` if present — superseded by this repo ([docs/work/README.md](work/README.md)).
+4. Delete any leftover `~/Projects/work/workstation-ces_vault` checkout — that repo was merged into this one and **deleted** on GitHub ([docs/work/README.md](work/README.md)).
 
 ## Naming
 

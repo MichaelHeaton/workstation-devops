@@ -1,5 +1,5 @@
 {{- if .feature_work }}
-# Adobe GHEC (work tag) — key path set by roles/git_github; upload .pub to GitHub enterprise SSO
+# GHEC (work tag) — key path set by roles/git_github; upload .pub to GitHub enterprise SSO
 Host github.com
   HostName github.com
   User git
@@ -8,7 +8,7 @@ Host github.com
   IdentityFile {{ .chezmoi.homeDir }}/.ssh/{{ .ghec_ssh_key | default "id_ed25519_github" }}
   IdentitiesOnly yes
 {{- else }}
-# Public GitHub (personal profile — no Adobe GHEC)
+# Public GitHub (personal profile — no GHEC block)
 Host github.com
   HostName github.com
   User git

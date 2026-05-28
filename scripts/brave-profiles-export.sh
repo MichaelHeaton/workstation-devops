@@ -32,7 +32,7 @@ CONFIG = Path(os.environ["CONFIG"])
 
 PROFILE_DIRS = [
     ("Default", "Personal"),
-    ("Profile 1", "Adobe"),
+    ("Profile 1", "Work"),
     ("Profile 2", "UV Cyber"),
 ]
 

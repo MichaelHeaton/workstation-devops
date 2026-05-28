@@ -25,10 +25,10 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
 1. Generate a dedicated GHEC key (if you do not already have one):
 
    ```bash
-   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C "YOUR_LDAP@adobe.com"
+   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C "you@work.example"
    ```
 
-2. Upload `~/.ssh/id_ed25519_github.pub` to [GitHub SSH keys](https://github.com/settings/keys) (authorize for Adobe enterprise SSO).
+2. Upload `~/.ssh/id_ed25519_github.pub` to [GitHub SSH keys](https://github.com/settings/keys) (authorize for employer enterprise SSO).
 
 3. Run playbook:
 
@@ -42,14 +42,16 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
 
    ```bash
    ssh -T git@github.com
-   git ls-remote git@github.com:YOUR_LDAP_adobe/adobe-cursor-rules.git HEAD
+   git ls-remote git@github.com:YOUR_ORG/cursor-rules.git HEAD
    ```
+
+   Set `YOUR_ORG/cursor-rules` in `managed_repos_local` inside `group_vars/work.local.yml`.
 
 ## Multi-account layout
 
 | Remote host alias | Use for |
 |-------------------|---------|
-| `github.com` | Adobe GHEC (work org repos) |
+| `github.com` | GHEC (work org repos) |
 | `github.com-personal` | Personal GitHub (`git@github.com-personal:MichaelHeaton/...`) |
 
 Personal-only machines (no `work` tag) use `github.com` → personal key in chezmoi; GHEC fragment is not deployed.

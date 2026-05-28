@@ -27,7 +27,7 @@
       ansible.builtin.debug:
         msg: >-
           Would add work shell block to ~/.zshrc
-          (TELEPORT_LOGIN={{ adobe_username }}, vssh alias).
+          (TELEPORT_LOGIN={{ work_username }}, vssh alias).
       when:
         - dry_run | default(false) | bool
         - "'work' in workstation_tags"

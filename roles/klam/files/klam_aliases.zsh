@@ -28,7 +28,7 @@ _ces_klam_term_style() {
     dev)
       print -n $'\033]0;Vault shared dev (891377009010)\007'
       [[ "${CES_KLAM_TERM_BG}" == 1 ]] || return 0
-      # Gold/yellow — shared Vault dev (other Adobe teams; not CES team dev)
+      # Gold/yellow — shared Vault dev (other teams; not CES team dev)
       [[ "${TERM_PROGRAM:-}" == iTerm.app ]] && print -n $'\033]6;1;bg;yellow;brightness;255\007'
       print -n $'\033]11;#5c5600\033\\'
       print -n $'\033]10;#f2f0e0\033\\'

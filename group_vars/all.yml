@@ -16,7 +16,7 @@ projects_root: "{{ ansible_facts['env']['HOME'] }}/Projects"
 
 # Finder color tags (work + personal). Profile bucket lists reference these by name.
 projects_bucket_finder_tags:
-  adobe: Red
+  work: Red
   personal: Orange
   specterrealm: Green
   uvcyber: Purple
@@ -55,7 +55,7 @@ managed_repos_pull: true
 
 # --- Packages (detect-first; merged with profile extras in site.yml) ----------
 #
-# homebrew_install_packages — when false (work/Adobe), only detect PATH/apps; no brew install
+# homebrew_install_packages — when false (work profile), only detect PATH/apps; no brew install
 # homebrew_mas_enabled      — personal only by default; avoids MAS on locked-down Apple IDs
 # homebrew_upgrade          — opt-in brew update && brew upgrade on apply (default off)
 
@@ -100,7 +100,7 @@ homebrew_cask_app_bundles_common:
 
 homebrew_cask_app_bundles: {}
 
-# GitHub-release DMG apps (not Homebrew). Source may be Adobe-private; binaries are public.
+# GitHub-release DMG apps (not Homebrew). Source may be private; binaries are public.
 mac_dmg_apps_catalog:
   ai-spend-tracker:
     display_name: AI Spend Tracker

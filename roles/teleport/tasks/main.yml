@@ -21,7 +21,7 @@
     - name: Remind when tsh is missing
       ansible.builtin.debug:
         msg: >-
-          tsh not on PATH. Install Teleport client per Adobe IT / onboarding wiki,
+          tsh not on PATH. Install Teleport client per employer IT / onboarding wiki,
           then re-run make apply. Helpers deploy anyway but t/tshl will fail until tsh exists.
       when: (teleport_tsh_check.rc | default(1)) != 0
 
@@ -29,7 +29,7 @@
       ansible.builtin.debug:
         msg: >-
           fzf not on PATH. Install with: brew install fzf
-          (work profile detect-only — Ansible will not brew-install on Adobe machines).
+          (work profile detect-only — Ansible will not brew-install on locked-down work machines).
       when: (teleport_fzf_check.rc | default(1)) != 0
 
     - name: Ensure workstation-devops config directory exists

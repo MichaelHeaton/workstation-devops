@@ -4,5 +4,5 @@
     "editor.accessibilitySupport": "on",
     "security.workspace.trust.enabled": true,
     "window.autoDetectColorScheme": false{{ if .feature_work }},
-    "adt.adobeEmail": "{{ .email | default (printf "%s@adobe.com" .adobe_username) }}"{{ end }}
+    "adt.adobeEmail": "{{ .email }}"{{ end }}
 }

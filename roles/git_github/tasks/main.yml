@@ -16,7 +16,7 @@
       ansible.builtin.debug:
         msg: >-
           GHEC SSH key not found: ~/.ssh/{{ ghec_ssh_key }}.
-          Generate: ssh-keygen -t ed25519 -f ~/.ssh/{{ ghec_ssh_key }} -C "{{ adobe_username }}@adobe.com"
+          Generate: ssh-keygen -t ed25519 -f ~/.ssh/{{ ghec_ssh_key }} -C "{{ work_email | default(work_username ~ '@work.example') }}"
           Upload ~/.ssh/{{ ghec_ssh_key }}.pub to GitHub (enterprise SSO).
           Override: EXTRA_VARS='-e ghec_ssh_key=your_key_basename'
           Then: make apply TAGS=dotfiles,work

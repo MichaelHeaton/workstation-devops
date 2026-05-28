@@ -24,7 +24,7 @@
       ansible.builtin.debug:
         msg: >-
           Would deploy ~/.config/workstation-devops/vault_functions.zsh
-          (vl, vault_login, vault_mgmt) for adobe_username={{ adobe_username }}.
+          (vl, vault_login, vault_mgmt) for work_username={{ work_username }}.
       when: dry_run | default(false) | bool
 
     - name: Probe Vault Okta Keychain item
@@ -35,7 +35,7 @@
           - -s
           - "{{ vault_okta_keychain_service }}"
           - -a
-          - "{{ adobe_username }}"
+          - "{{ work_username }}"
           - -w
       register: vault_okta_keychain_probe
       changed_when: false
@@ -62,10 +62,10 @@
       ansible.builtin.debug:
         msg: >-
           vault_okta_use_password_store is enabled but Keychain item
-          "{{ vault_okta_keychain_service }}" (account {{ adobe_username }}) was not found.
+          "{{ vault_okta_keychain_service }}" (account {{ work_username }}) was not found.
           Use Keychain Access (NOT the Passwords app — those are separate stores).
           Keychain Access → File → New Password Item → service {{ vault_okta_keychain_service }},
-          account {{ adobe_username }} → make apply again. See docs/work/vault-tools.md
+          account {{ work_username }} → make apply again. See docs/work/vault-tools.md
       when:
         - not (dry_run | default(false) | bool)
         - vault_okta_use_password_store | default(false) | bool

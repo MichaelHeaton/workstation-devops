@@ -42,7 +42,7 @@ workstation_tags = baseline + profile + extra   # unique
 make apply EXTRA_VARS='-e workstation_tags_extra=[work]'
 ```
 
-**Work Mac, skip Adobe tooling this run:**
+**Work Mac, skip work tooling this run:**
 
 ```bash
 make apply SKIP_TAGS=work
@@ -67,7 +67,7 @@ make apply TAGS=shell
 | `dotfiles` | Chezmoi (git, SSH, gh config, zprofile, MCP, Claude merges, Brave, …) |
 | `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`) |
 | `editors` | Cursor/VS Code settings + extension install script |
-| `work` | Work shell, Teleport fzf, kubelogin v0.1.9, GHEC SSH, KLAM, Vault tools, Adobe editor extensions |
+| `work` | Work shell, Teleport fzf, kubelogin v0.1.9, GHEC SSH, KLAM, Vault tools, work editor extensions |
 | `home` | Personal profile marker (extend with home-only tasks in `roles/personal/`) |
 
 Chezmoi templates read boolean flags from `~/.config/chezmoi/chezmoi.yaml` (`feature_work`, `feature_editors`, …), refreshed on every `make apply`.

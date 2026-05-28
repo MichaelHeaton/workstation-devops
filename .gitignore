@@ -1,1 +1,3 @@
 .envrc
+group_vars/work.local.yml
+group_vars/personal.local.yml

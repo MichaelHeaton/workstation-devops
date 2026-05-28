@@ -5,7 +5,7 @@
 	smudge = git-lfs smudge -- %f
 [user]
 	name = {{ .full_name | default "Michael Heaton" }}
-	email = {{ .email | default (printf "%s@adobe.com" .adobe_username) }}
+	email = {{ .email }}
 [credential "https://github.com"]
 	helper =
 	helper = !{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential

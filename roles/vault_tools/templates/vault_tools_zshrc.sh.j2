@@ -1,11 +1,11 @@
 # Vault CLI helpers (workstation-devops work profile)
 {% if vault_okta_password_store_active | default(false) | bool %}
-# ADOBENET via Keychain (create item once in Keychain Access — see docs/work/vault-tools.md)
+# Corp LDAP password via Keychain (create item once in Keychain Access — see docs/work/vault-tools.md)
 export VAULT_OKTA_USE_PASSWORD_STORE=1
 {% if vault_okta_op_ref | default('') | length > 0 %}
 export VAULT_OKTA_OP_REF="{{ vault_okta_op_ref }}"
 {% else %}
-export VAULT_OKTA_PASSWORD_CMD='security find-generic-password -s {{ vault_okta_keychain_service }} -a {{ adobe_username }} -w'
+export VAULT_OKTA_PASSWORD_CMD='security find-generic-password -s {{ vault_okta_keychain_service }} -a {{ work_username }} -w'
 {% endif %}
 {% endif %}
 [[ -f "$HOME/.config/workstation-devops/vault_functions.zsh" ]] && source "$HOME/.config/workstation-devops/vault_functions.zsh"

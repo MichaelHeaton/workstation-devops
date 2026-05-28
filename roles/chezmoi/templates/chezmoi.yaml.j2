@@ -1,8 +1,8 @@
 data:
   workstation_profile: "{{ workstation_profile }}"
-  adobe_username: "{{ adobe_username | default(ansible_facts['user_id']) }}"
+  work_username: "{{ work_username | default(ansible_facts['user_id']) }}"
   full_name: "{{ full_name | default('') }}"
-  email: "{{ adobe_email | default('') }}"
+  email: "{{ work_email | default('') }}"
   workstation_tags:
 {% for tag in workstation_tags %}
     - {{ tag }}

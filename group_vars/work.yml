@@ -1,21 +1,20 @@
 ---
-# Adobe / work machine profile — CES Vault team workstation.
+# Work machine profile — CES Vault team workstation.
 
 # Default feature tags for work machines (override: -e 'workstation_tags_extra=[home]').
 workstation_tags_profile:
   - work
 
 projects_buckets:
-  - name: adobe
+  - name: work
   - name: personal
   - name: scratch
   - name: workspace
 
-managed_repos:
-  - repo: "git@github.com:{{ adobe_username }}_adobe/adobe-cursor-rules.git"
-    dest: adobe/adobe-cursor-rules
+# Employer-specific clones — set managed_repos_local in group_vars/work.local.yml (see work.local.yml.example)
+managed_repos: []
 
-# Adobe IT often installs apps outside Homebrew — detect only, do not brew install.
+# Employer IT often installs apps outside Homebrew — detect only, do not brew install.
 homebrew_install_packages: false
 homebrew_upgrade: false
 homebrew_mas_enabled: false
@@ -30,16 +29,19 @@ homebrew_casks_profile:
 homebrew_cask_app_bundles:
   microsoft-teams: Microsoft Teams.app
 
-# AI Spend Tracker — public DMG (no Adobe GitHub SSO). Detect always; install via make apply.
+# AI Spend Tracker — public DMG (no employer GitHub SSO). Detect always; install via make apply.
 mac_dmg_apps_profile:
   - ai-spend-tracker
 mac_dmg_apps_install: true
 
 # Chezmoi identity — override on first run:
-#   ansible-playbook site.yml -e 'adobe_username=YOUR_LDAP full_name="Your Name" adobe_email="YOUR_LDAP@adobe.com"'
-adobe_username: "{{ ansible_facts['user_id'] }}"
+#   ansible-playbook site.yml -e 'work_username=YOUR_LDAP full_name="Your Name" work_email=you@work.example'
+work_username: "{{ ansible_facts['user_id'] }}"
 full_name: ""
-adobe_email: ""
+work_email: ""
 
 # GHEC SSH — private key basename under ~/.ssh/ (see docs/work/git-github.md)
 ghec_ssh_key: id_ed25519_github
+
+# Vault vl() cluster list — populate in group_vars/work.local.yml
+vault_clusters: []
