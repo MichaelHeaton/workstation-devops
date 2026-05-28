@@ -2,7 +2,7 @@
 
 Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 
-**Wiki:** [KLAM Command Line Interface](https://wiki.corp.adobe.com/spaces/spartans/pages/2187660420/KLAM+Command+Line+Interface)
+**Source:** KLAM Command Line Interface wiki (internal)
 
 ## What Ansible does
 

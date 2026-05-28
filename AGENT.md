@@ -53,7 +53,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 
 ## Work profile (CES Vault)
 
-- Onboarding wiki: [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667)
+- Onboarding wiki: Vault Engineer Onboarding (internal)
 - Docs: [docs/work/](docs/work/) — roadmap, manual setup, planned `roles/work/` imports
 - **kubelogin v0.1.9 only** (Ethos); bastion aliases `scb`/`bcp`/`bcp2` deprecated — use Teleport
 - **KLAM** needs IAM groups before profiles work; **TELEPORT_LOGIN** = LDAP username (not email)

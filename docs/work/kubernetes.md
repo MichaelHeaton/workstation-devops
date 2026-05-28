@@ -2,7 +2,7 @@
 
 Automated by `roles/kubernetes` on `make apply` when the `work` tag is in the allowlist.
 
-**Wiki:** [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667) → Install Azure/kubelogin v0.1.9
+**Source:** Vault Engineer Onboarding wiki (internal) → Install Azure/kubelogin v0.1.9
 
 Ethos requires **Azure/kubelogin v0.1.9 exactly**. Newer Homebrew builds can force re-auth on every `kubectl` command.
 
@@ -20,7 +20,7 @@ Ethos requires **Azure/kubelogin v0.1.9 exactly**. Newer Homebrew builds can for
 ## Prerequisites
 
 - `kubectl` on PATH
-- Ethos kubeconfig setup per [k8s-kubeconfig](https://git.corp.adobe.com/adobe-platform/k8s-kubeconfig) / internal wiki
+- Ethos kubeconfig setup per internal **k8s-kubeconfig** repo / employer wiki
 - VPN as required for cluster access
 
 ## Test

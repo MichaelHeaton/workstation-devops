@@ -73,7 +73,7 @@ roles/personal/          # personal-only hooks
 
 ## Work profile (CES Vault)
 
-Automates tooling described in the [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667). Dotfiles (MCP, Claude security) are applied today; Vault/Teleport/KLAM roles are tracked in [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).
+Automates tooling described in the Vault Engineer Onboarding wiki (internal). Dotfiles (MCP, Claude security) are applied today; Vault/Teleport/KLAM roles are tracked in [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).
 
 Legacy `workstation-ces_vault` on GitHub is deprecated — use this repo only.
 

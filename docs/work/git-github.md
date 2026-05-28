@@ -2,7 +2,7 @@
 
 Automated by `roles/git_github` on `make apply` when the `work` tag is in the allowlist.
 
-**Wiki:** [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667) → GHEC Clone
+**Source:** Vault Engineer Onboarding wiki (internal) → GHEC Clone
 
 ## What Ansible deploys
 
@@ -62,6 +62,6 @@ make apply EXTRA_VARS='-e ghec_ssh_key=ghec_do_not_rotate_personal'
 
 Use the wiki naming if you already created that key — basename only, not full path.
 
-## git.corp.adobe.com
+## Internal corp Git
 
-Legacy Vault repos on **git.corp.adobe.com** are separate from GHEC. Prefer **`gh repo clone`** when possible; corp SSH for git.corp.adobe.com is not automated here.
+Legacy Vault repos on the employer **internal Git host** are separate from GHEC. Prefer **`gh repo clone`** when possible; corp SSH for internal Git is not automated here.

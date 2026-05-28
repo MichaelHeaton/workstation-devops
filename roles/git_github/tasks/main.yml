@@ -43,7 +43,7 @@
     - name: Remind when gh is missing
       ansible.builtin.debug:
         msg: >-
-          gh not on PATH. Wiki recommends gh for cloning across git.corp.adobe.com and GHEC
+          gh not on PATH. Employer onboarding wiki recommends gh for cloning across internal Git and GHEC
           without SSH key swapping. gh config is deployed via chezmoi (dotfiles tag).
       when: (git_github_gh_check.rc | default(1)) != 0
 

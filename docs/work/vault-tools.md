@@ -2,7 +2,7 @@
 
 Automated by `roles/vault_tools` on `make apply` when `workstation_profile=work`.
 
-**Wiki:** [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667) → Tips/Shortcuts → Bash Functions and Aliases
+**Source:** Vault Engineer Onboarding wiki (internal) → Tips/Shortcuts → Bash Functions and Aliases
 
 ## What Ansible deploys
 

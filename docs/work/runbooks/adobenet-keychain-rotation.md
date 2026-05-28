@@ -84,4 +84,4 @@ Pick a cluster, complete **Okta MFA** (Watch/app). Login should succeed without 
 ## Related
 
 - [Vault CLI helpers (`vl`)](../vault-tools.md)
-- Adobe onboarding wiki: [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667)
+- Employer onboarding wiki: Vault Engineer Onboarding (internal)

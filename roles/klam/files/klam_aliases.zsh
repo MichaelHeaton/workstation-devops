@@ -1,6 +1,6 @@
 # KLAM AWS credential aliases — workstation-devops (work profile)
 # Prerequisite: klam configure-profile for ces_* (see docs/work/klam.md)
-# Wiki: https://wiki.corp.adobe.com/spaces/spartans/pages/2187660420/KLAM+Command+Line+Interface
+# Wiki: KLAM CLI wiki (internal — see docs/work/klam.md)
 
 # pip install --user puts klam on this path (macOS / Linux)
 if command -v python3 &>/dev/null; then

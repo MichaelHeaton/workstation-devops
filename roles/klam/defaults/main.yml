@@ -1,6 +1,6 @@
 ---
 # KLAM CLI — Adobe Artifactory pip install + shell aliases (work profile).
-# Wiki: https://wiki.corp.adobe.com/spaces/spartans/pages/2187660420/KLAM+Command+Line+Interface
+# KLAM CLI — see docs/work/klam.md (KLAM CLI wiki is internal)
 
 klam_enabled: true
 klam_pip_package: klam

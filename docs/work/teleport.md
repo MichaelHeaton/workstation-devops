@@ -2,7 +2,7 @@
 
 Automated by `roles/teleport` on `make apply` when the `work` tag is in the allowlist.
 
-**Wiki:** [Vault Engineer Onboarding](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667) → Tips/Shortcuts → Teleport Easy Mode w/Fuzzy Finder (fzf)
+**Source:** Vault Engineer Onboarding wiki (internal) → Tips/Shortcuts → Teleport Easy Mode w/Fuzzy Finder (fzf)
 
 ## What Ansible deploys
 

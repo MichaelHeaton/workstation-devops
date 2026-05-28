@@ -36,5 +36,4 @@ Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and commo
 
 ## External references
 
-- [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667)
-- [KLAM CLI wiki](https://wiki.corp.adobe.com/display/spartans/KLAM+Command+Line+Interface)
+Employer-internal wikis (Vault Engineer Onboarding, KLAM CLI) are the source of truth but are not linked from this public repo.

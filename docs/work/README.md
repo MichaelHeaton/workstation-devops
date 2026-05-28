@@ -2,7 +2,7 @@
 
 Adobe **work** machines use `workstation_profile=work` (see `group_vars/work.yml`). This tree holds CES Vault–specific docs and the roadmap for roles under `roles/work/`.
 
-**Source of truth for onboarding:** [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667) — Vault CLI helpers, Teleport/fzf, KLAM AWS aliases, kubelogin, GHEC SSH.
+**Source:** Vault Engineer Onboarding wiki (internal) — Vault CLI helpers, Teleport/fzf, KLAM AWS aliases, kubelogin, GHEC SSH.
 
 ## Already in workstation-devops
 
