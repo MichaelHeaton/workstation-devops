@@ -1,0 +1,22 @@
+---
+macos_defaults_enabled: true
+
+# Apple Notes — disable smart quotes/dashes so pasted code is not auto-corrected.
+# Monostyled / code blocks (⌘⇧M) are UI-only; Apple exposes no defaults key for them.
+macos_defaults_apple_notes_enabled: true
+macos_defaults_apple_notes_domain: com.apple.Notes
+macos_defaults_apple_notes_plist: >-
+  {{ ansible_facts['env']['HOME'] }}/Library/Containers/com.apple.Notes/Data/Library/Preferences/com.apple.Notes.plist
+# When sandbox plist write fails, apply the same keys on NSGlobalDomain (system-wide).
+macos_defaults_apple_notes_global_fallback: true
+macos_defaults_apple_notes:
+  NSAutomaticQuoteSubstitutionEnabled: false
+  NSAutomaticDashSubstitutionEnabled: false
+
+# Optional extra NSGlobalDomain smart typography (off by default; fallback may still set quote/dash).
+macos_defaults_global_smart_typography: false
+macos_defaults_global_smart_typography_keys:
+  AppleSmartQuotes: false
+  AppleSmartDashes: false
+  NSAutomaticQuoteSubstitutionEnabled: false
+  NSAutomaticDashSubstitutionEnabled: false

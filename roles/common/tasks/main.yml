@@ -15,3 +15,6 @@
 - name: Import chezmoi role
   ansible.builtin.import_role:
     name: chezmoi
+- name: Import macos_defaults role
+  ansible.builtin.import_role:
+    name: macos_defaults

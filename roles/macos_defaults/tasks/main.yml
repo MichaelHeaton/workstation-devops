@@ -1,0 +1,117 @@
+---
+# macOS user defaults (Darwin only). Requires community.general (requirements.yml).
+- name: macOS user defaults
+  when: ansible_facts['os_family'] == 'Darwin'
+  block:
+    - name: Apple Notes — preview substitution defaults (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would quit Notes if running, then set {{ item.key }}={{ item.value }}
+          in {{ macos_defaults_apple_notes_plist }}
+          (PlistBuddy; NSGlobalDomain fallback if sandbox write fails)
+      loop: "{{ macos_defaults_apple_notes | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when:
+        - dry_run | default(false) | bool
+        - macos_defaults_enabled | bool
+        - macos_defaults_apple_notes_enabled | bool
+
+    - name: Apple Notes text substitution defaults
+      when:
+        - macos_defaults_enabled | bool
+        - macos_defaults_apple_notes_enabled | bool
+        - not (dry_run | default(false) | bool)
+      block:
+        - name: Detect running Notes.app
+          ansible.builtin.command:
+            argv:
+              - pgrep
+              - -x
+              - Notes
+          register: macos_defaults_notes_pgrep
+          changed_when: false
+          failed_when: false
+
+        - name: Quit Notes.app before writing sandboxed preferences
+          ansible.builtin.command:
+            argv:
+              - osascript
+              - -e
+              - tell application "Notes" to quit
+          when: macos_defaults_notes_pgrep.rc == 0
+          changed_when: macos_defaults_notes_pgrep.rc == 0
+          failed_when: false
+
+        - name: Wait for Notes to release preferences lock
+          ansible.builtin.pause:
+            seconds: 1
+          when: macos_defaults_notes_pgrep.rc == 0
+
+        - name: Stat Apple Notes sandbox preferences plist
+          ansible.builtin.stat:
+            path: "{{ macos_defaults_apple_notes_plist }}"
+          register: macos_defaults_notes_plist_stat
+
+        - name: Fail when Notes sandbox plist is missing (triggers NSGlobalDomain fallback)
+          ansible.builtin.fail:
+            msg: >-
+              {{ macos_defaults_apple_notes_plist }} not found.
+              Open Notes once, quit it, then re-run make apply.
+          when: not macos_defaults_notes_plist_stat.stat.exists | bool
+
+        - name: Disable smart quotes and dashes in Apple Notes (sandbox plist)
+          ansible.builtin.command:
+            argv:
+              - "{{ role_path }}/files/apply-apple-notes-substitution.sh"
+              - "{{ macos_defaults_apple_notes_plist }}"
+          register: macos_defaults_notes_plist_apply
+          changed_when: "'summary=changed' in macos_defaults_notes_plist_apply.stdout"
+          failed_when: macos_defaults_notes_plist_apply.rc != 0
+
+      rescue:
+        - name: Warn — could not write Apple Notes sandbox plist
+          ansible.builtin.debug:
+            msg: >-
+              PlistBuddy could not update {{ macos_defaults_apple_notes_plist }}
+              (common on sandboxed Notes — grant Full Disk Access to your terminal,
+              or rely on NSGlobalDomain fallback).
+              {{ ansible_failed_result.msg | default('unknown error') }}
+
+        - name: Apply smart quote/dash overrides via NSGlobalDomain (fallback)
+          community.general.osx_defaults:
+            domain: NSGlobalDomain
+            key: "{{ item.key }}"
+            type: bool
+            value: "{{ item.value }}"
+          loop: "{{ macos_defaults_apple_notes | dict2items }}"
+          loop_control:
+            label: "{{ item.key }}"
+          when: macos_defaults_apple_notes_global_fallback | bool
+
+    - name: Show NSGlobalDomain smart typography defaults that would be applied (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          defaults write NSGlobalDomain {{ item.key }}
+          -bool {{ item.value | string | lower }}
+      loop: "{{ macos_defaults_global_smart_typography_keys | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when:
+        - dry_run | default(false) | bool
+        - macos_defaults_enabled | bool
+        - macos_defaults_global_smart_typography | bool
+
+    - name: Disable smart quotes and dashes globally (NSGlobalDomain)
+      community.general.osx_defaults:
+        domain: NSGlobalDomain
+        key: "{{ item.key }}"
+        type: bool
+        value: "{{ item.value }}"
+      loop: "{{ macos_defaults_global_smart_typography_keys | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when:
+        - macos_defaults_enabled | bool
+        - macos_defaults_global_smart_typography | bool
+        - not (dry_run | default(false) | bool)
