@@ -7,7 +7,7 @@ Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 ## What Ansible does
 
 | Step | Automated |
-|------|-----------|
+| ------ | ----------- |
 | `pip3 install --user klam` from Artifactory | Yes, when `klam` missing and `klam_artifactory_api_key` is passed |
 | `ces_sandbox` / `ces_dev` / `ces_prd` shell aliases | Yes → `~/.config/workstation-devops/klam_aliases.zsh` |
 | Artifactory API key | **No** — you pass at apply time (not stored in git) |
@@ -19,7 +19,7 @@ Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 ## Credentials (do not confuse)
 
 | Secret | Used for | Where |
-|--------|----------|--------|
+| -------- | ---------- | -------- |
 | **Artifactory API key** | `pip install` index URL | Employer Artifactory profile → API Key |
 | **Corp LDAP / Okta password** | `vault login -method=okta`, `klam login` prompts | Password manager — **never** put in Ansible/git |
 
@@ -99,7 +99,7 @@ Replace `ARTIFACTORY_HOST` with your employer Artifactory hostname from `work.lo
    ```
 
 | Profile | Project | Env | AWS account | Team use |
-|---------|---------|-----|-------------|----------|
+| --------- | --------- | ----- | ------------- | ---------- |
 | `ces_sandbox` | AWS_CESSS-SecurityTooling | DEV | 365215803550 | **CES Vault team dev** (sandbox/Terraform) |
 | `ces_dev` | ATS_CES_Vault | DEV | 891377009010 | Shared Vault dev (other teams) |
 | `ces_prd` | ATS_CES_Vault | PRD | 937224341222 | Vault prod |
@@ -123,7 +123,7 @@ ces_term_reset   # restore default colors and unset AWS_PROFILE
 **KLAM `osascript` / System Events error on login:** KLAM tries to close the OAuth browser tab via AppleScript. Login still succeeds. To silence it: **System Settings → Privacy & Security → Accessibility** → allow **iTerm** (optional).
 
 | Function | Visual cue | Meaning |
-|----------|------------|---------|
+| ---------- | ------------ | --------- |
 | `ces_sandbox` | Green | CES Vault **team** dev |
 | `ces_dev` | Gold/yellow | Shared Vault dev (not CES team dev) |
 | `ces_prd` | Red | Prod warning |

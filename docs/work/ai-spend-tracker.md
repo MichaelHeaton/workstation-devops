@@ -3,7 +3,7 @@
 Menu-bar app for tracking AI API spend. **Source** may be private (employer GitHub SSO). **Binaries and Sparkle updates** are public so installs and auto-update work without SSO.
 
 | What | URL | SSO? |
-|------|-----|------|
+| ------ | ----- | ------ |
 | Source / PRs | Private employer repo | Yes |
 | DMG downloads | [roymerrill/ai-spend-tracker-releases](https://github.com/roymerrill/ai-spend-tracker-releases/releases) | No |
 | Sparkle appcast | Public gist (see app `SUFeedURL`) | No |

@@ -7,7 +7,7 @@ Content imported from the deleted `workstation-ces_vault` repo (README/AGENT, 20
 **Implemented:** `vault-tools`, `klam`, `shell`, `teleport`, `kubernetes`, `git-github` (tagged in `roles/common/`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md), [teleport.md](teleport.md), [kubernetes.md](kubernetes.md), [git-github.md](git-github.md), [tags.md](../tags.md).
 
 | Role | Target | Notes |
-|------|--------|-------|
+| ------ | -------- | ------- |
 | ~~`shell`~~ | ~~oh-my-zsh, zshrc fragments~~ | **Done** — `roles/shell/` (`shell` + `work` tags) |
 | ~~`teleport`~~ | ~~fzf, `t()`, `tshl`~~ | **Done** — `roles/teleport/` (`work` tag) |
 | ~~`kubernetes`~~ | ~~kubelogin **v0.1.9 only**~~ | **Done** — `roles/kubernetes/` (`work` tag) |

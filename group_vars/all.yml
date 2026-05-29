@@ -46,7 +46,8 @@ managed_repos_common:
   - repo: git@github.com-personal:MichaelHeaton/ai-skills.git
     dest: personal/ai-skills
     version: main
-    install_cmd: make install-system
+    # hooks-install: git commit + pre-push lint (requires pre-commit formula below)
+    install_cmd: bash -c 'make install-system && make hooks-install'
   - repo: git@github.com-personal:MichaelHeaton/memex.git
     dest: personal/memex
 

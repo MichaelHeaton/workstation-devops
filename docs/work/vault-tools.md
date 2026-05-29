@@ -7,7 +7,7 @@ Automated by `roles/vault_tools` on `make apply` when `workstation_profile=work`
 ## What Ansible deploys
 
 | Function | Purpose |
-|----------|---------|
+| ---------- | --------- |
 | `vl` | Numbered cluster picker → `VAULT_ADDR` + Okta login |
 | `vault_login` | Alias for `vl` (wiki name) |
 | `vault_mgmt` | Teleport app `vault-mgmt-access` → local proxy :8222 + Okta login |

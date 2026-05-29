@@ -11,7 +11,7 @@
 ## Make helpers
 
 | Command | Purpose |
-|---------|---------|
+| --------- | --------- |
 | `make secrets-check` | Verify Keychain items and local secret files (no password output) |
 | `make secrets-vault-okta` | Interactive create/update Vault Okta Keychain item |
 | `make secrets-atlassian-env` | Create `~/.mcp/env/atlassian.env` from template |
@@ -22,7 +22,7 @@
 When creating an **application password** item manually or via `make secrets-vault-okta`:
 
 | Keychain Access UI | `security` CLI flag | Example |
-|--------------------|---------------------|---------|
+| -------------------- | --------------------- | --------- |
 | **Where** | `-s` (service) | `work-vault-okta` |
 | **Account** | `-a` (account) | `YOUR_LDAP` (work LDAP) |
 | **Name** (display) | `-l` (label) | `work-vault-okta` |
@@ -43,7 +43,7 @@ After Keychain setup: `make apply && source ~/.zshrc` — the vault-tools block 
 Metadata lives in `config/secrets-registry.yml`:
 
 | ID | Store | Service / path | Account | Used by |
-|----|-------|----------------|---------|---------|
+| ---- | ------- | ---------------- | --------- | --------- |
 | `vault_okta` | Keychain | `work-vault-okta` (override in `work.local.yml`) | `work_username` | `vl`, `vault_mgmt` |
 | `klam_artifactory_api_key` | Shell env | `KLAM_ARTIFACTORY_API_KEY` | — | KLAM pip install |
 | `atlassian_mcp` | File | `~/.mcp/env/atlassian.env` | work email in file | Atlassian MCP |
@@ -53,7 +53,7 @@ Employer URLs, repo paths, and any legacy Keychain service names belong in **`gr
 ## What stays out of git
 
 | Secret | Where it lives |
-|--------|----------------|
+| -------- | ---------------- |
 | Corp LDAP / VPN password | Keychain (`make secrets-vault-okta`) |
 | Artifactory API key | `export KLAM_ARTIFACTORY_API_KEY=…` at apply time |
 | Jira / Confluence tokens | `~/.mcp/env/atlassian.env` |
@@ -80,7 +80,7 @@ Discover paths: `op item list --categories Login` (requires `op` signed in to th
 **When your employer provides org 1Password**, extend the same pattern (see `planned_onepassword` in `config/secrets-registry.yml`):
 
 | Secret | Today | 1Password target |
-|--------|--------|------------------|
+| -------- | -------- | ------------------ |
 | Vault Okta LDAP | Keychain or `vault_okta_op_ref` | `op://…` (supported now) |
 | KLAM Artifactory API key | `KLAM_ARTIFACTORY_API_KEY` env | `op read` / `op run` at apply time |
 | Atlassian MCP tokens | `~/.mcp/env/atlassian.env` | `op inject` or env from `op run` |

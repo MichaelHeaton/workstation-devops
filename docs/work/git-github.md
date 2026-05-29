@@ -7,7 +7,7 @@ Automated by `roles/git_github` on `make apply` when the `work` tag is in the al
 ## What Ansible deploys
 
 | Piece | Location | Tag |
-|-------|----------|-----|
+| ------- | ---------- | ----- |
 | GHEC `Host github.com` block | `~/.ssh/config` via chezmoi (`feature_work`) | `dotfiles` + `work` |
 | `ghec_ssh_key` in chezmoi data | `~/.config/chezmoi/chezmoi.yaml` | refreshed on `make apply` |
 | `gh` preferences | `~/.config/gh/config.yml` via chezmoi | `dotfiles` |
@@ -50,7 +50,7 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
 ## Multi-account layout
 
 | Remote host alias | Use for |
-|-------------------|---------|
+| ------------------- | --------- |
 | `github.com` | GHEC (work org repos) |
 | `github.com-personal` | Personal GitHub (`git@github.com-personal:MichaelHeaton/...`) |
 
