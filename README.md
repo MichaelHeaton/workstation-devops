@@ -5,7 +5,7 @@ Single Ansible workstation bootstrap for **personal** and **work** machines. Pro
 **Edit configuration in `group_vars/`** — not roles or `site.yml`.
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, ai-skills, memex) |
 | `group_vars/personal.yml` | Homelab repos, gaming, personal buckets |
 | `group_vars/work.yml` | Work layout, CES Vault tooling, work identity |
@@ -40,7 +40,7 @@ make apply      # apply (installs missing items only when profile allows)
 ## Profiles
 
 | Profile | Typical machine | Extra installs |
-|---------|-----------------|----------------|
+| --------- | ----------------- | ---------------- |
 | `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack) |
 | `work` | Work laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
@@ -68,7 +68,7 @@ roles/personal/          # personal-only hooks
 **Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs work tooling).
 
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
-- **`personal/ai-skills`** — portable AI workspace (`make install-system` on clone and re-apply)
+- **`personal/ai-skills`** — portable AI workspace (`make install-system` + `make hooks-install` on clone and re-apply)
 - **`personal/claude-skills`** — legacy mirror (clone only; deploy from ai-skills)
 - **`personal/memex`** — knowledge vault
 

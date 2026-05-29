@@ -39,7 +39,7 @@ If you cannot find the item, it was never created in Keychain Access (Passwords 
 ## Optional: keep other stores in sync
 
 | Store | Action |
-|-------|--------|
+| ------- | -------- |
 | **Apple Passwords** (separate from Keychain CLI) | If you keep a browser/autofill copy, update that entry to the same new password so you are not juggling two different secrets. |
 | **1Password** | If you use `vault_okta_op_ref` instead of Keychain, update the item field referenced by `op://…` — no Keychain step. |
 
@@ -73,7 +73,7 @@ Pick a cluster, complete **Okta MFA** (Watch/app). Login should succeed without 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
-|---------|----------------|-----|
+| --------- | ---------------- | ----- |
 | `security: … could not be found` | Wrong service/account or item only in Passwords app | Recreate item in Keychain Access; match `group_vars/work.local.yml`. |
 | Vault: invalid credentials | Keychain still has **old** password | Repeat update steps; confirm with verify command. |
 | Touch ID never appears for Terminal **`security`** | First-time access | System Settings → **Privacy & Security** → allow the Terminal/iTerm app to use the Keychain item when macOS prompts. |

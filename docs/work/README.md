@@ -9,7 +9,7 @@ Employer-specific URLs and repos: **`group_vars/work.local.yml`** (gitignored; c
 ## Already in workstation-devops
 
 | Area | Location |
-|------|----------|
+| ------ | ---------- |
 | MCP + Claude security dotfiles | `dotfiles/run_onchange_sync-mcp-servers.sh.tmpl`, `dotfiles/run_onchange_merge-claude-security.sh.tmpl` |
 | Cursor rules clone | `group_vars/work.local.yml` → `work/cursor-rules` |
 | Detect-first Homebrew (IT installs apps) | `group_vars/work.yml` |

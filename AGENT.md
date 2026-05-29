@@ -35,7 +35,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 ## Key commands
 
 | Command | Purpose |
-|---------|---------|
+| --------- | --------- |
 | `make profile` | Detect or change `~/.workstation_profile` |
 | `make dry-run` | Preview without writes |
 | `make apply` | Apply configuration (respects tag allowlist for profile) |

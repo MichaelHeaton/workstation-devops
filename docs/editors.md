@@ -7,7 +7,7 @@ Extension IDs are plain text, one per line. After installing something new in th
 3. `make apply` — `run_onchange_install-editor-extensions.sh.tmpl` installs missing extensions
 
 | File | Installed on |
-|------|----------------|
+| ------ | ---------------- |
 | `extensions-common.txt` | Cursor + VS Code |
 | `extensions-cursor.txt` | Cursor only |
 | `extensions-work.txt` | `work` tag — Cursor + VS Code |

@@ -5,7 +5,7 @@ Workstation capabilities use **tags** and an **allowlist** — not the work/pers
 ## Two layers
 
 | Layer | Controls | Example |
-|-------|----------|---------|
+| ------- | ---------- | --------- |
 | **Profile** (`work` / `personal`) | Repos, Homebrew lists, project buckets | `group_vars/work.yml` |
 | **Feature tags** | Dotfiles, shell, editors, Vault/KLAM | `workstation_tags_*` in group_vars |
 
@@ -20,7 +20,7 @@ workstation_tags = baseline + profile + extra   # unique
 ```
 
 | Source | Tags |
-|--------|------|
+| -------- | ------ |
 | `group_vars/all.yml` → `workstation_tags_baseline` | `dotfiles`, `shell`, `editors` |
 | `group_vars/work.yml` → `workstation_tags_profile` | `work` |
 | `group_vars/personal.yml` → `workstation_tags_profile` | `home` |
@@ -63,7 +63,7 @@ make apply TAGS=shell
 ## Tag → capability map
 
 | Tag | What runs |
-|-----|-----------|
+| ----- | ----------- |
 | `dotfiles` | Chezmoi (git, SSH, gh config, zprofile, MCP, Claude merges, Brave, …) |
 | `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`) |
 | `editors` | Cursor/VS Code settings + extension install script |

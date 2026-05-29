@@ -34,7 +34,7 @@ Managed by chezmoi: `dotfiles/dot_gitignore_global` → `~/.gitignore_global` (m
 Extension IDs live in `dotfiles/editors/`:
 
 | File | Scope |
-|------|--------|
+| ------ | -------- |
 | `extensions-common.txt` | Both editors |
 | `extensions-cursor.txt` | Cursor only |
 | `extensions-work.txt` | Work profile only (employer extension) |

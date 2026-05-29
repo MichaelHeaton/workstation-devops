@@ -5,7 +5,7 @@
 ## Where answers live
 
 | File | Created by | Committed? |
-|------|------------|------------|
+| ------ | ------------ | ------------ |
 | `~/.config/ai-skills/local.json` | `make install-system` in ai-skills | **Never** |
 | `~/.config/ai-skills/accounts.shell` | copy from template (optional) | **Never** |
 | `~/.config/ai-skills/leak-patterns` | optional private pre-commit regexes | **Never** |
@@ -18,7 +18,9 @@ Templates (safe to commit) live in **ai-skills**:
 
 ## Workstation playbook role
 
-`group_vars/all.yml` clones ai-skills and runs `make install-system`. That deploys **copies** to `~/.claude/` and creates `local.json` from the template if missing — not your filled-in answers.
+`group_vars/all.yml` clones ai-skills and runs `make install-system` plus `make hooks-install` (git commit and pre-push lint). That deploys **copies** to `~/.claude/`, installs pre-commit hooks in the ai-skills clone, and creates `local.json` from the template if missing — not your filled-in answers.
+
+`pre-commit` is installed via Homebrew (`homebrew_formulae_common` in `all.yml`). No separate one-time step on playbook-managed Macs.
 
 After a playbook run:
 

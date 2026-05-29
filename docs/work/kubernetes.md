@@ -9,7 +9,7 @@ Ethos requires **Azure/kubelogin v0.1.9 exactly**. Newer Homebrew builds can for
 ## What Ansible does
 
 | Step | Automated |
-|------|-----------|
+| ------ | ----------- |
 | Download `kubelogin-darwin-{arm64,amd64}.zip` v0.1.9 from GitHub | Yes, when missing or wrong version |
 | Install to `~/.local/bin/kubelogin` | Yes |
 | Symlink `kubectl-oidc_login` plugin | Yes |

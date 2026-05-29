@@ -7,7 +7,7 @@ Automated by `roles/teleport` on `make apply` when the `work` tag is in the allo
 ## What Ansible deploys
 
 | Helper | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `t` | Fuzzy-pick from `tsh ls` (full row) → `tsh ssh` |
 | `tshl` | Alias: `tsh ssh $(tsh ls \| cut … \| fzf)` |
 
