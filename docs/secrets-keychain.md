@@ -6,7 +6,7 @@
 
 **Registry:** `config/secrets-registry.yml` lists what exists (service names, accounts, docs) — **not** secret values.
 
-**Machine fill-in values:** `group_vars/work.local.yml` (gitignored) + [Memex `work.local.yml`](https://github.com/MichaelHeaton/memex) copy.
+**Machine fill-in values:** `group_vars/work.local.yml` (gitignored) + a private Memex copy if you maintain one locally.
 
 ## Make helpers
 
@@ -23,32 +23,32 @@ When creating an **application password** item manually or via `make secrets-vau
 
 | Keychain Access UI | `security` CLI flag | Example |
 |--------------------|---------------------|---------|
-| **Where** | `-s` (service) | `adobe-vault-okta` |
-| **Account** | `-a` (account) | `ult35127` (work LDAP) |
+| **Where** | `-s` (service) | `work-vault-okta` |
+| **Account** | `-a` (account) | `YOUR_LDAP` (work LDAP) |
 | **Name** (display) | `-l` (label) | `work-vault-okta` |
 | **Password** | `-w` (never echo in scripts logged to disk) | corp LDAP |
 
-Ansible `vault_okta_keychain_service` in `work.local.yml` must match **Where / `-s`**, not necessarily the display name.
+Ansible `vault_okta_keychain_service` in `work.local.yml` must match **Where / `-s`**. On older machines the service name may differ — set the override in `work.local.yml`, not in this repo.
 
 Verify without printing the password:
 
 ```bash
-security find-generic-password -s adobe-vault-okta -a YOUR_LDAP >/dev/null && echo ok
+security find-generic-password -s work-vault-okta -a YOUR_LDAP >/dev/null && echo ok
 ```
 
 After Keychain setup: `make apply && source ~/.zshrc` — the vault-tools block exports `VAULT_OKTA_PASSWORD_CMD` when the probe succeeds.
 
-## Configured secrets (this workstation)
+## Registry summary
 
-Metadata lives in `config/secrets-registry.yml`. Current work-profile setup:
+Metadata lives in `config/secrets-registry.yml`:
 
 | ID | Store | Service / path | Account | Used by |
 |----|-------|----------------|---------|---------|
-| `vault_okta` | Keychain | `adobe-vault-okta` | `work_username` | `vl`, `vault_mgmt` |
+| `vault_okta` | Keychain | `work-vault-okta` (override in `work.local.yml`) | `work_username` | `vl`, `vault_mgmt` |
 | `klam_artifactory_api_key` | Shell env | `KLAM_ARTIFACTORY_API_KEY` | — | KLAM pip install |
-| `atlassian_mcp` | File | `~/.mcp/env/atlassian.env` | LDAP email in file | Atlassian MCP |
+| `atlassian_mcp` | File | `~/.mcp/env/atlassian.env` | work email in file | Atlassian MCP |
 
-Full values and employer URLs: Memex `Raw/Resources/Adobe/workstation-devops/` (`work.local.yml`, `employer-reference.yml`, `keychain-secrets.yml`).
+Employer URLs, repo paths, and any legacy Keychain service names belong in **`group_vars/work.local.yml`** or your private Memex copy — not in the public repo.
 
 ## What stays out of git
 
@@ -77,7 +77,7 @@ vault_okta_op_ref: "op://VAULT/Item Name/password"   # example — use your real
 
 Discover paths: `op item list --categories Login` (requires `op` signed in to the **employer** account).
 
-**When Adobe provides org 1Password**, extend the same pattern (see `planned_onepassword` in `config/secrets-registry.yml`):
+**When your employer provides org 1Password**, extend the same pattern (see `planned_onepassword` in `config/secrets-registry.yml`):
 
 | Secret | Today | 1Password target |
 |--------|--------|------------------|
@@ -88,7 +88,7 @@ Discover paths: `op item list --categories Login` (requires `op` signed in to th
 
 **Planned Make targets** (not built yet): `secrets-1p-discover`, `secrets-1p-vault-okta`, `secrets-check` branch that verifies `op` session + item existence.
 
-**Memex:** store real `op://` paths in `keychain-secrets.yml` / `employer-reference.yml` — never in the public repo.
+**Private notes:** store real `op://` paths in your gitignored `work.local.yml` or private Memex — never in the public repo.
 
 ## See also
 

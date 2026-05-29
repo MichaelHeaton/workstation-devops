@@ -15,6 +15,6 @@ Runtime env (export in shell, not stored by make):
   export KLAM_ARTIFACTORY_API_KEY=...   # before make apply for KLAM pip install
 
 Registry (metadata only): config/secrets-registry.yml
-Memex source of truth:    ~/Projects/personal/memex/Raw/Resources/Adobe/workstation-devops/
+Private Memex copy:       optional — paths vary; never commit employer values to GitHub
 Docs:                     docs/secrets-keychain.md
 EOF

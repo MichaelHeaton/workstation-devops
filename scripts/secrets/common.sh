@@ -44,7 +44,7 @@ resolve_work_username() {
   local user
   user="$(work_local_value work_username)"
   if [[ -z "$user" ]]; then
-    user="$(yq_read "${HOME}/.config/chezmoi/chezmoi.yaml" '.data.work_username // .data.adobe_username // ""' 2>/dev/null || true)"
+    user="$(yq_read "${HOME}/.config/chezmoi/chezmoi.yaml" '.data.work_username // ""' 2>/dev/null || true)"
   fi
   if [[ -z "$user" ]]; then
     user="${WORK_USERNAME:-}"

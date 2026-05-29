@@ -9,7 +9,8 @@ source "${SCRIPT_DIR}/common.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 template="${REPO_ROOT}/dotfiles/dot_mcp/env/atlassian.env.example"
 dest="${HOME}/.mcp/env/atlassian.env"
-memex_ref="${HOME}/Projects/personal/memex/Raw/Resources/Adobe/workstation-devops/employer-reference.yml"
+# Optional: set WORKSTATION_DEVOPS_MEMEX_REF to a private employer-reference.yml (never in public repo)
+memex_ref="${WORKSTATION_DEVOPS_MEMEX_REF:-}"
 
 mkdir -p "$(dirname "$dest")"
 
@@ -28,7 +29,7 @@ cp "$template" "$dest"
 chmod 600 "$dest"
 
 # Optional: fill URLs/username from Memex employer-reference when yq + file exist
-if [[ -f "$memex_ref" ]] && command -v yq >/dev/null 2>&1; then
+if [[ -n "$memex_ref" && -f "$memex_ref" ]] && command -v yq >/dev/null 2>&1; then
   jira_url="$(yq '.mcp_atlassian.jira_url // ""' "$memex_ref" 2>/dev/null || true)"
   wiki_url="$(yq '.mcp_atlassian.confluence_url // ""' "$memex_ref" 2>/dev/null || true)"
   user="$(yq '.mcp_atlassian.username // ""' "$memex_ref" 2>/dev/null || true)"
