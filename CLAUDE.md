@@ -16,11 +16,11 @@ This repo is on GitHub. Homelab repos in `group_vars/personal.yml` may still use
 
 ## Claude Code settings
 
-`~/.claude/settings.json` is managed as a chezmoi dotfile template. Do not edit it directly — changes are overwritten on the next playbook run.
+`~/.claude/settings.json` is **not** fully templated — merge scripts add deny/allow entries and hooks on `make apply`. Do not hand-edit policy expecting it to persist against the next apply.
 
-**To change Claude settings:** edit `dotfiles/dot_claude/settings.json.tmpl` → branch + MR → re-run the playbook.
+**To change Claude policy:** edit the `run_onchange_merge-claude-*.sh.tmpl` scripts under `dotfiles/` → branch + PR → re-run the playbook.
 
-**Ownership:** the template manages permissions, hooks, model, and theme. `mcpServers` is managed separately by `run_onchange_sync-mcp-servers.sh.tmpl` (sourced from `~/.mcp/servers.json`) — do not add it to the template.
+**Ownership:** merge scripts manage permissions and hooks. `mcpServers` is merged by `run_onchange_sync-mcp-servers.sh.tmpl` from `~/.mcp/servers.json`. Hook **scripts** (`block-env-read.py`, etc.) live in **ai-skills** (`make install-system`); `run_onchange_merge-claude-hooks.sh.tmpl` registers them in settings.
 
 ## Why Claude does things this way
 

@@ -1,4 +1,8 @@
 ---
+# Personal profile marker — home-tagged tasks can be added here (see docs/tags.md).
+
 - name: Mark personal profile role applied
   ansible.builtin.set_fact:
     workstation_personal_role_applied: true
+  tags:
+    - home

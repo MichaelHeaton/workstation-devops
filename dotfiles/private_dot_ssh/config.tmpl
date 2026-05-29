@@ -1,0 +1,30 @@
+{{- if .feature_work }}
+# GHEC (work tag) — key path set by roles/git_github; upload .pub to GitHub enterprise SSO
+Host github.com
+  HostName github.com
+  User git
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile {{ .chezmoi.homeDir }}/.ssh/{{ .ghec_ssh_key | default "id_ed25519_github" }}
+  IdentitiesOnly yes
+{{- else }}
+# Public GitHub (personal profile — no GHEC block)
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519_github_personal
+  IdentitiesOnly yes
+{{- end }}
+
+# Personal GitHub — use remote: git@github.com-personal:USER/REPO.git
+Host github.com-personal
+  HostName github.com
+  User git
+  IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519_github_personal
+  IdentitiesOnly yes
+
+Host gitlab.com
+  HostName gitlab.com
+  User git
+  IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519_github_personal
+  IdentitiesOnly yes

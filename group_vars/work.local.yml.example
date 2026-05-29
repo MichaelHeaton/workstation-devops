@@ -1,0 +1,41 @@
+# Copy to group_vars/work.local.yml (gitignored) on work machines.
+# Holds employer-specific URLs and repos — not committed to the public repo.
+#
+#   cp group_vars/work.local.yml.example group_vars/work.local.yml
+#   # edit values, then make apply
+
+# --- Managed repos (work-only clones) ----------------------------------------
+managed_repos_local:
+  - repo: git@github.com:YOUR_ORG/cursor-rules.git
+    dest: work/cursor-rules
+
+# --- KLAM Artifactory pip index ----------------------------------------------
+klam_artifactory_host: artifactory.internal.example
+klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
+
+# --- Vault cluster URLs (vl picker) ------------------------------------------
+vault_clusters:
+  - label: DEV-AMER
+    url: https://vault-amer.dev.internal.example
+  - label: PROD-AMER
+    url: https://vault-amer.internal.example
+  - label: PROD-APAC
+    url: https://vault-apac.internal.example
+  - label: PROD-EMEA
+    url: https://vault-emea.internal.example
+  - label: TRANSIT
+    url: https://vault-transit-amer.internal.example
+  - label: VAULT-A
+    url: https://vault.internal.example
+  - label: VAULT-A-DEV
+    url: https://vault.dev.internal.example
+  - label: TEST
+    url: https://vault-test.dev.internal.example
+  - label: VII-DEV
+    url: https://vault-vii.dev.internal.example
+  - label: VII-DEV-INT
+    url: https://vault-int-vii.dev.internal.example
+
+# --- Optional: Okta password from Keychain -----------------------------------
+# vault_okta_use_password_store: true
+# vault_okta_keychain_service: work-vault-okta

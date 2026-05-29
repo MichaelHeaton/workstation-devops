@@ -1,0 +1,3 @@
+# Work profile only — employer-internal extension (Cursor + VS Code when available).
+# Extension marketplace ID is vendor-defined; do not rename the ID line below.
+adobe-pass-aide-netra.adobe-developer-toolkit

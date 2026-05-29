@@ -1,9 +1,11 @@
 ---
-# Install KLAM CLI from Adobe Artifactory and deploy ces_* credential aliases.
+# Install KLAM CLI from employer Artifactory and deploy ces_* credential aliases.
 # IAM groups must exist before profiles authenticate; install can run earlier.
 
 - name: KLAM role
   when: klam_enabled | default(true) | bool
+  tags:
+    - work
   block:
     - name: Resolve KLAM Artifactory API key (extra-var or env, not committed)
       ansible.builtin.set_fact:
@@ -32,7 +34,7 @@
       ansible.builtin.debug:
         msg: >-
           Would install {{ klam_pip_package }} via pip3 from Artifactory
-          (user={{ adobe_username }}, index={{ klam_artifactory_host }}/{{ klam_artifactory_pypi_path }}).
+          (user={{ work_username }}, index={{ klam_artifactory_host }}/{{ klam_artifactory_pypi_path }}).
           Pass -e klam_artifactory_api_key=... from your Artifactory profile API key.
       when:
         - dry_run | default(false) | bool
@@ -41,8 +43,8 @@
     - name: KLAM install skipped — Artifactory API key not provided
       ansible.builtin.debug:
         msg: >-
-          klam not on PATH. Get an API key at https://artifactory.corp.adobe.com/artifactory/webapp/#/profile
-          (Edit Profile → API Key). This is not your ADOBENET password.
+          klam not on PATH. Get an API key from your employer Artifactory profile page
+          (Edit Profile → API Key). This is not your corp VPN password.
           Then: export KLAM_ARTIFACTORY_API_KEY=... && make apply
           (or EXTRA_VARS='-e klam_artifactory_api_key=...'). Manual: docs/work/klam.md
       when:
@@ -62,18 +64,18 @@
     - name: Resolve KLAM Artifactory LDAP username
       ansible.builtin.set_fact:
         klam_artifactory_username_resolved: >-
-          {{ lookup('env', 'ADOBE_USERNAME')
+          {{ lookup('env', 'WORK_USERNAME')
              | default(klam_artifactory_username, true)
-             | default(adobe_username, true) }}
+             | default(work_username, true) }}
 
-    - name: Warn when Artifactory username may be macOS account (not Adobe LDAP)
+    - name: Warn when Artifactory username may be macOS account (not work LDAP)
       ansible.builtin.debug:
         msg: >-
           klam_artifactory_username is "{{ klam_artifactory_username_resolved }}"
           (same as macOS login {{ ansible_facts['user_id'] }}).
-          Artifactory pip auth usually needs Adobe LDAP, e.g. ult35127:
-          export ADOBE_USERNAME=ult35127
-          or make apply EXTRA_VARS='-e adobe_username=ult35127'
+          Artifactory pip auth usually needs work LDAP, e.g. YOUR_LDAP:
+          export WORK_USERNAME=YOUR_LDAP
+          or make apply EXTRA_VARS='-e work_username=YOUR_LDAP'
       when:
         - klam_install_needed | bool
         - klam_artifactory_api_key_resolved | length > 0
@@ -147,7 +149,7 @@
         msg: >-
           KLAM pip install failed (rc={{ klam_pip_install.rc }}).
           LDAP user={{ klam_artifactory_username_resolved }}.
-          Common fixes: (1) export ADOBE_USERNAME=ult35127 if Artifactory 401,
+          Common fixes: (1) export WORK_USERNAME=YOUR_LDAP if Artifactory 401,
           (2) regenerate Artifactory API key if expired,
           (3) VPN on, (4) manual: docs/work/klam.md.
           pip: >-

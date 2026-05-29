@@ -2,7 +2,7 @@
 
 Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 
-**Wiki:** [KLAM Command Line Interface](https://wiki.corp.adobe.com/spaces/spartans/pages/2187660420/KLAM+Command+Line+Interface)
+**Source:** KLAM Command Line Interface wiki (internal)
 
 ## What Ansible does
 
@@ -11,7 +11,7 @@ Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 | `pip3 install --user klam` from Artifactory | Yes, when `klam` missing and `klam_artifactory_api_key` is passed |
 | `ces_sandbox` / `ces_dev` / `ces_prd` shell aliases | Yes → `~/.config/workstation-devops/klam_aliases.zsh` |
 | Artifactory API key | **No** — you pass at apply time (not stored in git) |
-| KLAM trust key (`klam.corp.adobe.com` → CLI keys) | **No** — one-time in browser |
+| KLAM trust key (employer KLAM portal → CLI keys) | **No** — one-time in browser |
 | `klam login` / `klam configure-profile` | **No** — interactive; needs IAM groups |
 
 > **Naming:** Use **`ces_*`** profiles (CES Vault). Older wiki/onboarding examples use `cstdev`/`cstprd` (legacy CST naming).
@@ -20,8 +20,12 @@ Automated by `roles/klam` on `make apply` when `workstation_profile=work`.
 
 | Secret | Used for | Where |
 |--------|----------|--------|
-| **Artifactory API key** | `pip install` index URL | [Artifactory profile](https://artifactory.corp.adobe.com/artifactory/webapp/#/profile) → API Key |
-| **ADOBENET / Okta password** | `vault login -method=okta`, `klam login` prompts | Apple Passwords “Adobe: ADOBENET” — **never** put in Ansible/git |
+| **Artifactory API key** | `pip install` index URL | Employer Artifactory profile → API Key |
+| **Corp LDAP / Okta password** | `vault login -method=okta`, `klam login` prompts | Password manager — **never** put in Ansible/git |
+
+## Local config
+
+Set **`klam_artifactory_host`** in `group_vars/work.local.yml` (see `work.local.yml.example`).
 
 ## Install via playbook
 
@@ -30,9 +34,9 @@ The CLI is **not** installed until you pass an Artifactory API key. Aliases alon
 **Preferred** (keeps the key out of shell history):
 
 ```bash
-# VPN on; API key from Artifactory profile page (not ADOBENET)
+# VPN on; API key from Artifactory profile page (not corp VPN password)
 export KLAM_ARTIFACTORY_API_KEY='paste-key-here'
-export ADOBE_USERNAME=ult35127   # Artifactory LDAP — not your macOS login name
+export WORK_USERNAME=YOUR_LDAP   # Artifactory LDAP — not your macOS login name
 cd ~/Projects/personal/workstation-devops
 make apply
 source ~/.zshrc
@@ -44,19 +48,21 @@ klam --help
 Or via extra-var:
 
 ```bash
-make apply EXTRA_VARS='-e klam_artifactory_api_key=YOUR_ARTIFACTORY_API_KEY adobe_username=ult35127'
+make apply EXTRA_VARS='-e klam_artifactory_api_key=YOUR_ARTIFACTORY_API_KEY work_username=YOUR_LDAP'
 ```
 
 ## Manual pip install (same as wiki)
 
 ```bash
 pip3 install --user --break-system-packages klam \
-  -i "https://ULT35127:YOUR_API_KEY@artifactory.corp.adobe.com/artifactory/api/pypi/pypi-klam-cli-release/simple"
+  -i "https://YOUR_LDAP:YOUR_API_KEY@ARTIFACTORY_HOST/artifactory/api/pypi/pypi-klam-cli-release/simple"
 ```
+
+Replace `ARTIFACTORY_HOST` with your employer Artifactory hostname from `work.local.yml`.
 
 ## After install (manual, one-time)
 
-1. **Trust key** — [klam.corp.adobe.com](https://klam.corp.adobe.com) → Profile → Command Line Interface → Generate key → run the command shown.
+1. **Trust key** — employer KLAM portal → Profile → Command Line Interface → Generate key → run the command shown.
 
 2. **Discover policies** (environment is **uppercase** `DEV` / `PRD` as shown in `klam projects`):
 
@@ -95,7 +101,7 @@ pip3 install --user --break-system-packages klam \
 | Profile | Project | Env | AWS account | Team use |
 |---------|---------|-----|-------------|----------|
 | `ces_sandbox` | AWS_CESSS-SecurityTooling | DEV | 365215803550 | **CES Vault team dev** (sandbox/Terraform) |
-| `ces_dev` | ATS_CES_Vault | DEV | 891377009010 | Shared Vault dev (other Adobe teams) |
+| `ces_dev` | ATS_CES_Vault | DEV | 891377009010 | Shared Vault dev (other teams) |
 | `ces_prd` | ATS_CES_Vault | PRD | 937224341222 | Vault prod |
 
 IAM group membership is required before profiles work — see [setup-notes.md](setup-notes.md).

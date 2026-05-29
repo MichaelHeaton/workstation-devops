@@ -75,14 +75,14 @@
   register: chezmoi_config
   when: not (dry_run | default(false) | bool)
 
-- name: Seed chezmoi config (first run only)
+- name: Ensure chezmoi config is current (identity + feature tags)
   ansible.builtin.template:
     src: chezmoi.yaml.j2
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/chezmoi/chezmoi.yaml"
     mode: "0600"
-  when:
-    - not (dry_run | default(false) | bool)
-    - not chezmoi_config.stat.exists
+  when: not (dry_run | default(false) | bool)
+  tags:
+    - dotfiles
 
 - name: Check for pending chezmoi dotfile changes
   ansible.builtin.command:
@@ -108,6 +108,8 @@
     not (dry_run | default(false) | bool) and
     (chezmoi_diff.stdout | default('') | trim | length > 0)
   when: chezmoi_available | default(false) | bool
+  tags:
+    - dotfiles
 
 - name: Show dry-run diff
   ansible.builtin.debug:

@@ -43,7 +43,7 @@
     },
     {
       "dir": "Profile 1",
-      "name": "Adobe",
+      "name": "Work",
       "local_state": {
         "profile_highlight_color": -13625058,
         "default_avatar_stroke_color": -920588,
@@ -54,7 +54,7 @@
       "preferences": {
         "profile": {
           "avatar_index": 84,
-          "name": "Adobe",
+          "name": "Work",
           "is_using_default_name": false
         },
         "browser": {

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# merge-claude-hooks — register ai-skills hook scripts in ~/.claude/settings.json.
+#
+# ADDITIVE ONLY: installs Read (block-env-read) and UserPromptSubmit (lean-context)
+# hooks when missing. Hook scripts are deployed by ai-skills make install-system.
+#
+# Bump to force re-run:
+# hooks-policy-version: v1.0.0
+
+set -euo pipefail
+
+SETTINGS="$HOME/.claude/settings.json"
+BLOCK_ENV="$HOME/.claude/hooks/block-env-read.py"
+LEAN_CTX="$HOME/.claude/hooks/lean-context-reminder.py"
+
+if [[ ! -f "$SETTINGS" ]]; then
+  echo "merge-claude-hooks: $SETTINGS not found, skipping"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: merge-claude-hooks: jq not installed, skipping" >&2
+  exit 0
+fi
+
+PYTHON_BIN=$(command -v python3)
+
+READ_HOOK='{
+  "matcher": "Read",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "__PYTHON__ __BLOCK_ENV__"
+    }
+  ]
+}'
+
+PROMPT_HOOK='{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "__PYTHON__ __LEAN_CTX__"
+    }
+  ]
+}'
+
+READ_HOOK="${READ_HOOK//__PYTHON__/$PYTHON_BIN}"
+READ_HOOK="${READ_HOOK//__BLOCK_ENV__/$BLOCK_ENV}"
+PROMPT_HOOK="${PROMPT_HOOK//__PYTHON__/$PYTHON_BIN}"
+PROMPT_HOOK="${PROMPT_HOOK//__LEAN_CTX__/$LEAN_CTX}"
+
+if [[ ! -f "$BLOCK_ENV" ]]; then
+  echo "merge-claude-hooks: $BLOCK_ENV missing (run ai-skills make install-system), skipping Read hook"
+  READ_HOOK=""
+fi
+
+if [[ ! -f "$LEAN_CTX" ]]; then
+  echo "merge-claude-hooks: $LEAN_CTX missing (run ai-skills make install-system), skipping UserPromptSubmit hook"
+  PROMPT_HOOK=""
+fi
+
+has_read=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Read")] | length' "$SETTINGS")
+if [[ -n "$READ_HOOK" && "$has_read" -eq 0 ]]; then
+  echo "merge-claude-hooks: adding Read PreToolUse hook (block-env-read)..."
+  tmp=$(mktemp)
+  jq --argjson hook "$READ_HOOK" \
+    '.hooks.PreToolUse = ((.hooks.PreToolUse // []) + [$hook])' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+elif [[ "$has_read" -gt 0 ]]; then
+  echo "merge-claude-hooks: Read hook already present, skipping"
+fi
+
+has_prompt=$(jq '[.hooks.UserPromptSubmit[]? | select(.matcher == "")] | length' "$SETTINGS")
+if [[ -n "$PROMPT_HOOK" && "$has_prompt" -eq 0 ]]; then
+  echo "merge-claude-hooks: adding UserPromptSubmit hook (lean-context-reminder)..."
+  tmp=$(mktemp)
+  jq --argjson hook "$PROMPT_HOOK" \
+    '.hooks.UserPromptSubmit = ((.hooks.UserPromptSubmit // []) + [$hook])' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+elif [[ "$has_prompt" -gt 0 ]]; then
+  echo "merge-claude-hooks: UserPromptSubmit hook already present, skipping"
+fi
+
+echo "merge-claude-hooks: done"

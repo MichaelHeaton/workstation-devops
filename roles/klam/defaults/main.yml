@@ -1,15 +1,14 @@
 ---
-# KLAM CLI — Adobe Artifactory pip install + shell aliases (work profile).
-# Wiki: https://wiki.corp.adobe.com/spaces/spartans/pages/2187660420/KLAM+Command+Line+Interface
+# KLAM CLI — Artifactory pip install + shell aliases (work profile).
+# Set klam_artifactory_host in group_vars/work.local.yml (see work.local.yml.example).
 
 klam_enabled: true
 klam_pip_package: klam
-klam_artifactory_host: artifactory.corp.adobe.com
+klam_artifactory_host: ""
 klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
-# Pass at apply time only — Artifactory API key (profile page), NOT ADOBENET/LDAP password:
-#   export KLAM_ARTIFACTORY_API_KEY=... && make apply
-# Adobe LDAP for the pip index (defaults to adobe_username; override with ADOBE_USERNAME env)
-klam_artifactory_username: "{{ adobe_username }}"
-# Homebrew Python 3.12+ blocks user installs unless this is set (PEP 668)
-klam_pip_break_system_packages: "{{ is_mac | default(false) }}"
-klam_artifactory_api_key: ""
+
+# Work LDAP for the pip index (defaults to work_username; override with WORK_USERNAME env)
+klam_artifactory_username: "{{ work_username }}"
+
+# macOS Homebrew Python (PEP 668) — pass --break-system-packages to pip install --user
+klam_pip_break_system_packages: true

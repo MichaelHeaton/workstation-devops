@@ -1,0 +1,64 @@
+---
+# Deploy Teleport fzf helpers (t, tshl) from Vault Engineer Onboarding wiki.
+
+- name: Teleport role
+  when: teleport_enabled | default(true) | bool
+  tags:
+    - work
+  block:
+    - name: Check tsh is on PATH
+      ansible.builtin.command: command -v tsh
+      register: teleport_tsh_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check fzf is on PATH
+      ansible.builtin.command: command -v fzf
+      register: teleport_fzf_check
+      changed_when: false
+      failed_when: false
+
+    - name: Remind when tsh is missing
+      ansible.builtin.debug:
+        msg: >-
+          tsh not on PATH. Install Teleport client per employer IT / onboarding wiki,
+          then re-run make apply. Helpers deploy anyway but t/tshl will fail until tsh exists.
+      when: (teleport_tsh_check.rc | default(1)) != 0
+
+    - name: Remind when fzf is missing
+      ansible.builtin.debug:
+        msg: >-
+          fzf not on PATH. Install with: brew install fzf
+          (work profile detect-only — Ansible will not brew-install on locked-down work machines).
+      when: (teleport_fzf_check.rc | default(1)) != 0
+
+    - name: Ensure workstation-devops config directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Deploy Teleport shell helpers
+      ansible.builtin.copy:
+        src: teleport_helpers.zsh
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/workstation-devops/teleport_helpers.zsh"
+        mode: "0644"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Show Teleport helpers deploy (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would deploy ~/.config/workstation-devops/teleport_helpers.zsh
+          (t, tshl) and source from ~/.zshrc.
+      when: dry_run | default(false) | bool
+
+    - name: Source Teleport helpers from zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops teleport"
+        block: |
+          # Teleport fzf helpers (workstation-devops work profile)
+          [[ -f "$HOME/.config/workstation-devops/teleport_helpers.zsh" ]] && source "$HOME/.config/workstation-devops/teleport_helpers.zsh"
+        insertafter: EOF
+      when: not (dry_run | default(false) | bool)

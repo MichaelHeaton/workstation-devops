@@ -1,11 +1,15 @@
 ---
 # Personal machine profile — homelab, gaming, personal repos.
 
+# Default feature tags for personal machines (add work tools: -e 'workstation_tags_extra=[work]').
+workstation_tags_profile:
+  - home
+
 projects_buckets:
   - name: personal
   - name: scratch
   - name: workspace
-  - name: adobe
+  - name: work
   - name: specterrealm
   - name: uvcyber
   - name: archive

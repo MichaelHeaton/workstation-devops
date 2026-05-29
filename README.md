@@ -8,7 +8,8 @@ Single Ansible workstation bootstrap for **personal** and **work** machines. Pro
 |------|---------|
 | `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, ai-skills, memex) |
 | `group_vars/personal.yml` | Homelab repos, gaming, personal buckets |
-| `group_vars/work.yml` | Adobe layout, CES Vault repos, work identity |
+| `group_vars/work.yml` | Work layout, CES Vault tooling, work identity |
+| `group_vars/work.local.yml.example` | Template for gitignored employer-specific URLs/repos |
 
 Machine identity is stored in **`~/.workstation_profile`** (`work` or `personal`).
 
@@ -41,7 +42,7 @@ make apply      # apply (installs missing items only when profile allows)
 | Profile | Typical machine | Extra installs |
 |---------|-----------------|----------------|
 | `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack) |
-| `work` | Adobe laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
+| `work` | Work laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
 **Override for one run:** `ansible-playbook site.yml -e workstation_profile=work`
 
@@ -64,7 +65,7 @@ roles/work/              # work-only (extend with vault-tools, etc.)
 roles/personal/          # personal-only hooks
 ```
 
-**Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs Adobe).
+**Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs work tooling).
 
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
 - **`personal/ai-skills`** — portable AI workspace (`make install-system` on clone and re-apply)
@@ -73,9 +74,9 @@ roles/personal/          # personal-only hooks
 
 ## Work profile (CES Vault)
 
-Automates tooling described in the [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667). Dotfiles (MCP, Claude security) are applied today; Vault/Teleport/KLAM roles are tracked in [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md).
+Automates tooling described in the Vault Engineer Onboarding wiki (internal). Vault, Teleport, KLAM, and related roles live in this repo — see [docs/work/](docs/work/) and [docs/work/ces-vault-roadmap.md](docs/work/ces-vault-roadmap.md) for import history.
 
-Legacy `workstation-ces_vault` on GitHub is deprecated — use this repo only.
+The former standalone `workstation-ces_vault` repo was merged here and **deleted**; use this repo only.
 
 ## Migrating an existing Mac
 

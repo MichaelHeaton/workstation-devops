@@ -9,9 +9,9 @@ fi
 
 # --- Okta login (optional password from Keychain / 1Password) ----------------
 # Enabled via Ansible: group_vars/work.yml → vault_okta_use_password_store, vault_okta_keychain_service
-# One-time: Keychain Access → New Password Item (service adobe-vault-okta, account ult35127)
+# One-time: Keychain Access → New Password Item (service {{ vault_okta_keychain_service }}, account {{ work_username }})
 
-_vault_adobe_password() {
+_vault_okta_password() {
   [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]] || return 1
   local pass=""
 
@@ -21,7 +21,7 @@ _vault_adobe_password() {
   elif [[ -n "${VAULT_OKTA_OP_REF:-}" ]] && command -v op >/dev/null 2>&1; then
     pass="$(op read "${VAULT_OKTA_OP_REF}" 2>/dev/null)" || return 1
   elif command -v security >/dev/null 2>&1; then
-    local user="{{ adobe_username }}"
+    local user="{{ work_username }}"
     local svc="${VAULT_OKTA_KEYCHAIN_SERVICE:-}"
     if [[ -n "$svc" ]]; then
       pass="$(security find-generic-password -s "$svc" -w 2>/dev/null)" \
@@ -29,13 +29,7 @@ _vault_adobe_password() {
         || pass="$(security find-internet-password -s "$svc" -a "$user" -w 2>/dev/null)" \
         || return 1
     else
-      # Try common Adobe/Okta keychain shapes (Apple Passwords title ≠ service name)
-      local try_svc try
-      for try_svc in "Adobe: ADOBENET" "adobe-vault-okta" "login.adobe.com" "okta.com"; do
-        try="$(security find-generic-password -s "$try_svc" -w 2>/dev/null)" && pass="$try" && break
-        try="$(security find-internet-password -s "$try_svc" -a "$user" -w 2>/dev/null)" && pass="$try" && break
-      done
-      [[ -n "$pass" ]] || return 1
+      return 1
     fi
   else
     return 1
@@ -45,14 +39,14 @@ _vault_adobe_password() {
 }
 
 _vault_okta_login() {
-  local user="{{ adobe_username }}"
+  local user="{{ work_username }}"
   local pass
-  if pass="$(_vault_adobe_password)"; then
+  if pass="$(_vault_okta_password)"; then
     vault login -method=okta username="$user" password="$pass"
   else
     if [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]]; then
-      echo "Note: password store lookup failed — type ADOBENET password (MFA push still applies)." >&2
-      echo "  Fix: create Keychain item or adjust vault_okta_* in group_vars/work.yml — see docs/work/vault-tools.md" >&2
+      echo "Note: password store lookup failed — type corp LDAP password (MFA push still applies)." >&2
+      echo "  Fix: create Keychain item or adjust vault_okta_* in group_vars/work.local.yml — see docs/work/vault-tools.md" >&2
     fi
     vault login -method=okta username="$user"
   fi
@@ -61,31 +55,19 @@ _vault_okta_login() {
 # --- Interactive cluster login (wiki: vault_login; alias vl) ---------------
 
 vl() {
-  local devamer="https://vault-amer.dev.adobe.net"
-  local prodamer="https://vault-amer.adobe.net"
-  local prodapac="https://vault-apac.adobe.net"
-  local prodemea="https://vault-emea.adobe.net"
-  local transit="https://vault-transit-amer.adobe.net"
-  local vaulta="https://vault.adobe.net"
-  local vaultadev="https://vault.dev.adobe.net"
-  local test="https://vault-test.dev.or2.adobe.net"
-  local viidev="https://vault-vii.dev.adobe.net"
-  local viidevint="https://vault-int-vii.dev.adobe.net"
   local local_vault="http://127.0.0.1:8200"
 
   local clusters=(
-    "DEV-AMER    | $devamer"
-    "PROD-AMER   | $prodamer"
-    "PROD-APAC   | $prodapac"
-    "PROD-EMEA   | $prodemea"
-    "TRANSIT     | $transit"
-    "VAULT-A     | $vaulta"
-    "VAULT-A-DEV | $vaultadev"
-    "TEST        | $test"
-    "VII-DEV     | $viidev"
-    "VII-DEV-INT | $viidevint"
+{% for cluster in vault_clusters %}
+    "{{ cluster.label }}    | {{ cluster.url }}"
+{% endfor %}
     "LOCAL       | $local_vault"
   )
+
+  if (( ${#clusters[@]} <= 1 )); then
+    echo "No Vault clusters configured. Add vault_clusters in group_vars/work.local.yml — see work.local.yml.example" >&2
+    return 1
+  fi
 
   echo "Select a Vault cluster:"
   local i=1

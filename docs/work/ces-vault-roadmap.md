@@ -1,17 +1,19 @@
-# CES Vault roles — import roadmap
+# CES Vault roles — import history
 
-Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and common roles already live in workstation-devops.
+Content imported from the deleted `workstation-ces_vault` repo (README/AGENT, 2026-05). That repo is gone; workstation-devops is canonical.
 
-**Implemented:** `vault-tools`, `klam` (wired in `roles/work/tasks/main.yml`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md).
+**Status:** complete. Dotfiles and work-tagged roles live in this repo.
+
+**Implemented:** `vault-tools`, `klam`, `shell`, `teleport`, `kubernetes`, `git-github` (tagged in `roles/common/`). Docs: [vault-tools.md](vault-tools.md), [klam.md](klam.md), [teleport.md](teleport.md), [kubernetes.md](kubernetes.md), [git-github.md](git-github.md), [tags.md](../tags.md).
 
 | Role | Target | Notes |
 |------|--------|-------|
-| `shell` | oh-my-zsh, zshrc fragments, PATH, `TELEPORT_LOGIN` | Shell fragments under `roles/work/shell/files/`, sourced from `.zshrc` via task — do not edit `.zshrc` directly |
-| `teleport` | fzf, `t()`, `tshl` | `roles/work/teleport/files/` |
-| `kubernetes` | kubelogin **v0.1.9 only** | Ethos requirement; install from GitHub release, not brew upgrade |
-| `git-github` | `gh`, GHEC SSH config fragment | Template username placeholder; key path per user at apply time |
+| ~~`shell`~~ | ~~oh-my-zsh, zshrc fragments~~ | **Done** — `roles/shell/` (`shell` + `work` tags) |
+| ~~`teleport`~~ | ~~fzf, `t()`, `tshl`~~ | **Done** — `roles/teleport/` (`work` tag) |
+| ~~`kubernetes`~~ | ~~kubelogin **v0.1.9 only**~~ | **Done** — `roles/kubernetes/` (`work` tag) |
+| ~~`git-github`~~ | ~~GHEC SSH + gh~~ | **Done** — `roles/git_github/` + chezmoi gh config (`work` / `dotfiles`) |
 
-## Wiring when a role is ready
+## Adding future work roles
 
 1. Add `roles/work/<role>/tasks/main.yml` (idempotent; use `stat` / `when` guards).
 2. Import from `roles/work/tasks/main.yml`:
@@ -31,10 +33,9 @@ Imported from `workstation-ces_vault` README/AGENT (2026-05). Dotfiles and commo
 - **kubelogin v0.1.9** — do not upgrade via Homebrew.
 - **Bastion aliases** `scb`, `bcp`, `bcp2` — deprecated; use Teleport.
 - **KLAM** — CLI can be installed before IAM group membership; profiles fail until groups are granted.
-- **Adobe VPN** — required at runtime for corp Git, Jenkins, internal Vault URLs.
-- **`TELEPORT_LOGIN`** — Adobe LDAP username only (not full email).
+- **Corp VPN** — required at runtime for internal Git, Jenkins, Vault URLs.
+- **`TELEPORT_LOGIN`** — work LDAP username only (not full email).
 
 ## External references
 
-- [Vault Engineer Onboarding wiki](https://wiki.corp.adobe.com/pages/viewpage.action?pageId=2842250667)
-- [KLAM CLI wiki](https://wiki.corp.adobe.com/display/spartans/KLAM+Command+Line+Interface)
+Employer-internal wikis (Vault Engineer Onboarding, KLAM CLI) are the source of truth but are not linked from this public repo.

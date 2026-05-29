@@ -40,8 +40,8 @@
     workstation_profile_guess: >-
       {{
         'work' if (
-          ansible_facts['hostname'] is search('(?i)(adobe|corp|ces-|wkst-)')
-          or ansible_facts['nodename'] is search('(?i)(adobe|corp)')
+          ansible_facts['hostname'] is search('(?i)(corp|ces-|wkst-|work-)')
+          or ansible_facts['nodename'] is search('(?i)(corp|wkst-)')
         ) else 'personal'
       }}
   when: workstation_profile is not defined

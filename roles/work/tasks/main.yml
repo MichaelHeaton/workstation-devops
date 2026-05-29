@@ -1,12 +1,9 @@
 ---
+# Work profile marker — work-tagged tasks live in roles/common (shell, vault_tools, klam).
+# Profile still controls repos/packages via group_vars/work.yml; feature tags control tooling.
+
 - name: Mark work profile role applied
   ansible.builtin.set_fact:
     workstation_work_role_applied: true
-
-- name: Import vault_tools role
-  ansible.builtin.import_role:
-    name: vault_tools
-
-- name: Import klam role
-  ansible.builtin.import_role:
-    name: klam
+  tags:
+    - work

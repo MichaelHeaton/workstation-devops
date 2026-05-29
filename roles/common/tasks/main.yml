@@ -1,20 +1,70 @@
 ---
-# Always runs — layout, packages, clones, shared dotfiles.
+# Always runs — layout, packages, clones. Feature-tagged roles respect workstation_tags allowlist.
 - name: Import directories role
   ansible.builtin.import_role:
     name: directories
+
 - name: Import homebrew role
   ansible.builtin.import_role:
     name: homebrew
+
 - name: Import mac_dmg_apps role
   ansible.builtin.import_role:
     name: mac_dmg_apps
+
 - name: Import repos role
   ansible.builtin.import_role:
     name: repos
-- name: Import chezmoi role
+
+- name: Import chezmoi dotfiles role
   ansible.builtin.import_role:
     name: chezmoi
+  when: "'dotfiles' in workstation_tags"
+  tags:
+    - dotfiles
+
+- name: Import shell role
+  ansible.builtin.import_role:
+    name: shell
+  when: "'shell' in workstation_tags"
+  tags:
+    - shell
+
+- name: Import vault_tools role
+  ansible.builtin.import_role:
+    name: vault_tools
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
+- name: Import klam role
+  ansible.builtin.import_role:
+    name: klam
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
+- name: Import teleport role
+  ansible.builtin.import_role:
+    name: teleport
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
+- name: Import kubernetes role
+  ansible.builtin.import_role:
+    name: kubernetes
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
+- name: Import git_github role
+  ansible.builtin.import_role:
+    name: git_github
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
 - name: Import macos_defaults role
   ansible.builtin.import_role:
     name: macos_defaults
