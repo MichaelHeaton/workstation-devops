@@ -39,9 +39,11 @@ Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.y
 
 ```yaml
 vault_okta_use_password_store: true
-vault_okta_keychain_service: work-vault-okta   # Keychain "service" name (not Apple Passwords title)
+vault_okta_keychain_service: work-vault-okta   # Keychain “Where” / security -s (label may differ)
 # vault_okta_op_ref: "op://Employee/Work VPN/password"   # instead of keychain, if using 1Password CLI
 ```
+
+Or run **`make secrets-vault-okta`** (see [secrets-keychain.md](../secrets-keychain.md)).
 
 `make apply` updates the vault-tools block in `~/.zshrc`. Exports are written **only after** the Keychain item exists (or `vault_okta_op_ref` is set). Until then, `vl` uses the normal password prompt with no warning noise. Set `vault_okta_use_password_store: false` to disable entirely.
 
@@ -50,11 +52,16 @@ vault_okta_keychain_service: work-vault-okta   # Keychain "service" name (not Ap
 **Important:** entries in the **Passwords** app (System Settings → Passwords) are **not** visible to `security` or Terminal. You must create the item in **Keychain Access** (`/Applications/Utilities/Keychain Access.app`).
 
 1. **Keychain Access** → **File → New Password Item** (not Passwords app → New Password)
-2. **Keychain Item Name:** `work-vault-okta` — this becomes the **service** name (must match `vault_okta_keychain_service`)
+2. **Where (service):** `work-vault-okta` — must match `vault_okta_keychain_service`
 3. **Account Name:** your `work_username` (work LDAP)
-4. **Password:** corp LDAP / VPN password
-5. **Keychain:** login (default)
-6. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
+4. **Name (label):** any display name (often same as service)
+5. **Password:** corp LDAP / VPN password
+6. **Keychain:** login (default)
+7. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
+
+Or run **`make secrets-vault-okta`** instead of manual steps.
+
+**Legacy machines:** if an existing Keychain item uses a different **Where** name, set `vault_okta_keychain_service` in `work.local.yml` to match — do not change the public repo default.
 
 Verify:
 

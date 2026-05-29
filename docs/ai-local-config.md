@@ -40,4 +40,5 @@ Chezmoi in this repo ignores MCP secrets under `dot_mcp/secrets/` — treat `loc
 
 ## See also
 
+- [docs/secrets-keychain.md](secrets-keychain.md) — Keychain + Make setup for passwords/tokens
 - ai-skills: `docs/guides/local-config.md`, `docs/multi-ai.md`

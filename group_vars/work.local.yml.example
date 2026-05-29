@@ -6,8 +6,10 @@
 
 # --- Managed repos (work-only clones) ----------------------------------------
 managed_repos_local:
+  # optional: true — won't fail make apply when VPN is off or repo unreachable
   - repo: git@github.com:YOUR_ORG/cursor-rules.git
     dest: work/cursor-rules
+    optional: true
 
 # --- KLAM Artifactory pip index ----------------------------------------------
 klam_artifactory_host: artifactory.internal.example
@@ -38,4 +40,4 @@ vault_clusters:
 
 # --- Optional: Okta password from Keychain -----------------------------------
 # vault_okta_use_password_store: true
-# vault_okta_keychain_service: work-vault-okta
+# vault_okta_keychain_service: work-vault-okta   # override if legacy Keychain “Where” differs

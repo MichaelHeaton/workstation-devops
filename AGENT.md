@@ -43,6 +43,8 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 | `make apply SKIP_TAGS=work` | Skip work-tagged tooling |
 | `make apply EXTRA_VARS='-e workstation_tags_extra=[work]'` | Add work tools on any profile |
 | `make check` | Preflight against active profile |
+| `make secrets-check` | Verify Keychain + local secret files |
+| `make secrets-help` | Secret setup commands (passwords never in git) |
 
 ## Gotchas
 
@@ -50,6 +52,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
 - **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e work_username=YOUR_LDAP -e work_email=you@work.example'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e work_username=…` still overrides. Older chezmoi configs with a legacy username key are migrated on read.
 - **Work local overrides** — employer URLs/repos in `group_vars/work.local.yml` (gitignored; copy from `work.local.yml.example`).
+- **Secrets** — Keychain for corp LDAP password; `make secrets-check`, `make secrets-vault-okta`. See [docs/secrets-keychain.md](docs/secrets-keychain.md).
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
 ## Work profile (CES Vault)

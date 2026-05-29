@@ -64,7 +64,8 @@ vl() {
     "LOCAL       | $local_vault"
   )
 
-  if (( ${#clusters[@]} <= 1 )); then
+{% raw %}
+  if (( $#clusters <= 1 )); then
     echo "No Vault clusters configured. Add vault_clusters in group_vars/work.local.yml — see work.local.yml.example" >&2
     return 1
   fi
@@ -93,6 +94,7 @@ vl() {
   else
     _vault_okta_login
   fi
+{% endraw %}
 }
 
 alias vault_login=vl

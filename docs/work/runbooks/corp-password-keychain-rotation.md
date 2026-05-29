@@ -2,7 +2,7 @@
 
 Employers often require periodic **corp LDAP / VPN password** changes (typically **every 90 days**). The copy stored for **`vl` / `vault_mgmt`** lives in **Keychain Access**, not in the Passwords app — update it whenever you rotate, or `security` will keep feeding Vault the old password.
 
-**Ansible reference:** `vault_okta_keychain_service` and `work_username` in `group_vars/work.local.yml` (defaults: service `work-vault-okta`, account matches LDAP short name).
+**Ansible reference:** `vault_okta_keychain_service` and `work_username` in `group_vars/work.local.yml` (default service: `work-vault-okta`; account matches LDAP short name).
 
 ---
 
@@ -26,7 +26,7 @@ Employers often require periodic **corp LDAP / VPN password** changes (typically
 1. Quit or finish any in-flight **`vl`** / **`vault_mgmt`** sessions (optional but avoids confusion).
 2. Open **Keychain Access** (`/Applications/Utilities/Keychain Access.app`).
 3. Select the **login** keychain (left sidebar, “login” under **Default Keychains**).
-4. Use the search field: type **`work-vault-okta`** (or your `vault_okta_keychain_service` if you overrode it).
+4. Use the search field: type your **`vault_okta_keychain_service`** (default `work-vault-okta`).
 5. Double-click the **application password** item whose **Kind** is **application password** and name matches the service.
 6. Click **Show password** (you may need Touch ID or your macOS password).
 7. Replace the value with the **new** corp password.
