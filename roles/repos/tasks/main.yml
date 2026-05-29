@@ -58,10 +58,40 @@
   loop: "{{ repo_state.results }}"
   loop_control:
     label: "{{ item.item.dest }}"
+  register: repo_clone_results
+  failed_when: false
   when:
     - not (dry_run | default(false) | bool)
     - not item.stat.exists
-  changed_when: true
+
+- name: Fail when required managed repo clone failed
+  ansible.builtin.fail:
+    msg: >-
+      git clone failed for {{ item.item.item.dest }} (rc={{ item.rc }}).
+      {{ item.stderr | default('') | truncate(400, True) }}
+  loop: "{{ repo_clone_results.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.dest | default('unknown') }}"
+  when:
+    - repo_clone_results is defined
+    - not item.skipped | default(false)
+    - item.rc | default(0) != 0
+    - not (item.item.item.optional | default(false) | bool)
+
+- name: Warn when optional managed repo clone failed
+  ansible.builtin.debug:
+    msg: >-
+      Optional repo {{ item.item.item.dest }} not cloned (rc={{ item.rc }}).
+      Connect VPN if the org uses an IP allow list, or clone manually.
+      {{ item.stderr | default('') | truncate(300, True) }}
+  loop: "{{ repo_clone_results.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.dest | default('unknown') }}"
+  when:
+    - repo_clone_results is defined
+    - not item.skipped | default(false)
+    - item.rc | default(0) != 0
+    - item.item.item.optional | default(false) | bool
 
 - name: Repoint origin to configured URL for existing repos (dry-run)
   ansible.builtin.debug:

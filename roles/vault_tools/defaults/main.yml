@@ -3,6 +3,6 @@ vault_tools_enabled: true
 
 # Okta login: read corp password from Keychain (one-time item in Keychain Access — not Apple Passwords UI title)
 vault_okta_use_password_store: false
-vault_okta_keychain_service: work-vault-okta
+vault_okta_keychain_service: adobe-vault-okta
 # Set instead of keychain when using 1Password CLI, e.g. op://Employee/Work VPN/password
 vault_okta_op_ref: ""

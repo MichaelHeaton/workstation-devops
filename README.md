@@ -82,6 +82,10 @@ The former standalone `workstation-ces_vault` repo was merged here and **deleted
 
 See [docs/migration.md](docs/migration.md) for `~/Projects` layout changes.
 
+## Secrets
+
+Passwords and API tokens stay in **Keychain** or gitignored local files — see [docs/secrets-keychain.md](docs/secrets-keychain.md). Quick check: `make secrets-check`.
+
 ## For agents
 
 See [AGENT.md](AGENT.md).

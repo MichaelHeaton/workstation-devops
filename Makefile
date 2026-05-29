@@ -1,4 +1,4 @@
-.PHONY: dry-run check apply deps hooks lint profile
+.PHONY: dry-run check apply deps hooks lint profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -34,3 +34,17 @@ check:
 
 apply:
 	$(ANSIBLE_PLAYBOOK)
+
+secrets-check:
+	@./scripts/secrets/keychain-check.sh
+
+secrets: secrets-check
+
+secrets-vault-okta:
+	@./scripts/secrets/keychain-vault-okta.sh
+
+secrets-atlassian-env:
+	@./scripts/secrets/keychain-atlassian-env.sh
+
+secrets-help:
+	@./scripts/secrets/help.sh

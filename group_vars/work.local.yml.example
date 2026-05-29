@@ -1,13 +1,18 @@
 # Copy to group_vars/work.local.yml (gitignored) on work machines.
 # Holds employer-specific URLs and repos — not committed to the public repo.
 #
+# Source of truth (Memex): ~/Projects/personal/memex/Raw/Resources/Adobe/workstation-devops/work.local.yml
+# Wiki: memex Wiki/Concepts/Workstation-Devops-Work-Vars.md
+#
 #   cp group_vars/work.local.yml.example group_vars/work.local.yml
-#   # edit values, then make apply
+#   # or copy from Memex path above, then make apply
 
 # --- Managed repos (work-only clones) ----------------------------------------
 managed_repos_local:
-  - repo: git@github.com:YOUR_ORG/cursor-rules.git
+  # optional: true — won't fail make apply when VPN is off or repo unreachable
+  - repo: git@github.com:YOUR_ORG/adobe-cursor-rules.git
     dest: work/cursor-rules
+    optional: true
 
 # --- KLAM Artifactory pip index ----------------------------------------------
 klam_artifactory_host: artifactory.internal.example
@@ -38,4 +43,4 @@ vault_clusters:
 
 # --- Optional: Okta password from Keychain -----------------------------------
 # vault_okta_use_password_store: true
-# vault_okta_keychain_service: work-vault-okta
+# vault_okta_keychain_service: adobe-vault-okta   # Keychain “Where”; use make secrets-vault-okta

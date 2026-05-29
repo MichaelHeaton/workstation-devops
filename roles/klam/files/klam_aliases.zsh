@@ -11,6 +11,9 @@ if command -v python3 &>/dev/null; then
   unset _klam_user_base
 fi
 
+# AWS CLI v2 pipes some output through less; disable so results go to stdout.
+export AWS_PAGER=""
+
 # Terminal cue when switching AWS context (on by default; disable: export CES_KLAM_TERM_BG=0)
 # Full tab+background colors: iTerm2 best. Cursor/VS Code: title + OSC background may work; iTerm tab color will not.
 [[ -z "${CES_KLAM_TERM_BG:-}" ]] && export CES_KLAM_TERM_BG=1

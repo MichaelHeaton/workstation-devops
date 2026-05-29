@@ -39,9 +39,11 @@ Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.y
 
 ```yaml
 vault_okta_use_password_store: true
-vault_okta_keychain_service: work-vault-okta   # Keychain "service" name (not Apple Passwords title)
+vault_okta_keychain_service: adobe-vault-okta   # Keychain “Where” / security -s (label may differ)
 # vault_okta_op_ref: "op://Employee/Work VPN/password"   # instead of keychain, if using 1Password CLI
 ```
+
+Or run **`make secrets-vault-okta`** (see [secrets-keychain.md](../secrets-keychain.md)).
 
 `make apply` updates the vault-tools block in `~/.zshrc`. Exports are written **only after** the Keychain item exists (or `vault_okta_op_ref` is set). Until then, `vl` uses the normal password prompt with no warning noise. Set `vault_okta_use_password_store: false` to disable entirely.
 
@@ -50,16 +52,19 @@ vault_okta_keychain_service: work-vault-okta   # Keychain "service" name (not Ap
 **Important:** entries in the **Passwords** app (System Settings → Passwords) are **not** visible to `security` or Terminal. You must create the item in **Keychain Access** (`/Applications/Utilities/Keychain Access.app`).
 
 1. **Keychain Access** → **File → New Password Item** (not Passwords app → New Password)
-2. **Keychain Item Name:** `work-vault-okta` — this becomes the **service** name (must match `vault_okta_keychain_service`)
+2. **Where (service):** `adobe-vault-okta` — must match `vault_okta_keychain_service`
 3. **Account Name:** your `work_username` (work LDAP)
-4. **Password:** corp LDAP / VPN password
-5. **Keychain:** login (default)
-6. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
+4. **Name (label):** `work-vault-okta` (display only)
+5. **Password:** corp LDAP / VPN password
+6. **Keychain:** login (default)
+7. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
+
+Or run **`make secrets-vault-okta`** instead of manual steps.
 
 Verify:
 
 ```bash
-security find-generic-password -s work-vault-okta -a YOUR_LDAP -w && echo found
+security find-generic-password -s adobe-vault-okta -a YOUR_LDAP -w && echo found
 ```
 
 If you already added the password in the Passwords app, leave it there for autofill in browsers and **duplicate** the password into a Keychain Access item as above (same values).
@@ -72,7 +77,7 @@ Set `vault_okta_op_ref` in `group_vars/work.local.yml` and leave keychain servic
 
 ```bash
 security dump-keychain login.keychain-db 2>/dev/null | grep -i vault | head -20
-security find-generic-password -s 'work-vault-okta' -g 2>&1 | head -3   # after you create it
+security find-generic-password -s 'adobe-vault-okta' -g 2>&1 | head -3   # after you create it
 ```
 
 Do **not** use placeholder labels from examples literally — those will always fail.
