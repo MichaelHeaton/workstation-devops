@@ -15,13 +15,14 @@ if [[ ! -d "$BRAVE_APP" ]]; then
 fi
 
 if [[ ! -f "$CONFIG" ]]; then
-  echo "brave-profiles: missing ${CONFIG}"
-  exit 1
+  echo "⚠ brave-profiles: missing ${CONFIG}, skipping"
+  exit 0
 fi
 
 if pgrep -xq "Brave Browser" 2>/dev/null; then
-  echo "brave-profiles: quit Brave Browser, then run make apply again"
-  exit 1
+  echo "⚠ brave-profiles: Brave Browser is running — profile config not updated"
+  echo "  Quit Brave Browser and run make apply again to apply profile changes"
+  exit 0
 fi
 
 echo "brave-profiles: applying from ${CONFIG}..."

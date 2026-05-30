@@ -56,11 +56,11 @@
         work_username: >-
           {{ _chezmoi_identity.work_username
              | default(_chezmoi_identity.adobe_username, true) }}
-        full_name: "{{ _chezmoi_identity.full_name | default(full_name, true) }}"
+        full_name: "{{ _chezmoi_identity.full_name | default(full_name | default(''), true) }}"
         work_email: >-
           {{ _chezmoi_identity.email
              | default(_chezmoi_identity.work_email, true)
-             | default(work_email, true) }}
+             | default(work_email | default(''), true) }}
       vars:
         _chezmoi_identity: "{{ (workstation_chezmoi_identity_file.content | b64decode | from_yaml).data | default({}) }}"
       when:
