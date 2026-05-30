@@ -1,6 +1,6 @@
 ---
 # macOS user defaults (Darwin only). Requires community.general (requirements.yml).
-- name: macOS user defaults
+- name: Apply macOS user defaults
   when: ansible_facts['os_family'] == 'Darwin'
   block:
     - name: Apple Notes — preview substitution defaults (dry-run)

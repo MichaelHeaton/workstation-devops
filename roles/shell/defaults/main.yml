@@ -1,2 +1,7 @@
 ---
 shell_enabled: true
+
+# Defaults for shell_personal.zsh.j2 (override in group_vars/personal.yml).
+personal_aws_profile: platform-bootstrap
+personal_aws_region: us-west-2
+personal_tf_state_bucket: mccleaton-tfstate

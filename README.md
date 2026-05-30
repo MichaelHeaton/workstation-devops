@@ -41,7 +41,7 @@ make apply      # apply (installs missing items only when profile allows)
 
 | Profile | Typical machine | Extra installs |
 | --------- | ----------------- | ---------------- |
-| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack) |
+| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack); AWS `platform-bootstrap` profile — [docs/home/platform-aws.md](docs/home/platform-aws.md) |
 | `work` | Work laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
 **Override for one run:** `ansible-playbook site.yml -e workstation_profile=work`
@@ -71,6 +71,7 @@ roles/personal/          # personal-only hooks
 - **`personal/ai-skills`** — portable AI workspace (`make install-system` + `make hooks-install` on clone and re-apply)
 - **`personal/claude-skills`** — legacy mirror (clone only; deploy from ai-skills)
 - **`personal/memex`** — knowledge vault
+- **`personal/platform-bootstrap`** — AWS/GitHub platform (Terraform state, service CI/CD)
 
 ## Work profile (CES Vault)
 

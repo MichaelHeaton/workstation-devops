@@ -11,3 +11,7 @@ skip_list:
   - no-changed-when
   # managed_repos clones are create-only (update: false).
   - latest[git]
+  # repos role uses plain git for clone/ff-only pull and dirty-tree checks.
+  - command-instead-of-module
+  # Task titles may use official product casing (macOS).
+  - name[casing]

@@ -1,5 +1,38 @@
 ---
-# Personal profile marker — home-tagged tasks can be added here (see docs/tags.md).
+# Personal profile — home-tagged tasks (see docs/tags.md).
+
+- name: Show AWS config block for platform-bootstrap (dry-run)
+  ansible.builtin.debug:
+    msg: Would ensure [profile platform-bootstrap] exists in ~/.aws/config (region/output only).
+  when:
+    - dry_run | default(false) | bool
+    - "'home' in workstation_tags"
+  tags:
+    - home
+
+- name: Ensure ~/.aws exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.aws"
+    state: directory
+    mode: "0700"
+  when:
+    - not (dry_run | default(false) | bool)
+    - "'home' in workstation_tags"
+  tags:
+    - home
+
+- name: Ensure platform-bootstrap profile in AWS config
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
+    marker: "# {mark} ANSIBLE MANAGED - workstation-devops platform-bootstrap"
+    block: "{{ lookup('file', 'aws_platform_bootstrap_profile.ini') }}"
+    create: true
+    mode: "0600"
+  when:
+    - not (dry_run | default(false) | bool)
+    - "'home' in workstation_tags"
+  tags:
+    - home
 
 - name: Mark personal profile role applied
   ansible.builtin.set_fact:
