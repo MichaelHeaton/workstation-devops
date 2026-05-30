@@ -65,10 +65,10 @@ make apply TAGS=shell
 | Tag | What runs |
 | ----- | ----------- |
 | `dotfiles` | Chezmoi (git, SSH, gh config, zprofile, MCP, Claude merges, Brave, …) |
-| `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`) |
+| `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`); personal block when `home` is in allowlist |
 | `editors` | Cursor/VS Code settings + extension install script |
 | `work` | Work shell, Teleport fzf, kubelogin v0.1.9, GHEC SSH, KLAM, Vault tools, work editor extensions |
-| `home` | Personal profile marker (extend with home-only tasks in `roles/personal/`) |
+| `home` | Personal AWS defaults (`platform-bootstrap` profile), `~/.aws/config` stub, homelab tasks in `roles/personal/` — see [platform-aws.md](home/platform-aws.md) |
 
 Chezmoi templates read boolean flags from `~/.config/chezmoi/chezmoi.yaml` (`feature_work`, `feature_editors`, …), refreshed on every `make apply`.
 

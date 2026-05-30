@@ -44,3 +44,26 @@
       tags:
         - shell
         - work
+
+    - name: Show personal shell block (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would add personal shell block to ~/.zshrc
+          (AWS_PROFILE={{ personal_aws_profile }}, AWS_REGION={{ personal_aws_region }},
+          TF_STATE_BUCKET_NAME={{ personal_tf_state_bucket }}).
+      when:
+        - dry_run | default(false) | bool
+        - "'home' in workstation_tags"
+
+    - name: Deploy personal shell fragment to zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops shell-personal"
+        block: "{{ lookup('template', 'shell_personal.zsh.j2') }}"
+        insertafter: EOF
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'home' in workstation_tags"
+      tags:
+        - shell
+        - home

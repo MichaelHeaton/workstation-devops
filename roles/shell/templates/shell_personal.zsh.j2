@@ -1,0 +1,11 @@
+# Personal / homelab AWS — platform-bootstrap (workstation-devops)
+# Credentials: ~/.aws/credentials [platform-bootstrap] — see docs/home/platform-aws.md
+export AWS_PROFILE="${AWS_PROFILE:-{{ personal_aws_profile }}}"
+export AWS_REGION="${AWS_REGION:-{{ personal_aws_region }}}"
+export TF_STATE_BUCKET_NAME="${TF_STATE_BUCKET_NAME:-{{ personal_tf_state_bucket }}}"
+
+platform_bootstrap() {
+  export AWS_PROFILE="{{ personal_aws_profile }}"
+  export AWS_REGION="{{ personal_aws_region }}"
+  export TF_STATE_BUCKET_NAME="{{ personal_tf_state_bucket }}"
+}
