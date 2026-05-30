@@ -1,4 +1,4 @@
-.PHONY: dry-run check apply deps hooks lint profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help
+.PHONY: dry-run check apply deps hooks lint profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help repos-export repos-sync-notion
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -48,3 +48,16 @@ secrets-atlassian-env:
 
 secrets-help:
 	@./scripts/secrets/help.sh
+
+# Ansible managed_repos → Notion Repositories (Projects dest, Clone scope)
+# Override profile: make repos-export REPOS_PROFILE=work
+REPOS_PROFILE ?= $(if $(WORKSTATION_PROFILE),$(WORKSTATION_PROFILE),personal)
+
+repos-export:
+	@./scripts/export-managed-repos.py --profile $(REPOS_PROFILE)
+
+repos-sync-notion: repos-export
+	@echo ""
+	@echo "Next: sync Projects dest + Clone scope to Notion (Repositories DB)."
+	@echo "  Use Notion MCP — procedure: scripts/sync-notion-repo-layout.md"
+	@echo "  Or ask your agent: sync repo dests to Notion"
