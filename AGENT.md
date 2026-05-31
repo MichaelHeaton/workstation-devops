@@ -38,10 +38,12 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 | --------- | --------- |
 | `make profile` | Detect or change `~/.workstation_profile` |
 | `make dry-run` | Preview without writes |
-| `make apply` | Apply configuration (respects tag allowlist for profile) |
+| `make apply` | Apply configuration; tees output to `logs/apply-<timestamp>.log` |
 | `make apply TAGS=dotfiles` | Chezmoi/dotfiles only |
 | `make apply SKIP_TAGS=work` | Skip work-tagged tooling |
 | `make apply EXTRA_VARS='-e workstation_tags_extra=[work]'` | Add work tools on any profile |
+| `make test` | Regression tests + personal dry-run (see [docs/testing.md](docs/testing.md)) |
+| `make triage` | Summarize latest apply log (`LOG=logs/apply-….log` to pick a file) |
 | `make check` | Preflight against active profile |
 | `make secrets-check` | Verify Keychain + local secret files |
 | `make secrets-help` | Secret setup commands (passwords never in git) |
@@ -49,6 +51,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 ## Gotchas
 
 - **`make dry-run` must not write** — chezmoi/repos/directories respect `dry_run`.
+- **`make test` before apply changes** — catches undefined personal chezmoi vars and broken `shell_personal.zsh.j2` before they touch `~/.zshrc`. Failed applies: `make triage` on `logs/apply-*.log`.
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
 - **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e work_username=YOUR_LDAP -e work_email=you@work.example'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e work_username=…` still overrides. Older chezmoi configs with a legacy username key are migrated on read.
 - **Work local overrides** — employer URLs/repos in `group_vars/work.local.yml` (gitignored; copy from `work.local.yml.example`).
