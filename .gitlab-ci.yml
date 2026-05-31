@@ -39,3 +39,5 @@ validate:ansible:
   script:
     - ansible-playbook site.yml --syntax-check -e workstation_profile=personal -e skip_profile_prompt=true
     - ansible-lint
+    - chmod +x scripts/test-apply-safety.sh scripts/log-triage.sh
+    - ./scripts/test-apply-safety.sh

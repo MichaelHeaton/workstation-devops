@@ -13,3 +13,4 @@ data:
   feature_editors: {{ 'editors' in workstation_tags }}
   feature_dotfiles: {{ 'dotfiles' in workstation_tags }}
   ghec_ssh_key: "{{ ghec_ssh_key | default('id_ed25519_github') }}"
+  personal_ssh_key: "{{ personal_ssh_key | default('id_ed25519_github_personal') }}"

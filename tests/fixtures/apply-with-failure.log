@@ -1,0 +1,12 @@
+PLAY [Detect workstation profile] **********************************************
+
+TASK [Run profile detection tasks] *********************************************
+ok: [localhost]
+
+PLAY [Apply workstation configuration] *****************************************
+
+TASK [Apply persisted chezmoi identity (when seeded)] **************************
+fatal: [localhost]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'full_name' is undefined"}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=1

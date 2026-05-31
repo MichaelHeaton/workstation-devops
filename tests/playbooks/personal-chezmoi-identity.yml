@@ -1,0 +1,60 @@
+---
+# Regression: personal profile must not reference undefined full_name / work_email
+# when merging chezmoi identity (site.yml pre_tasks).
+# Run via: scripts/test-apply-safety.sh
+
+- name: Personal chezmoi identity vars (no undefined Jinja)
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars_files:
+    - ../../group_vars/all.yml
+  tasks:
+    - name: Load personal profile vars
+      ansible.builtin.include_vars:
+        file: ../../group_vars/personal.yml
+
+    - name: Set workstation profile
+      ansible.builtin.set_fact:
+        workstation_profile: personal
+
+    # Simulate site.yml when ~/.config/chezmoi/chezmoi.yaml exists with work identity
+    - name: Apply persisted chezmoi identity (fixture)
+      ansible.builtin.set_fact:
+        work_username: >-
+          {{ _chezmoi_identity.work_username
+             | default(_chezmoi_identity.adobe_username, true) }}
+        full_name: "{{ _chezmoi_identity.full_name | default(full_name | default(''), true) }}"
+        work_email: >-
+          {{ _chezmoi_identity.email
+             | default(_chezmoi_identity.work_email, true)
+             | default(work_email | default(''), true) }}
+      vars:
+        _chezmoi_identity:
+          work_username: testuser
+          full_name: Test User
+          email: test@example.com
+
+    - name: Assert identity facts resolved
+      ansible.builtin.assert:
+        that:
+          - work_username == 'testuser'
+          - full_name == 'Test User'
+          - work_email == 'test@example.com'
+
+    # Personal apply without work_username in chezmoi and no CLI -e full_name
+    - name: Apply chezmoi identity when only partial data (no full_name in scope)
+      ansible.builtin.set_fact:
+        full_name: "{{ _empty_identity.full_name | default(full_name | default(''), true) }}"
+        work_email: >-
+          {{ _empty_identity.email
+             | default(_empty_identity.work_email, true)
+             | default(work_email | default(''), true) }}
+      vars:
+        _empty_identity: {}
+
+    - name: Assert empty defaults do not fail
+      ansible.builtin.assert:
+        that:
+          - full_name == ''
+          - work_email == ''

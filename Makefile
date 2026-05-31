@@ -1,4 +1,4 @@
-.PHONY: dry-run check apply deps hooks lint profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help repos-export repos-sync-notion
+.PHONY: dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help repos-export repos-sync-notion
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -23,6 +23,9 @@ lint:
 	ansible-playbook site.yml --syntax-check -e workstation_profile=personal -e skip_profile_prompt=true
 	ansible-lint
 
+test:
+	@./scripts/test-apply-safety.sh
+
 profile:
 	ansible-playbook profile_detect.yml $(ANSIBLE_PROFILE_ARGS)
 
@@ -32,8 +35,17 @@ dry-run:
 check:
 	@./scripts/preflight.sh
 
+# Tee full output so logs survive terminal resets / IDE restarts mid-apply
+APPLY_LOG = logs/apply-$(shell date +%Y%m%d-%H%M%S).log
+
 apply:
-	$(ANSIBLE_PLAYBOOK)
+	@mkdir -p logs
+	@echo "Logging to $(APPLY_LOG)"
+	@set -o pipefail; ANSIBLE_FORCE_COLOR=1 $(ANSIBLE_PLAYBOOK) 2>&1 | tee "$(APPLY_LOG)"; \
+	 ec=$$?; echo "Log: $(APPLY_LOG) (make triage)"; exit $$ec
+
+triage:
+	@./scripts/log-triage.sh $(if $(LOG),$(LOG),)
 
 secrets-check:
 	@./scripts/secrets/keychain-check.sh
