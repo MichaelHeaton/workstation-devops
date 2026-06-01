@@ -16,7 +16,8 @@
 | `make secrets-vault-okta` | Interactive create/update Vault Okta Keychain item |
 | `make secrets-notion` | Interactive create/update Notion MCP token in Keychain |
 | `make secrets-linear` | Interactive create/update Linear MCP API key in Keychain |
-| `make secrets-atlassian-env` | Create `~/.mcp/env/atlassian.env` from template |
+| `make secrets-atlassian` | Atlassian MCP: store Jira + Confluence tokens in Keychain and create config file |
+| `make secrets-atlassian-env` | Create `~/.mcp/env/atlassian-config.env` from template (config only, no tokens) |
 | `make secrets-help` | List all secret setup commands |
 
 ## Keychain Access field mapping
@@ -50,7 +51,9 @@ Metadata lives in `config/secrets-registry.yml`:
 | `notion_mcp` | Keychain | `claude-mcp-notion` | `claude-code` | Notion MCP |
 | `linear_mcp` | Keychain | `claude-mcp-linear` | `claude-code` | Linear MCP |
 | `klam_artifactory_api_key` | Shell env | `KLAM_ARTIFACTORY_API_KEY` | — | KLAM pip install |
-| `atlassian_mcp` | File | `~/.mcp/env/atlassian.env` | work email in file | Atlassian MCP |
+| `atlassian_mcp_jira` | Keychain | `claude-mcp-atlassian-jira` | `claude-code` | Atlassian MCP |
+| `atlassian_mcp_confluence` | Keychain | `claude-mcp-atlassian-confluence` | `claude-code` | Atlassian MCP |
+| `atlassian_mcp_config` | Config file | `~/.mcp/env/atlassian-config.env` | — | Atlassian MCP (URLs, usernames only) |
 
 Employer URLs, repo paths, and any legacy Keychain service names belong in **`group_vars/work.local.yml`** or your private Memex copy — not in the public repo.
 
@@ -62,7 +65,7 @@ Employer URLs, repo paths, and any legacy Keychain service names belong in **`gr
 | Notion MCP token | Keychain (`make secrets-notion`) |
 | Linear MCP API key | Keychain (`make secrets-linear`) |
 | Artifactory API key | `export KLAM_ARTIFACTORY_API_KEY=…` at apply time |
-| Jira / Confluence tokens | `~/.mcp/env/atlassian.env` |
+| Jira / Confluence tokens | Keychain (`make secrets-atlassian`) |
 | SSH private keys | `~/.ssh/` |
 | `group_vars/work.local.yml` | Gitignored clone-local file |
 | `~/.config/ai-skills/local.json` | See [ai-local-config.md](ai-local-config.md) |

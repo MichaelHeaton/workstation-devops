@@ -1,11 +1,7 @@
 {
   "atlassian": {
-    "command": "uvx",
-    "args": [
-      "mcp-atlassian",
-      "--env-file",
-      "{{ .chezmoi.homeDir }}/.cursor/.env"
-    ]
+    "command": "{{ .chezmoi.homeDir }}/.mcp/wrappers/atlassian.sh",
+    "args": []
   },
   "notion": {
     "command": "{{ .chezmoi.homeDir }}/.mcp/wrappers/notion.sh",

@@ -60,18 +60,31 @@ else
   echo "○ env KLAM_ARTIFACTORY_API_KEY — not set (optional until KLAM pip install)"
 fi
 
-# --- Local files -------------------------------------------------------------
-atlassian_path="${HOME}/.mcp/env/atlassian.env"
-if [[ -f "$atlassian_path" ]]; then
-  if grep -q 'your_token_here' "$atlassian_path" 2>/dev/null; then
-    echo "○ ${atlassian_path} — exists but still has placeholder tokens"
-  else
-    echo "✓ ${atlassian_path} — present"
-    ok=$((ok + 1))
-  fi
+# --- Keychain: Atlassian MCP -------------------------------------------------
+if keychain_item_exists "claude-mcp-atlassian-jira" "claude-code"; then
+  echo "✓ Keychain atlassian_mcp_jira — service=claude-mcp-atlassian-jira account=claude-code"
+  ok=$((ok + 1))
 else
-  echo "○ ${atlassian_path} — missing (optional for Atlassian MCP)"
-  echo "  → make secrets-atlassian-env"
+  echo "○ Keychain atlassian_mcp_jira — missing (optional; needed for Atlassian MCP)"
+  echo "  → make secrets-atlassian"
+fi
+
+if keychain_item_exists "claude-mcp-atlassian-confluence" "claude-code"; then
+  echo "✓ Keychain atlassian_mcp_confluence — service=claude-mcp-atlassian-confluence account=claude-code"
+  ok=$((ok + 1))
+else
+  echo "○ Keychain atlassian_mcp_confluence — missing (optional; needed for Atlassian MCP)"
+  echo "  → make secrets-atlassian"
+fi
+
+# --- Local config files (non-secret) -----------------------------------------
+atlassian_config="${HOME}/.mcp/env/atlassian-config.env"
+if [[ -f "$atlassian_config" ]]; then
+  echo "✓ ${atlassian_config} — present"
+  ok=$((ok + 1))
+else
+  echo "○ ${atlassian_config} — missing (optional; needed for Atlassian MCP)"
+  echo "  → make secrets-atlassian"
 fi
 
 echo
