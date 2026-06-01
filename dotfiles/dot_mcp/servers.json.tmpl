@@ -6,5 +6,13 @@
       "--env-file",
       "{{ .chezmoi.homeDir }}/.cursor/.env"
     ]
+  },
+  "notion": {
+    "command": "{{ .chezmoi.homeDir }}/.mcp/wrappers/notion.sh",
+    "args": []
+  },
+  "linear": {
+    "command": "{{ .chezmoi.homeDir }}/.mcp/wrappers/linear.sh",
+    "args": []
   }
 }
