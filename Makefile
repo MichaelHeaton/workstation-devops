@@ -1,4 +1,4 @@
-.PHONY: dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-atlassian-env secrets-help repos-export repos-sync-notion
+.PHONY: dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -54,6 +54,15 @@ secrets: secrets-check
 
 secrets-vault-okta:
 	@./scripts/secrets/keychain-vault-okta.sh
+
+secrets-notion:
+	@./scripts/secrets/keychain-notion.sh
+
+secrets-linear:
+	@./scripts/secrets/keychain-linear.sh
+
+secrets-atlassian:
+	@./scripts/secrets/keychain-atlassian.sh
 
 secrets-atlassian-env:
 	@./scripts/secrets/keychain-atlassian-env.sh
