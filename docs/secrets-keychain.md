@@ -2,7 +2,7 @@
 
 **Public repo rule:** passwords, API tokens, and Artifactory keys **never** go in git, Ansible vars committed to GitHub, or Memex if the vault is synced publicly without encryption.
 
-**Preferred store for corp LDAP password:** macOS **Keychain Access** (login keychain), read at runtime via `security find-generic-password`.
+**Preferred store for all MCP tokens and passwords:** macOS **Keychain Access** (login keychain), read at runtime via `security find-generic-password`. New MCP servers default to Keychain — not env files.
 
 **Registry:** `config/secrets-registry.yml` lists what exists (service names, accounts, docs) — **not** secret values.
 
@@ -14,6 +14,8 @@
 | --------- | --------- |
 | `make secrets-check` | Verify Keychain items and local secret files (no password output) |
 | `make secrets-vault-okta` | Interactive create/update Vault Okta Keychain item |
+| `make secrets-notion` | Interactive create/update Notion MCP token in Keychain |
+| `make secrets-linear` | Interactive create/update Linear MCP API key in Keychain |
 | `make secrets-atlassian-env` | Create `~/.mcp/env/atlassian.env` from template |
 | `make secrets-help` | List all secret setup commands |
 
@@ -45,6 +47,8 @@ Metadata lives in `config/secrets-registry.yml`:
 | ID | Store | Service / path | Account | Used by |
 | ---- | ------- | ---------------- | --------- | --------- |
 | `vault_okta` | Keychain | `work-vault-okta` (override in `work.local.yml`) | `work_username` | `vl`, `vault_mgmt` |
+| `notion_mcp` | Keychain | `claude-mcp-notion` | `claude-code` | Notion MCP |
+| `linear_mcp` | Keychain | `claude-mcp-linear` | `claude-code` | Linear MCP |
 | `klam_artifactory_api_key` | Shell env | `KLAM_ARTIFACTORY_API_KEY` | — | KLAM pip install |
 | `atlassian_mcp` | File | `~/.mcp/env/atlassian.env` | work email in file | Atlassian MCP |
 
@@ -55,6 +59,8 @@ Employer URLs, repo paths, and any legacy Keychain service names belong in **`gr
 | Secret | Where it lives |
 | -------- | ---------------- |
 | Corp LDAP / VPN password | Keychain (`make secrets-vault-okta`) |
+| Notion MCP token | Keychain (`make secrets-notion`) |
+| Linear MCP API key | Keychain (`make secrets-linear`) |
 | Artifactory API key | `export KLAM_ARTIFACTORY_API_KEY=…` at apply time |
 | Jira / Confluence tokens | `~/.mcp/env/atlassian.env` |
 | SSH private keys | `~/.ssh/` |

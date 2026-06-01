@@ -34,6 +34,24 @@ else
   missing=$((missing + 1))
 fi
 
+# --- Keychain: Notion MCP ----------------------------------------------------
+if keychain_item_exists "claude-mcp-notion" "claude-code"; then
+  echo "✓ Keychain notion_mcp — service=claude-mcp-notion account=claude-code"
+  ok=$((ok + 1))
+else
+  echo "○ Keychain notion_mcp — missing (optional; needed for Notion MCP)"
+  echo "  → make secrets-notion"
+fi
+
+# --- Keychain: Linear MCP ----------------------------------------------------
+if keychain_item_exists "claude-mcp-linear" "claude-code"; then
+  echo "✓ Keychain linear_mcp — service=claude-mcp-linear account=claude-code"
+  ok=$((ok + 1))
+else
+  echo "○ Keychain linear_mcp — missing (optional; needed for Linear MCP)"
+  echo "  → make secrets-linear"
+fi
+
 # --- Runtime env (presence only) ---------------------------------------------
 if [[ -n "${KLAM_ARTIFACTORY_API_KEY:-}" ]]; then
   echo "✓ env KLAM_ARTIFACTORY_API_KEY — set in shell (not verified)"
