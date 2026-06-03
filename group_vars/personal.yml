@@ -72,6 +72,14 @@ managed_repos:
     dest: specterrealm/esport/minecraft-modpack-cp-verdant
   - repo: git@github.com:MichaelHeaton/minecraft-modpack-ltm.git
     dest: specterrealm/esport/minecraft-modpack-ltm
+  - repo: git@github.com:SpecterRealm/specterrealm-core.git
+    dest: specterrealm/esport/specterrealm-core
+  - repo: git@github.com:SpecterRealm/minecraft-modpack-cp-elysian.git
+    dest: specterrealm/esport/minecraft-modpack-cp-elysian
+  - repo: git@github.com:SpecterRealm/minecraft-modpack-cp-influx.git
+    dest: specterrealm/esport/minecraft-modpack-cp-influx
+  - repo: git@github.com:SpecterRealm/minecraft-modpack-cp-liminal.git
+    dest: specterrealm/esport/minecraft-modpack-cp-liminal
 
 homebrew_install_packages: true
 homebrew_mas_enabled: true
