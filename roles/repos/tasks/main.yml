@@ -25,6 +25,41 @@
     - not (dry_run | default(false) | bool)
     - managed_repos | selectattr('repo', 'search', 'git@|ssh://') | list | length > 0
 
+# Pre-seeded paths (e.g. local scaffold before first clone) block plain git clone.
+# Init + fetch + merge preserves local files and satisfies the .git check below.
+- name: Adopt non-git repo directories that already contain files
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      dest="{{ projects_root }}/{{ item.dest }}"
+      repo="{{ item.repo }}"
+      branch="{{ item.version | default('main') }}"
+      if [ -d "$dest/.git" ]; then
+        exit 0
+      fi
+      if [ ! -d "$dest" ] || [ -z "$(ls -A "$dest" 2>/dev/null)" ]; then
+        exit 0
+      fi
+      cd "$dest"
+      git init -b "$branch"
+      git remote add origin "$repo"
+      git add -A
+      if ! git diff --cached --quiet; then
+        git commit -m "Adopt existing tree (workstation-devops)"
+      fi
+      git fetch origin "$branch"
+      if git rev-parse "origin/$branch" >/dev/null 2>&1; then
+        git merge "origin/$branch" --allow-unrelated-histories --no-edit
+      fi
+      echo adopted
+  loop: "{{ managed_repos }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  register: repo_adopt_results
+  changed_when: "'adopted' in (repo_adopt_results.stdout | default(''))"
+  when:
+    - not (dry_run | default(false) | bool)
+
 - name: Check which managed repos are already cloned
   ansible.builtin.stat:
     path: "{{ projects_root }}/{{ item.dest }}/.git"
