@@ -71,7 +71,8 @@ roles/personal/          # personal-only hooks
 - **`personal/ai-skills`** — portable AI workspace (`make install-system` + `make hooks-install` on clone and re-apply)
 - **`personal/claude-skills`** — legacy mirror (clone only; deploy from ai-skills)
 - **`personal/memex`** — knowledge vault
-- **`personal/platform-bootstrap`** — AWS/GitHub platform (Terraform state, service CI/CD)
+- **`personal/platform-bootstrap`** — AWS/GitHub hub (HCP Terraform; registers org repos and OIDC)
+- **`personal/cloudflare`** — McCleaton org Cloudflare DNS spoke (S3 state, GHA apply)
 
 ## Work profile (CES Vault)
 

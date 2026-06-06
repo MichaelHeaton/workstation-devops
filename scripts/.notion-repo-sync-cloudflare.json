@@ -1,0 +1,21 @@
+{
+  "parent": {
+    "type": "data_source_id",
+    "data_source_id": "6f44da4e-bb6b-433a-a9a7-c1a6f9d93579"
+  },
+  "pages": [
+    {
+      "properties": {
+        "Name": "cloudflare",
+        "userDefined:URL": "https://github.com/McCleaton/cloudflare",
+        "Description": "Cloudflare DNS and edge configuration (Terraform spoke). State: mccleaton-tfstate/shared-cloudflare-dns/terraform.tfstate. Apply via GHA OIDC.",
+        "Visibility": "private",
+        "Status": "active",
+        "Projects dest": "personal/cloudflare",
+        "Clone scope": "personal",
+        "Ticket System": "Linear",
+        "Linear Project": "Homelab"
+      }
+    }
+  ]
+}

@@ -24,6 +24,8 @@ managed_repos:
     dest: personal/MichaelHeaton
   - repo: git@github.com-personal:MichaelHeaton/platform-bootstrap.git
     dest: personal/platform-bootstrap
+  - repo: git@github.com:McCleaton/cloudflare.git
+    dest: personal/cloudflare
   - repo: git@github.com:MichaelHeaton/memex-suite.git
     dest: personal/memex-suite
   - repo: git@github.com:MichaelHeaton/homelab-core.git
