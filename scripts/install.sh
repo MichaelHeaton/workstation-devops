@@ -17,8 +17,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT:-${HOME}/Projects}"
 REL_DEST="${WORKSTATION_DEVOPS_REL_DEST:-personal/workstation-devops}"
 DEST="${WORKSTATION_DEVOPS_DEST:-${PROJECTS_ROOT}/${REL_DEST}}"
 BRANCH="${WORKSTATION_DEVOPS_BRANCH:-main}"
-REPO="${WORKSTATION_DEVOPS_REPO:-git@github.com-personal:MichaelHeaton/workstation-devops.git}"
-FALLBACK_REPO="${WORKSTATION_DEVOPS_REPO_HTTPS:-https://github.com/MichaelHeaton/workstation-devops.git}"
+REPO="${WORKSTATION_DEVOPS_REPO:-https://github.com/MichaelHeaton/workstation-devops.git}"
 
 echo "=== workstation-devops install (minimal) ==="
 echo ""
@@ -39,12 +38,7 @@ if [[ -d "${DEST}/.git" ]]; then
   echo "✓ Repo already at ${DEST}"
 else
   echo "→ Cloning ${REPO} (branch ${BRANCH})..."
-  if git clone --branch "${BRANCH}" -- "${REPO}" "${DEST}" 2>/dev/null; then
-    :
-  else
-    echo "  SSH clone failed; trying HTTPS..."
-    git clone --branch "${BRANCH}" -- "${FALLBACK_REPO}" "${DEST}"
-  fi
+  git clone --branch "${BRANCH}" -- "${REPO}" "${DEST}"
   echo "✓ Cloned to ${DEST}"
 fi
 
