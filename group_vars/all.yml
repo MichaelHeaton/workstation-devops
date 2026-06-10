@@ -27,26 +27,24 @@ git_ssh_hosts:
 
 # --- Bootstrap / install.sh --------------------------------------------------
 
-# Personal GitHub on multi-account Macs: git@github.com-personal:… (see memex Agents/11-development-standards.md)
-workstation_devops_repo: git@github.com-personal:MichaelHeaton/workstation-devops.git
-workstation_devops_repo_https: https://github.com/MichaelHeaton/workstation-devops.git
+workstation_devops_repo: https://github.com/MichaelHeaton/workstation-devops.git
 workstation_devops_dest: personal/workstation-devops
 workstation_devops_branch: main
 
 # Cloned on every profile (work + personal); merged with profile managed_repos in site.yml.
 managed_repos_common:
   # GitHub repo is "workspaces"; local bucket stays ~/Projects/workspace
-  - repo: git@github.com-personal:MichaelHeaton/workspaces.git
+  - repo: https://github.com/MichaelHeaton/workspaces.git
     dest: workspace
   # dest must match workstation_devops_dest (preflight reads YAML without Jinja)
-  - repo: git@github.com-personal:MichaelHeaton/workstation-devops.git
+  - repo: https://github.com/MichaelHeaton/workstation-devops.git
     dest: personal/workstation-devops
-  - repo: git@github.com-personal:MichaelHeaton/ai-skills.git
+  - repo: https://github.com/MichaelHeaton/ai-skills.git
     dest: personal/ai-skills
     version: main
     # hooks-install: git commit + pre-push lint (requires pre-commit formula below)
     install_cmd: bash -c 'make install-system && make hooks-install'
-  - repo: git@github.com-personal:MichaelHeaton/memex.git
+  - repo: https://github.com/MichaelHeaton/memex.git
     dest: personal/memex
 
 # ff-only pull for repos with install_cmd; skipped when the working tree is dirty

@@ -12,6 +12,9 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
+[url "https://github.com/"]
+	insteadOf = git@github.com:
+	insteadOf = git@github.com-personal:
 [includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal/"]
 	path = ~/.gitconfig-personal
 [includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal-gitlab/"]
