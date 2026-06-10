@@ -1,6 +1,6 @@
 # AI local configuration (private answers)
 
-**ai-skills**, **workstation-devops**, and **claude-skills** are **public** repositories. Do not store employer-specific metadata in any of them.
+**ai-skills** and **workstation-devops** are **public** repositories. Do not store employer-specific metadata in either of them.
 
 ## Where answers live
 
@@ -27,10 +27,6 @@ After a playbook run:
 1. Edit `~/.config/ai-skills/local.json` with Jira base URL, project key, channel names, repo paths, etc.
 2. Copy `config/accounts.shell.template` → `~/.config/ai-skills/accounts.shell` if you use shell exports.
 3. Re-run `direnv allow` in repos that use `.envrc`.
-
-## Migration from `~/.config/claude-skills/`
-
-Copy values into `~/.config/ai-skills/local.json` once, then use the new path only. See ai-skills `docs/guides/local-config.md`.
 
 ## Optional: backup private config
 
