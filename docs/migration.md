@@ -7,7 +7,7 @@ The playbook only creates buckets and clones for the active profile in **`group_
 Edit profile vars in [group_vars/personal.yml](../group_vars/personal.yml) or [group_vars/work.yml](../group_vars/work.yml):
 
 - **`projects_buckets`** — top-level folders (e.g. `personal`, `workspace`, `work`)
-- **`managed_repos_common`** (`all.yml`) — workspace, workstation-devops, ai-skills (`make install-system` + `make hooks-install`), claude-skills (clone), memex on every machine
+- **`managed_repos_common`** (`all.yml`) — workspace, workstation-devops, ai-skills (`make install-system` + `make hooks-install`), memex on every machine
 - **`managed_repos`** (profile yml) — additional clones per profile (`dest` relative to `projects_root`)
 
 Repo catalog in Notion (URL, routing, clone paths): [repo-registry-notion.md](repo-registry-notion.md). Refresh `Projects dest` after ansible changes: `make repos-sync-notion` (see [sync-notion-repo-layout.md](../scripts/sync-notion-repo-layout.md)).

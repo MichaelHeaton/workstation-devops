@@ -6,7 +6,7 @@ Single Ansible workstation bootstrap for **personal** and **work** machines. Pro
 
 | File | Purpose |
 | ------ | --------- |
-| `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, claude-skills, ai-skills, memex) |
+| `group_vars/all.yml` | Shared packages, paths, `managed_repos_common` (workspace, devops, ai-skills, memex) |
 | `group_vars/personal.yml` | Homelab repos, gaming, personal buckets |
 | `group_vars/work.yml` | Work layout, CES Vault tooling, work identity |
 | `group_vars/work.local.yml.example` | Template for gitignored employer-specific URLs/repos |
@@ -69,7 +69,6 @@ roles/personal/          # personal-only hooks
 
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
 - **`personal/ai-skills`** — portable AI workspace (`make install-system` + `make hooks-install` on clone and re-apply)
-- **`personal/claude-skills`** — legacy mirror (clone only; deploy from ai-skills)
 - **`personal/memex`** — knowledge vault
 - **`personal/platform-bootstrap`** — AWS/GitHub hub (HCP Terraform; registers org repos and OIDC)
 - **`personal/cloudflare`** — McCleaton org Cloudflare DNS spoke (S3 state, GHA apply)
