@@ -7,12 +7,12 @@ mytools() {
   echo ""
   local found=0
 
-  if (( $+aliases[ces_sandbox] || $+aliases[ces_dev] || $+aliases[ces_prd] )); then
+  if (( $+functions[ces_sandbox] || $+functions[ces_dev] || $+functions[ces_prd] )); then
     echo "  ── AWS (KLAM) ───────────────────────────────────────────────────"
-    (( $+aliases[ces_sandbox] )) && echo "    ces_sandbox         assume KLAM credentials for sandbox"
-    (( $+aliases[ces_dev] ))     && echo "    ces_dev             assume KLAM credentials for dev"
-    (( $+aliases[ces_prd] ))     && echo "    ces_prd             assume KLAM credentials for prod"
-    echo "    (disconnect)        unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE"
+    (( $+functions[ces_sandbox] )) && echo "    ces_sandbox         assume KLAM credentials for sandbox"
+    (( $+functions[ces_dev] ))     && echo "    ces_dev             assume KLAM credentials for dev"
+    (( $+functions[ces_prd] ))     && echo "    ces_prd             assume KLAM credentials for prod"
+    echo "    ces_term_reset      disconnect — unset AWS_PROFILE + reset terminal colors"
     echo ""
     found=1
   fi
