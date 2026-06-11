@@ -48,6 +48,52 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 | `make secrets-check` | Verify Keychain + local secret files |
 | `make secrets-help` | Secret setup commands (passwords never in git) |
 
+## Shell shortcuts (runtime)
+
+Run `mytools` in any terminal to see all active shortcuts for the current profile.
+
+These are installed into your shell by Ansible — they're available in any terminal after `make apply`, not inside this repo.
+
+### AWS (work profile — KLAM)
+
+| Alias | What it does |
+| --------- | -------------------------------------------------- |
+| `ces_sandbox` | Assume KLAM credentials for the sandbox environment |
+| `ces_dev` | Assume KLAM credentials for the DEV environment |
+| `ces_prd` | Assume KLAM credentials for the PROD environment |
+
+To disconnect: `unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE`  
+Verify: `aws sts get-caller-identity`
+
+Requires: KLAM installed (`make deps` will not install it — see [docs/work/klam.md](docs/work/klam.md)), IAM group membership, corp VPN at runtime.
+
+### Vault (work profile)
+
+| Command | What it does |
+| --------- | -------------------------------------------------- |
+| `vl` or `vault_login` | Interactive cluster picker (fzf) → sets `VAULT_ADDR` + Okta login |
+| `vault_mgmt` | Teleport `vault-mgmt-access` → local proxy on `:8222` + Okta login |
+
+Cluster list lives in `group_vars/work.local.yml` (gitignored). Okta password optionally pulled from Keychain (`make secrets-vault-okta`).
+
+### Teleport (work profile)
+
+| Command | What it does |
+| --------- | -------------------------------------------------- |
+| `t` | Interactive fzf cluster/node picker via `tsh` |
+| `tshl` | Teleport SSH helper |
+| `vssh` | SSH via Teleport with `--request-reason="Vault admin"` |
+
+Requires: `tsh` and `fzf` on PATH, `TELEPORT_LOGIN` set (= LDAP username).
+
+### Personal AWS (personal profile)
+
+| Command | What it does |
+| --------- | -------------------------------------------------- |
+| `platform_bootstrap` | Re-export `AWS_PROFILE=platform-bootstrap`, `AWS_REGION=us-west-2`, `TF_STATE_BUCKET_NAME=mccleaton-tfstate` |
+
+Auto-set on shell startup for personal machines. See [docs/home/platform-aws.md](docs/home/platform-aws.md).
+
 ## Gotchas
 
 - **`make dry-run` must not write** — chezmoi/repos/directories respect `dry_run`.
