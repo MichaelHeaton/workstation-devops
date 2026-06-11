@@ -2,3 +2,48 @@
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/go/bin:$PATH"
 [[ -f "$HOME/.config/ai-skills/accounts.shell" ]] && source "$HOME/.config/ai-skills/accounts.shell"
+
+mytools() {
+  echo ""
+  local found=0
+
+  if (( $+aliases[ces_sandbox] || $+aliases[ces_dev] || $+aliases[ces_prd] )); then
+    echo "  ── AWS (KLAM) ───────────────────────────────────────────────────"
+    (( $+aliases[ces_sandbox] )) && echo "    ces_sandbox         assume KLAM credentials for sandbox"
+    (( $+aliases[ces_dev] ))     && echo "    ces_dev             assume KLAM credentials for dev"
+    (( $+aliases[ces_prd] ))     && echo "    ces_prd             assume KLAM credentials for prod"
+    echo "    (disconnect)        unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE"
+    echo ""
+    found=1
+  fi
+
+  if (( $+functions[platform_bootstrap] )); then
+    echo "  ── Personal AWS ─────────────────────────────────────────────────"
+    echo "    platform_bootstrap  re-export AWS_PROFILE + region + tfstate bucket"
+    echo ""
+    found=1
+  fi
+
+  if (( $+functions[vl] || $+functions[vault_mgmt] )); then
+    echo "  ── Vault ────────────────────────────────────────────────────────"
+    (( $+functions[vl] ))          && echo "    vl / vault_login    interactive cluster picker → VAULT_ADDR + Okta login"
+    (( $+functions[vault_mgmt] ))  && echo "    vault_mgmt          Teleport vault-mgmt-access → local proxy :8222"
+    echo ""
+    found=1
+  fi
+
+  if (( $+aliases[vssh] || $+functions[t] || $+functions[tshl] )); then
+    echo "  ── Teleport ─────────────────────────────────────────────────────"
+    (( $+aliases[vssh] ))  && echo "    vssh                tsh ssh with --request-reason='Vault admin'"
+    (( $+functions[t] ))   && echo "    t                   interactive cluster/node picker (fzf)"
+    (( $+functions[tshl] )) && echo "    tshl                Teleport SSH helper"
+    echo ""
+    found=1
+  fi
+
+  if (( found == 0 )); then
+    echo "  No workstation-devops tools detected in current shell."
+    echo "  Run: make apply TAGS=shell  (from ~/Projects/personal/workstation-devops)"
+    echo ""
+  fi
+}

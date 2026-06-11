@@ -1,4 +1,39 @@
-.PHONY: dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
+.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
+
+help:
+	@echo "workstation-devops — available targets"
+	@echo ""
+	@echo "  Setup"
+	@echo "    make profile                        Detect or change machine profile (work/personal)"
+	@echo "    make deps                           Install Ansible and toolchain dependencies"
+	@echo "    make check                          Preflight: verify PATH, /Applications, Homebrew"
+	@echo "    make hooks                          Install pre-commit hooks"
+	@echo ""
+	@echo "  Apply"
+	@echo "    make apply                          Apply full configuration (logs to logs/apply-*.log)"
+	@echo "    make dry-run                        Preview changes without writing anything"
+	@echo "    make apply TAGS=dotfiles            Run only the dotfiles (chezmoi) tag"
+	@echo "    make apply SKIP_TAGS=work           Skip work-tagged tooling"
+	@echo "    make apply EXTRA_VARS='-e homebrew_upgrade=true'"
+	@echo ""
+	@echo "  Debug"
+	@echo "    make triage                         Summarize latest apply log"
+	@echo "    make triage LOG=logs/apply-X.log    Summarize a specific apply log"
+	@echo "    make lint                           yamllint + ansible syntax check + ansible-lint"
+	@echo "    make test                           Regression tests + personal dry-run"
+	@echo ""
+	@echo "  Secrets"
+	@echo "    make secrets-check                  Verify all Keychain items and local secret files"
+	@echo "    make secrets-help                   List all secret setup commands"
+	@echo "    make secrets-vault-okta             Create/update Vault Okta Keychain item"
+	@echo "    make secrets-notion                 Notion MCP token → Keychain"
+	@echo "    make secrets-linear                 Linear MCP API key → Keychain"
+	@echo "    make secrets-atlassian              Atlassian Jira/Confluence tokens + config file"
+	@echo "    make secrets-atlassian-env          Create ~/.mcp/env/atlassian-config.env"
+	@echo ""
+	@echo "  Repos"
+	@echo "    make repos-export                   Export managed_repos to Notion Repositories DB"
+	@echo "    make repos-sync-notion              Export + print Notion sync instructions"
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
