@@ -43,5 +43,9 @@ work_email: ""
 # GHEC SSH — private key basename under ~/.ssh/ (see docs/work/git-github.md)
 ghec_ssh_key: id_ed25519_github
 
+# direnv — work GitHub account for ~/Projects/.envrc GH_TOKEN injection.
+# Adobe convention: LDAP username + _adobe suffix.
+work_gh_user: "{{ work_username }}_adobe"
+
 # Vault vl() cluster list — populate in group_vars/work.local.yml
 vault_clusters: []
