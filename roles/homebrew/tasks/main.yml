@@ -20,6 +20,7 @@
           homebrew={{ 'yes' if homebrew_available else 'no' }} |
           install_via_brew={{ homebrew_install_packages | default(true) }} |
           mas_enabled={{ homebrew_mas_enabled | default(false) }} |
+          update=always |
           upgrade={{ homebrew_upgrade | default(false) }}
 
     - name: List installed Homebrew formulae
@@ -295,7 +296,7 @@
         - item.id not in mas_installed_ids.stdout_lines | default([])
       changed_when: true
 
-    - name: Run Homebrew update (optional)
+    - name: Run Homebrew update
       ansible.builtin.command: "{{ brew_bin }} update"
       register: brew_update
       failed_when: false
@@ -303,7 +304,6 @@
       when:
         - not (dry_run | default(false) | bool)
         - homebrew_available | bool
-        - homebrew_upgrade | default(false) | bool
 
     - name: Run Homebrew upgrade (optional, non-fatal)
       ansible.builtin.shell: |
@@ -332,9 +332,16 @@
         - brew_upgrade is defined
         - brew_upgrade.rc | default(0) != 0
 
+    - name: Show Homebrew update (dry-run)
+      ansible.builtin.debug:
+        msg: Would run brew update
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_available | bool
+
     - name: Show Homebrew upgrade (dry-run)
       ansible.builtin.debug:
-        msg: Would run brew update && brew upgrade (homebrew_upgrade=true; failures are non-fatal)
+        msg: Would run brew upgrade (homebrew_upgrade=true; failures are non-fatal)
       when:
         - dry_run | default(false) | bool
         - homebrew_available | bool
