@@ -71,17 +71,32 @@ homebrew_formulae_common:
   - ansible-lint
   - pre-commit
   - shellcheck
+  - awscli
+  - deno
+  - docker
+  - docker-completion
+  - fzf
+  - gnupg
+  - tmux
+  - tree
+  - uv
+  - watch
+  - wget
+  - yt-dlp
 
 homebrew_casks_common:
   - 1password
   - brave-browser
   - claude
+  - claude-code
   - cursor
   - github
   - iterm2
   - visual-studio-code
   - docker-desktop
   - obsidian
+  - session-manager-plugin
+  - temurin@17
 
 # If the .app exists, homebrew/preflight skip brew install --cask (manual installs count).
 homebrew_cask_app_bundles_common:

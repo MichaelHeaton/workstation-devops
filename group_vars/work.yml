@@ -20,7 +20,6 @@ homebrew_upgrade: false
 homebrew_mas_enabled: false
 
 homebrew_formulae_profile:
-  - fzf
   - kubernetes-cli
 
 homebrew_casks_profile:
