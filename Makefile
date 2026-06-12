@@ -10,7 +10,7 @@ help:
 	@echo "    make hooks                          Install pre-commit hooks"
 	@echo ""
 	@echo "  Apply"
-	@echo "    make apply                          Apply full configuration (logs to logs/apply-*.log)"
+	@echo "    make apply                          Apply full configuration (logs to logs/apply-*.log; sudo if PKG casks install)"
 	@echo "    make dry-run                        Preview changes without writing anything"
 	@echo "    make apply TAGS=dotfiles            Run only the dotfiles (chezmoi) tag"
 	@echo "    make apply SKIP_TAGS=work           Skip work-tagged tooling"
@@ -46,6 +46,7 @@ SKIP_TAGS ?=
 ANSIBLE_EXTRA_VAR_ARGS := $(EXTRA_VARS) $(ANSIBLE_EXTRA_ARGS)
 ANSIBLE_TAG_ARGS := $(if $(TAGS),--tags $(TAGS),) $(if $(SKIP_TAGS),--skip-tags $(SKIP_TAGS),)
 ANSIBLE_PLAYBOOK := ansible-playbook site.yml $(ANSIBLE_PROFILE_ARGS) $(ANSIBLE_EXTRA_VAR_ARGS) $(ANSIBLE_TAG_ARGS)
+ANSIBLE_APPLY := $(ANSIBLE_PLAYBOOK) --ask-become-pass
 
 deps:
 	@./scripts/bootstrap-deps.sh
@@ -76,7 +77,7 @@ APPLY_LOG = logs/apply-$(shell date +%Y%m%d-%H%M%S).log
 apply:
 	@mkdir -p logs
 	@echo "Logging to $(APPLY_LOG)"
-	@set -o pipefail; ANSIBLE_FORCE_COLOR=1 $(ANSIBLE_PLAYBOOK) 2>&1 | tee "$(APPLY_LOG)"; \
+	@set -o pipefail; ANSIBLE_FORCE_COLOR=1 $(ANSIBLE_APPLY) 2>&1 | tee "$(APPLY_LOG)"; \
 	 ec=$$?; echo "Log: $(APPLY_LOG) (make triage)"; exit $$ec
 
 triage:
