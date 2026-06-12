@@ -2,3 +2,4 @@
 export TELEPORT_LOGIN={{ work_username }}
 export CONFLUENCE_USER={{ work_username }}
 alias vssh='tsh ssh --request-reason="Vault admin" -- -t bash'
+eval "$(direnv hook zsh)"

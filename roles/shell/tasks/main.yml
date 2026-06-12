@@ -45,6 +45,41 @@
         - shell
         - work
 
+    - name: Show Projects .envrc block (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would create {{ projects_root }}/.envrc
+          (GH_TOKEN via gh auth token --user {{ work_gh_user }}) and run direnv allow.
+      when:
+        - dry_run | default(false) | bool
+        - "'work' in workstation_tags"
+
+    - name: Deploy ~/Projects/.envrc
+      ansible.builtin.template:
+        src: projects_envrc.j2
+        dest: "{{ projects_root }}/.envrc"
+        mode: "0644"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'work' in workstation_tags"
+      tags:
+        - shell
+        - work
+
+    - name: Trust ~/Projects/.envrc with direnv allow
+      ansible.builtin.command:
+        argv:
+          - "{{ brew_prefix }}/bin/direnv"
+          - allow
+          - "{{ projects_root }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'work' in workstation_tags"
+      changed_when: false
+      tags:
+        - shell
+        - work
+
     - name: Show personal shell block (dry-run)
       ansible.builtin.debug:
         msg: >-
