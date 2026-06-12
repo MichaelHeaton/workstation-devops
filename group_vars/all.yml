@@ -98,6 +98,16 @@ homebrew_casks_common:
   - session-manager-plugin
   - temurin@17
 
+# PKG casks run `sudo installer`; make apply uses ansible become + /usr/sbin/installer.
+homebrew_casks_sudo_required:
+  - session-manager-plugin
+  - temurin@17
+
+# Non-.app cask satisfaction (PATH checks use homebrew_formula_bins pattern in preflight).
+homebrew_cask_path_checks:
+  session-manager-plugin: /usr/local/sessionmanagerplugin/bin/session-manager-plugin
+  temurin@17: /Library/Java/JavaVirtualMachines/temurin-17.jdk
+
 # If the .app exists, homebrew/preflight skip brew install --cask (manual installs count).
 homebrew_cask_app_bundles_common:
   1password: 1Password.app
@@ -140,6 +150,13 @@ macos_defaults_apple_notes:
 macos_defaults_global_smart_typography: false
 
 # --- Platform ------------------------------------------------------------------
+
+# One-time trust for taps already on the machine (Homebrew 4.6+). Idempotent.
+homebrew_taps_to_trust:
+  - cloudflare/cloudflare
+  - hashicorp/tap
+  - hudochenkov/sshpass
+  - mongodb/brew
 
 is_mac: "{{ ansible_facts['os_family'] == 'Darwin' }}"
 is_linux: "{{ ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'RedHat' }}"

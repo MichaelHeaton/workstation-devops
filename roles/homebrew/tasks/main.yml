@@ -23,6 +23,24 @@
           update=always |
           upgrade={{ homebrew_upgrade | default(false) }}
 
+    - name: Trust configured Homebrew taps
+      ansible.builtin.command: "{{ brew_bin }} trust {{ homebrew_taps_to_trust | join(' ') }}"
+      register: homebrew_tap_trust
+      failed_when: false
+      changed_when: homebrew_tap_trust.rc == 0
+      when:
+        - homebrew_available | bool
+        - homebrew_taps_to_trust | default([]) | length > 0
+        - not (dry_run | default(false) | bool)
+
+    - name: Show Homebrew tap trust (dry-run)
+      ansible.builtin.debug:
+        msg: "Would trust taps: {{ homebrew_taps_to_trust | join(', ') }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_available | bool
+        - homebrew_taps_to_trust | default([]) | length > 0
+
     - name: List installed Homebrew formulae
       ansible.builtin.command: "{{ brew_bin }} list --formula"
       register: brew_formulae
@@ -140,26 +158,131 @@
         - dry_run | default(false) | bool
         - item in homebrew_casks_skip_bundles | default([])
 
+    - name: Check PKG cask install paths
+      ansible.builtin.stat:
+        path: "{{ item.value }}"
+      loop: "{{ homebrew_cask_path_checks | default({}) | dict2items }}"
+      register: cask_path_checks
+      when: homebrew_casks | length > 0
+
+    - name: Build casks satisfied via install path
+      ansible.builtin.set_fact:
+        homebrew_casks_satisfied_paths: >-
+          {{ cask_path_checks.results
+             | default([])
+             | selectattr('stat.exists', 'defined')
+             | selectattr('stat.exists')
+             | map(attribute='item.key')
+             | list }}
+      when: cask_path_checks is defined
+
+    - name: Compute casks still needed
+      ansible.builtin.set_fact:
+        homebrew_casks_to_install: >-
+          {{ homebrew_casks
+             | difference(brew_casks.stdout_lines | default([]))
+             | difference(homebrew_casks_skip_bundles | default([]))
+             | difference(homebrew_casks_satisfied_paths | default([])) }}
+
+    - name: Compute PKG casks that need sudo during install
+      ansible.builtin.set_fact:
+        homebrew_casks_pkg_to_install: >-
+          {{ homebrew_casks_to_install
+             | intersect(homebrew_casks_sudo_required | default([])) }}
+
+    - name: Compute non-PKG casks to install via brew
+      ansible.builtin.set_fact:
+        homebrew_casks_brew_to_install: >-
+          {{ homebrew_casks_to_install
+             | difference(homebrew_casks_sudo_required | default([])) }}
+
     - name: Show casks that would be installed via Homebrew (dry-run)
       ansible.builtin.debug:
         msg: "Would install cask: {{ item }}"
-      loop: "{{ homebrew_casks }}"
+      loop: "{{ homebrew_casks_brew_to_install | default([]) }}"
       when:
         - dry_run | default(false) | bool
         - homebrew_install_packages | default(true) | bool
         - homebrew_available | bool
-        - item not in brew_casks.stdout_lines | default([])
-        - item not in homebrew_casks_skip_bundles | default([])
 
-    - name: Install Homebrew casks
-      ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
-      loop: "{{ homebrew_casks }}"
+    - name: Show PKG casks that would be installed via installer (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would fetch and install PKG cask {{ item }}
+          (ansible become runs /usr/sbin/installer — make apply prompts for sudo)
+      loop: "{{ homebrew_casks_pkg_to_install | default([]) }}"
+      when:
+        - dry_run | default(false) | bool
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
+
+    - name: Fetch PKG cask artifacts and resolve installer paths
+      ansible.builtin.shell: |
+        set -euo pipefail
+        cask="{{ item }}"
+        "{{ brew_bin }}" fetch --cask --force "$cask"
+        cache_path=$("{{ brew_bin }}" --cache --cask "$cask")
+        if [[ -f "$cache_path" && "$cache_path" == *.pkg ]]; then
+          printf '%s\n' "$cache_path"
+          exit 0
+        fi
+        if [[ -d "$cache_path" ]]; then
+          pkg=$(find "$cache_path" -name '*.pkg' -type f | sort -V | tail -1 || true)
+          if [[ -n "$pkg" ]]; then
+            printf '%s\n' "$pkg"
+            exit 0
+          fi
+        fi
+        for dir in \
+          "{{ brew_prefix }}/Caskroom/$cask" \
+          "$("{{ brew_bin }}" --cache)/downloads"; do
+          if [[ -d "$dir" ]]; then
+            pkg=$(find "$dir" -name '*.pkg' -type f 2>/dev/null | sort -V | tail -1 || true)
+            if [[ -n "$pkg" ]]; then
+              printf '%s\n' "$pkg"
+              exit 0
+            fi
+          fi
+        done
+        echo "No PKG found for cask $cask after brew fetch" >&2
+        exit 1
+      args:
+        executable: /bin/bash
+      loop: "{{ homebrew_casks_pkg_to_install | default([]) }}"
+      register: homebrew_pkg_cask_files
+      changed_when: true
       when:
         - not (dry_run | default(false) | bool)
         - homebrew_install_packages | default(true) | bool
         - homebrew_available | bool
-        - item not in brew_casks.stdout_lines | default([])
-        - item not in homebrew_casks_skip_bundles | default([])
+        - homebrew_casks_pkg_to_install | length > 0
+
+    - name: Install PKG casks with elevated installer
+      become: true
+      ansible.builtin.command:
+        argv:
+          - /usr/sbin/installer
+          - -pkg
+          - "{{ item.stdout | trim }}"
+          - -target
+          - /
+      loop: "{{ homebrew_pkg_cask_files.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
+        - item.stdout is defined
+        - item.stdout | trim | length > 0
+
+    - name: Install Homebrew casks
+      ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"
+      loop: "{{ homebrew_casks_brew_to_install | default([]) }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - homebrew_available | bool
 
     - name: Check Go-installed binaries
       ansible.builtin.stat:

@@ -139,10 +139,26 @@ done < <({
   yq '.homebrew_cask_app_bundles | to_entries[] | [.key, .value] | @tsv' "$PROFILE_CONFIG" 2>/dev/null || true
 })
 
+declare -A cask_path_checks
+while IFS=$'\t' read -r key val; do
+  [[ -z "$key" ]] && continue
+  cask_path_checks["$key"]="$val"
+done < <(yq '.homebrew_cask_path_checks | to_entries[] | [.key, .value] | @tsv' "$ALL_CONFIG" 2>/dev/null || true)
+
+declare -A cask_sudo_required
+while IFS= read -r cask; do
+  [[ -z "$cask" ]] && continue
+  cask_sudo_required["$cask"]=1
+done < <(yq '.homebrew_casks_sudo_required[]' "$ALL_CONFIG" 2>/dev/null || true)
+
 cask_satisfied() {
   local cask=$1
   local bundle="${app_bundles[$cask]:-}"
   if [[ -n "$bundle" && -d "/Applications/$bundle" ]]; then
+    return 0
+  fi
+  local path_check="${cask_path_checks[$cask]:-}"
+  if [[ -n "$path_check" && -e "$path_check" ]]; then
     return 0
   fi
   if [[ "$brew_available" == true ]] && printf '%s\n' "$installed_casks" | grep -qx "$cask"; then
@@ -156,7 +172,11 @@ while IFS= read -r cask; do
   if cask_satisfied "$cask"; then
     ok "$cask"
   elif [[ "$install_packages" == "true" && "$brew_available" == true ]]; then
-    miss "$cask" "brew install --cask $cask"
+    if [[ -n "${cask_sudo_required[$cask]:-}" ]]; then
+      miss "$cask" "brew install --cask $cask (or run make apply — prompts for sudo)"
+    else
+      miss "$cask" "brew install --cask $cask"
+    fi
   elif [[ "$install_packages" == "true" ]]; then
     miss "$cask" "app not in /Applications (install manually or run make deps)"
   else
