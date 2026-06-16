@@ -9,9 +9,9 @@ mytools() {
 
   if (( $+functions[ces_sandbox] || $+functions[ces_dev] || $+functions[ces_prd] )); then
     echo "  ── AWS (KLAM) ───────────────────────────────────────────────────"
-    (( $+functions[ces_sandbox] )) && echo "    ces_sandbox         assume KLAM credentials for sandbox"
-    (( $+functions[ces_dev] ))     && echo "    ces_dev             assume KLAM credentials for dev"
-    (( $+functions[ces_prd] ))     && echo "    ces_prd             assume KLAM credentials for prod"
+    (( $+functions[ces_sandbox] )) && echo "    ces_sandbox         assume KLAM credentials for sandbox  (...3550)"
+    (( $+functions[ces_dev] ))     && echo "    ces_dev             assume KLAM credentials for dev       (...9010)"
+    (( $+functions[ces_prd] ))     && echo "    ces_prd             assume KLAM credentials for prod      (...1222)"
     echo "    ces_term_reset      disconnect — unset AWS_PROFILE + reset terminal colors"
     echo ""
     found=1
