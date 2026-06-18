@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash ~/.claude/skills/session-close/scripts/discover-repos.sh*)",
+      "Bash(bash ~/.claude/skills/session-close/scripts/git-ssh-fallback.sh *)",
+      "Bash(bash ~/.claude/skills/issue-create/scripts/detect-context.sh)",
+      "Bash(bash ~/.claude/skills/issue-create/scripts/append-task-index.sh *)",
+      "Bash(export GH_TOKEN=$(gh auth token *))",
+      "Bash(security find-generic-password *)",
+      "Bash(shellcheck *)",
+      "Bash(yamllint *)",
+      "Bash(git -C * status*)",
+      "Bash(git -C * log*)",
+      "Bash(git -C * diff*)",
+      "mcp__atlassian__jira_get_issue",
+      "mcp__atlassian__jira_search",
+      "mcp__atlassian__jira_get_transitions",
+      "mcp__atlassian__jira_get_project_components",
+      "mcp__atlassian__confluence_get_page",
+      "mcp__atlassian__confluence_get_page_children",
+      "mcp__atlassian__confluence_search",
+      "mcp__ccd_session_mgmt__search_session_transcripts"
+    ]
+  }
+}
