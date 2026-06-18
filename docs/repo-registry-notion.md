@@ -12,7 +12,7 @@ Notion **Repositories** (`collection://6f44da4e-bb6b-433a-a9a7-c1a6f9d93579`) is
 
 ## Paths
 
-- **Projects dest** — Relative path under `~/Projects` (ansible `dest`), e.g. `personal/memex`, `specterrealm/homelab/homelab-core`.
+- **Projects dest** — Relative path under `~/Projects` (ansible `dest`), e.g. `personal/memex`, `personal/platform-bootstrap`.
 - **Clone scope** — `common` (every profile, `managed_repos_common`), `personal` / `work` (profile `managed_repos`), or `none` (exists in GitHub but not cloned by this playbook).
 
 ## Refresh dest + clone scope in Notion

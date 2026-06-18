@@ -32,7 +32,7 @@ Skip Adobe/org repos not in the manifest (leave dest empty or `Clone scope` = `n
 
 ```json
 {
-  "Projects dest": "specterrealm/homelab/homelab-core",
+  "Projects dest": "personal/platform-bootstrap",
   "Clone scope": "personal"
 }
 ```
@@ -43,4 +43,4 @@ Repos in Notion from Terraform but **not** in the ansible manifest should get `C
 
 ## 6. Verify
 
-Spot-check: `workstation-devops` → `personal/workstation-devops`, `memex` → `personal/memex`, `homelab-core` → `specterrealm/homelab/homelab-core`.
+Spot-check: `workstation-devops` → `personal/workstation-devops`, `memex` → `personal/memex`, `platform-bootstrap` → `personal/platform-bootstrap`.
