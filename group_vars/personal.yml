@@ -28,6 +28,8 @@ managed_repos:
     dest: personal/platform-bootstrap
   - repo: https://github.com/MichaelHeaton/memex-suite.git
     dest: personal/memex-suite
+  - repo: https://github.com/specterrealm-homelab/homelab-observability.git
+    dest: specterrealm/homelab/homelab-observability
   - repo: https://github.com/MichaelHeaton/minecraft-modpack-family.git
     dest: specterrealm/esport/minecraft-modpack-family
   - repo: https://github.com/MichaelHeaton/minecraft-modpack-cp-verdant.git
