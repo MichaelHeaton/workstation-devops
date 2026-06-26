@@ -1,3 +1,4 @@
+sourceDir: "{{ playbook_dir }}/dotfiles"
 data:
   workstation_profile: "{{ workstation_profile }}"
   work_username: "{{ work_username | default(ansible_facts['user_id']) }}"
