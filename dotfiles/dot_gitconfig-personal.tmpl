@@ -3,7 +3,7 @@
 	email = michael@heatons.me
 [credential "https://github.com"]
 	helper =
-	helper = !GH_USER=MichaelHeaton {{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
+	helper = !GH_TOKEN=$({{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth token --user MichaelHeaton) {{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
 [credential "https://gist.github.com"]
 	helper =
-	helper = !GH_USER=MichaelHeaton {{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
+	helper = !GH_TOKEN=$({{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth token --user MichaelHeaton) {{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}/bin/gh auth git-credential
