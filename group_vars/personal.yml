@@ -22,14 +22,12 @@ projects_buckets:
 managed_repos:
   - repo: https://github.com/MichaelHeaton/MichaelHeaton.git
     dest: personal/MichaelHeaton
-  - repo: https://github.com/McCleaton/cloudflare.git
-    dest: personal/cloudflare
   - repo: https://github.com/MichaelHeaton/platform-bootstrap.git
     dest: personal/platform-bootstrap
   - repo: https://github.com/MichaelHeaton/memex-suite.git
     dest: personal/memex-suite
-  - repo: https://github.com/specterrealm-homelab/homelab-observability.git
-    dest: specterrealm/homelab/homelab-observability
+  # cloudflare + observability consolidated into homelab-infra (#102) — TF now lives in
+  # homelab-infra/terraform/{cloudflare,observability}; no standalone clones needed.
   - repo: https://github.com/specterrealm-homelab/homelab-infra.git
     dest: specterrealm/homelab/homelab-infra
   - repo: https://github.com/MichaelHeaton/minecraft-modpack-family.git
