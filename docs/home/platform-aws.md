@@ -17,7 +17,7 @@ Override in `group_vars/personal.local.yml` if your bucket or region differ.
 | Repo | Backend | Plan / apply |
 | ---- | ------- | ------------ |
 | **platform-bootstrap** | HCP Terraform (`McCleaton-Bootstrap` / workspace `platform-bootstrap`) | VCS-driven in [HCP](https://app.terraform.io/app/McCleaton-Bootstrap/workspaces/platform-bootstrap) — not local `terraform apply` |
-| **Domain spokes** (e.g. `McCleaton/cloudflare`) | S3 (`mccleaton-tfstate`, key per pipeline) | GitHub Actions OIDC on `main` |
+| **Domain spokes** (e.g. `homelab-infra/terraform/<stack>`) | HCP Terraform (one workspace per stack) | VCS-driven in HCP on `main` |
 
 Local `AWS_PROFILE=platform-bootstrap` is still used for Secrets Manager reads, debugging
 spoke plans, and helper scripts — not for applying platform-bootstrap root module state.
@@ -57,27 +57,19 @@ HCP workspace: [McCleaton-Bootstrap/platform-bootstrap](https://app.terraform.io
 Runbooks: [04 — Add a Service](https://github.com/MichaelHeaton/platform-bootstrap/blob/main/docs/runbooks/04-add-service.md),
 [09 — Cloudflare spoke](https://github.com/MichaelHeaton/platform-bootstrap/blob/main/docs/runbooks/09-cloudflare-terraform-repo.md).
 
-## cloudflare spoke (S3 + GHA)
+## cloudflare DNS (consolidated into homelab-infra)
 
-Repo: `McCleaton/cloudflare` → cloned to `~/Projects/personal/cloudflare`.
+Cloudflare DNS moved out of the standalone `McCleaton/cloudflare` repo into
+`homelab-infra/terraform/cloudflare/` (#102). It is now an HCP Terraform workspace, plan/apply
+VCS-driven on `main` — not local S3 + GHA. Clone `homelab-infra`, not a separate cloudflare repo.
 
 | Item | Value |
 | ---- | ----- |
-| State bucket | `mccleaton-tfstate` |
-| State key | `shared-cloudflare-dns/terraform.tfstate` |
+| Path | `~/Projects/specterrealm/homelab/homelab-infra/terraform/cloudflare` |
+| State | HCP Terraform (workspace `cloudflare`) |
 | SM secret (plan time) | `personal/cloudflare-api-token` |
 
-Local plan (optional — needs AWS creds + token from SM):
-
-```bash
-cd ~/Projects/personal/cloudflare/terraform
-export AWS_PROFILE=platform-bootstrap TF_STATE_BUCKET_NAME=mccleaton-tfstate
-terraform init -backend-config="bucket=$TF_STATE_BUCKET_NAME" -backend-config="key=shared-cloudflare-dns/terraform.tfstate"
-# CLOUDFLARE_API_TOKEN from SM for plan
-terraform plan
-```
-
-Normal path: push to `main` and let GitHub Actions plan/apply via OIDC.
+Normal path: push to `main` and let HCP plan/apply. See `homelab-infra/docs/terraform-workspaces.md`.
 
 ## Work laptop
 
