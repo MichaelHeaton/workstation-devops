@@ -4,6 +4,8 @@
       "Bash(bash ~/.claude/skills/session-close/scripts/discover-repos.sh*)",
       "Bash(bash ~/.claude/skills/session-close/scripts/git-ssh-fallback.sh *)",
       "Bash(bash ~/.claude/skills/issue-create/scripts/detect-context.sh)",
+      "Bash(bash ~/.claude/skills/agent-md-sync/scripts/discover-components.sh *)",
+      "Bash(bash ~/.claude/skills/agent-md-sync/scripts/check-pr-diff.sh *)",
       "Bash(bash ~/.claude/skills/issue-create/scripts/append-task-index.sh *)",
       "Bash(export GH_TOKEN=$(gh auth token *))",
       "Bash(security find-generic-password *)",
