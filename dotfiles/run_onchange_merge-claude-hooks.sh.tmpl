@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # merge-claude-hooks — register ai-skills hook scripts in ~/.claude/settings.json.
 #
-# ADDITIVE ONLY: installs Read (block-env-read) and UserPromptSubmit (lean-context)
-# hooks when missing. Hook scripts are deployed by ai-skills make install-system.
+# ADDITIVE ONLY: installs Read (block-env-read), UserPromptSubmit (lean-context),
+# and SessionStart (check-ai-skills-sync) hooks when missing. Hook scripts are
+# deployed by ai-skills make install-system.
 #
 # Bump to force re-run:
-# hooks-policy-version: v1.0.0
+# hooks-policy-version: v1.1.0
 
 set -euo pipefail
 
 SETTINGS="$HOME/.claude/settings.json"
 BLOCK_ENV="$HOME/.claude/hooks/block-env-read.py"
 LEAN_CTX="$HOME/.claude/hooks/lean-context-reminder.py"
+SYNC_CHECK="$HOME/.claude/hooks/check-ai-skills-sync.py"
 
 if [[ ! -f "$SETTINGS" ]]; then
   echo "merge-claude-hooks: $SETTINGS not found, skipping"
@@ -45,10 +47,22 @@ PROMPT_HOOK='{
   ]
 }'
 
+SESSION_HOOK='{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "__PYTHON__ __SYNC_CHECK__"
+    }
+  ]
+}'
+
 READ_HOOK="${READ_HOOK//__PYTHON__/$PYTHON_BIN}"
 READ_HOOK="${READ_HOOK//__BLOCK_ENV__/$BLOCK_ENV}"
 PROMPT_HOOK="${PROMPT_HOOK//__PYTHON__/$PYTHON_BIN}"
 PROMPT_HOOK="${PROMPT_HOOK//__LEAN_CTX__/$LEAN_CTX}"
+SESSION_HOOK="${SESSION_HOOK//__PYTHON__/$PYTHON_BIN}"
+SESSION_HOOK="${SESSION_HOOK//__SYNC_CHECK__/$SYNC_CHECK}"
 
 if [[ ! -f "$BLOCK_ENV" ]]; then
   echo "merge-claude-hooks: $BLOCK_ENV missing (run ai-skills make install-system), skipping Read hook"
@@ -58,6 +72,11 @@ fi
 if [[ ! -f "$LEAN_CTX" ]]; then
   echo "merge-claude-hooks: $LEAN_CTX missing (run ai-skills make install-system), skipping UserPromptSubmit hook"
   PROMPT_HOOK=""
+fi
+
+if [[ ! -f "$SYNC_CHECK" ]]; then
+  echo "merge-claude-hooks: $SYNC_CHECK missing (run ai-skills make install-system), skipping SessionStart hook"
+  SESSION_HOOK=""
 fi
 
 has_read=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Read")] | length' "$SETTINGS")
@@ -82,6 +101,18 @@ if [[ -n "$PROMPT_HOOK" && "$has_prompt" -eq 0 ]]; then
   echo "  done"
 elif [[ "$has_prompt" -gt 0 ]]; then
   echo "merge-claude-hooks: UserPromptSubmit hook already present, skipping"
+fi
+
+has_session=$(jq '[.hooks.SessionStart[]? | select(.matcher == "")] | length' "$SETTINGS")
+if [[ -n "$SESSION_HOOK" && "$has_session" -eq 0 ]]; then
+  echo "merge-claude-hooks: adding SessionStart hook (check-ai-skills-sync)..."
+  tmp=$(mktemp)
+  jq --argjson hook "$SESSION_HOOK" \
+    '.hooks.SessionStart = ((.hooks.SessionStart // []) + [$hook])' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+elif [[ "$has_session" -gt 0 ]]; then
+  echo "merge-claude-hooks: SessionStart hook already present, skipping"
 fi
 
 echo "merge-claude-hooks: done"
