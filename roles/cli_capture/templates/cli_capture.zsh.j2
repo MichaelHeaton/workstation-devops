@@ -1,0 +1,100 @@
+## CLI output capture — automatic, silent (see ticket #68).
+##
+## Wraps only the configured high-signal commands (not preexec/precmd on every
+## command) so ordinary shell usage never pays extra fork/redirect cost. Each
+## wrapper pipes the real command's stdout+stderr straight through to the
+## terminal via `tee` (same `2>&1 | ...` shape clog itself is invoked with) —
+## the terminal experience is unchanged — while also writing a raw copy for
+## the launchd watcher to redact + filter via clog.py. No confirmation output
+## is printed (silent capture, per triage decision). Measured overhead is
+## ~15-40ms per wrapped invocation from the tee/pipe fork cost — negligible
+## and scoped to only the 4 wrapped commands, but not literally zero latency.
+##
+## Raw files are written under a name the watcher's RAW_FILENAME_RE will never
+## match (a "." prefix + ".writing.<pid>" suffix) until the wrapped command
+## fully exits, then renamed to the final "<tool>-<timestamp>-<pid>.log" name
+## inside a zsh `always` block — which fires on normal return, error exit, AND
+## interruption (e.g. Ctrl-C) — so the watcher can never observe (and thus
+## never truncate) a file that's still being written. This closes a
+## found-in-testing race where an mtime-only "is this file still growing?"
+## heuristic let the watcher process and delete a raw file mid-write on a
+## slow/long-running command, silently dropping everything written after the
+## watcher's read. The final filename also includes a $RANDOM token in
+## addition to the pid: two sequential same-second invocations of the same
+## command from the *same* interactive shell share both timestamp and pid, so
+## pid alone doesn't disambiguate them — verified in testing this round that
+## without the random token, the second invocation's `mv -f` silently
+## overwrote (not merely deduped/concatenated) the first invocation's fully
+## captured output. The random token is final-filename-only (the ".writing"
+## temp name keeps a bare pid, since the watcher's orphan-reap liveness check
+## needs a real, single pid to signal).
+##
+## kubectl gets an extra guard: `kubectl exec -it`/`-t` and `kubectl edit`
+## need real TTY control (raw-mode line editing, $EDITOR) that piping through
+## `tee` breaks/garbles — there's no reliable way to capture and also
+## preserve TTY semantics through a pipe. For those two cases the wrapper
+## skips capture entirely and runs kubectl directly against the real
+## terminal, same as if it weren't wrapped at all. This is a targeted fix for
+## the two confirmed common interactive invocations (found in review) — it
+## does not attempt full kubectl flag-parsing robustness, and the same
+## interactive-passthrough treatment is NOT extended to terraform/
+## ansible-playbook/vault (e.g. `terraform console`, an interactive `vault
+## login` password prompt): those remain a known residual limitation of this
+## capture approach rather than something this fix addresses.
+export CLI_CAPTURE_RAW_DIR="{{ cli_capture_raw_dir }}"
+mkdir -p "$CLI_CAPTURE_RAW_DIR" 2>/dev/null
+
+{% for cmd in cli_capture_commands %}
+{% set tool = cli_capture_tool_map.get(cmd, 'auto') %}
+{% if cmd == 'kubectl' %}
+{{ cmd }}() {
+  local __cli_capture_subcmd="$1"
+  local __cli_capture_skip_capture=0
+  if [[ "$__cli_capture_subcmd" == "edit" ]]; then
+    __cli_capture_skip_capture=1
+  elif [[ "$__cli_capture_subcmd" == "exec" ]]; then
+    local __cli_capture_arg
+    for __cli_capture_arg in "$@"; do
+      case "$__cli_capture_arg" in
+        -i|-t|-it|-ti|--stdin|--tty)
+          __cli_capture_skip_capture=1
+          ;;
+      esac
+    done
+  fi
+
+  if (( __cli_capture_skip_capture )); then
+    # Interactive invocation (exec -it/-t or edit) — needs a real TTY for
+    # raw-mode line editing / $EDITOR. Run directly, no tee, no raw file.
+    command {{ cmd }} "$@"
+    return $?
+  fi
+
+  local __cli_capture_ts="$(date +%Y-%m-%dT%H-%M-%S)"
+  local __cli_capture_tmp="${CLI_CAPTURE_RAW_DIR}/.{{ tool }}-${__cli_capture_ts}.log.writing.$$"
+  local __cli_capture_final="${CLI_CAPTURE_RAW_DIR}/{{ tool }}-${__cli_capture_ts}-$$-${RANDOM}.log"
+  local __cli_capture_status=0
+  {
+    command {{ cmd }} "$@" 2>&1 | tee -a "$__cli_capture_tmp"
+    __cli_capture_status=$pipestatus[1]
+  } always {
+    [[ -f "$__cli_capture_tmp" ]] && mv -f "$__cli_capture_tmp" "$__cli_capture_final"
+  }
+  return $__cli_capture_status
+}
+{% else %}
+{{ cmd }}() {
+  local __cli_capture_ts="$(date +%Y-%m-%dT%H-%M-%S)"
+  local __cli_capture_tmp="${CLI_CAPTURE_RAW_DIR}/.{{ tool }}-${__cli_capture_ts}.log.writing.$$"
+  local __cli_capture_final="${CLI_CAPTURE_RAW_DIR}/{{ tool }}-${__cli_capture_ts}-$$-${RANDOM}.log"
+  local __cli_capture_status=0
+  {
+    command {{ cmd }} "$@" 2>&1 | tee -a "$__cli_capture_tmp"
+    __cli_capture_status=$pipestatus[1]
+  } always {
+    [[ -f "$__cli_capture_tmp" ]] && mv -f "$__cli_capture_tmp" "$__cli_capture_final"
+  }
+  return $__cli_capture_status
+}
+{% endif %}
+{% endfor %}

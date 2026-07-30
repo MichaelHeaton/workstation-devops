@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+"""
+cli-capture-watch — launchd QueueDirectories watcher for {{ cli_capture_raw_dir }}
+
+Templated by Ansible (roles/cli_capture) so absolute HOME / ai-skills paths are
+baked in — this runs under a LaunchAgent's minimal environment, which cannot be
+relied on to have a real login shell's PATH or env vars.
+
+For each raw capture file left by the zsh wrapper functions in
+cli_capture.zsh.j2 (named "<tool>-<timestamp>-<pid>.log"), this:
+  1. detects the tool from the filename,
+  2. pipes the file's content into clog.py <tool> as stdin (reusing its
+     existing redaction/filter logic — not reimplemented here),
+  3. deletes the raw file once clog.py exits successfully.
+
+Correctness does NOT depend on a file "looking old enough" to be done: the
+wrapper function only ever creates the matchable "<tool>-<timestamp>-<pid>.log"
+name via an atomic rename in a zsh `always` block that runs after the wrapped
+command fully exits (success, failure, or Ctrl-C). While the command is still
+running, its raw output lives under a name this script's regex will never
+match (a "." prefix + ".writing.<pid>" suffix), so this script can never
+observe, let alone truncate, a file that's still being written. MIN_AGE_SECONDS
+below is kept only as cheap defense-in-depth against clock skew / filesystem
+metadata lag, not as the source of truth for "is this file done".
+
+Orphaned in-progress files: a zsh `always` block cannot run at all if the
+owning shell is killed outright (kill -9, terminal force-quit, power loss)
+mid-capture — the ".writing.<pid>" file is then abandoned forever, holding
+whatever partial output (potentially secrets) was captured before the kill.
+This script reaps those: for every ".writing.<pid>" file, it checks whether
+<pid> is still alive; if not, the file is dead-owner orphaned and gets routed
+through the exact same clog.py redaction path as a normal completed capture,
+then deleted — regardless of age. It is never raw-deleted by the age-based
+retention purge below. This guarantees a secrets-bearing raw file never sits
+around unredacted for the full retention window just because its shell died
+mid-write.
+
+The age-based purge below only ever removes files matching the *completed*
+capture name pattern that are older than the retention window; it explicitly
+skips ".writing.<pid>" files (orphan reaping above is the only path that may
+remove those, and only after a successful clog.py pass) — not a separate
+cron/timer (QueueDirectories jobs already run frequently enough, plus a
+StartInterval backstop in the plist, so a second scheduler would be
+redundant).
+
+Manual test (per dev-team testing boundary): invoke this script directly
+against a synthetic raw file in a scratch directory — do not point
+CLI_CAPTURE_RAW_DIR at the real ~/.cli-output/raw on a dev machine.
+"""
+
+import fcntl
+import os
+import re
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+RAW_DIR = Path("{{ cli_capture_raw_dir }}")
+CLOG_SCRIPT = Path("{{ cli_capture_ai_skills_clog }}")
+RETENTION_DAYS = {{ cli_capture_retention_days }}
+LOCK_FILE = RAW_DIR / ".cli-capture-watch.lock"
+
+# Matches the naming convention produced by cli_capture.zsh.j2 for a *completed*
+# capture (the in-progress name uses a "." prefix + ".writing.<pid>" suffix and
+# will never match this):
+#   <tool>-<YYYY-MM-DDTHH-MM-SS>-<pid>-<random>.log
+# Allows 0-2 trailing "-<digits>" groups (pid, and pid+random) for backward
+# compatibility with either naming shape.
+RAW_FILENAME_RE = re.compile(
+    r"^(?P<tool>[A-Za-z0-9_]+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:-\d+){0,2}\.log$"
+)
+
+# Matches an *in-progress* (or, if the owning pid is dead, orphaned) capture:
+#   .<tool>-<YYYY-MM-DDTHH-MM-SS>.log.writing.<pid>
+WRITING_FILENAME_RE = re.compile(
+    r"^\.(?P<tool>[A-Za-z0-9_]+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.log\.writing\.(?P<pid>\d+)$"
+)
+
+# Defense-in-depth only (see module docstring) — completed files are already
+# guaranteed done by the rename-on-exit scheme, not by this age check.
+MIN_AGE_SECONDS = 3
+
+
+def acquire_lock():
+    """Best-effort single-instance guard; launchd can fire overlapping runs."""
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    lock_fh = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        print("cli-capture-watch: another instance is running, exiting", file=sys.stderr)
+        sys.exit(0)
+    return lock_fh  # keep a reference so the lock isn't released on GC
+
+
+def pid_is_alive(pid: int) -> bool:
+    """Best-effort liveness check. Doesn't guarantee it's the *same* process
+    that created the file (pids can be reused) — acceptable here since a
+    false "alive" only delays reaping by one more watcher pass, and a false
+    "dead" is not possible for a pid that was never reused yet."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # Exists, but not ours to signal — treat as alive, leave it alone.
+        return True
+    return True
+
+
+def process_raw_file(path: Path, tool: str) -> None:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        print(f"cli-capture-watch: could not read {path}: {exc}", file=sys.stderr)
+        return
+
+    result = subprocess.run(
+        [sys.executable, str(CLOG_SCRIPT), tool],
+        input=data,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 0:
+        print(
+            f"cli-capture-watch: clog.py failed for {path} (tool={tool}): "
+            f"{result.stderr.decode(errors='replace')}",
+            file=sys.stderr,
+        )
+        return
+
+    try:
+        path.unlink()
+    except OSError as exc:
+        print(f"cli-capture-watch: processed {path} but could not remove it: {exc}", file=sys.stderr)
+
+
+def reap_orphaned_writing_files() -> None:
+    """Redact-then-delete any '.writing.<pid>' file whose owning shell is
+    dead, instead of leaving it to sit raw and unredacted until the age-based
+    purge eventually reaches it (see module docstring)."""
+    if not RAW_DIR.is_dir():
+        return
+    for path in sorted(RAW_DIR.iterdir()):
+        if path == LOCK_FILE or not path.is_file():
+            continue
+        match = WRITING_FILENAME_RE.match(path.name)
+        if not match:
+            continue
+        pid = int(match.group("pid"))
+        if pid_is_alive(pid):
+            continue  # still being written by a live shell — leave it alone
+        print(
+            f"cli-capture-watch: reaping orphaned {path} (owner pid {pid} is no longer running)",
+            file=sys.stderr,
+        )
+        process_raw_file(path, match.group("tool"))
+
+
+def purge_old_raw_files() -> None:
+    """Age-based backstop for *completed* raw captures only. Never touches
+    '.writing.<pid>' files — those are exclusively handled (redacted, then
+    deleted) by reap_orphaned_writing_files above, never raw-unlinked here,
+    no matter how old they are."""
+    cutoff = time.time() - (RETENTION_DAYS * 86400)
+    if not RAW_DIR.is_dir():
+        return
+    for path in RAW_DIR.iterdir():
+        if path == LOCK_FILE or not path.is_file():
+            continue
+        if WRITING_FILENAME_RE.match(path.name):
+            continue
+        try:
+            if path.stat().st_mtime < cutoff:
+                path.unlink()
+        except OSError as exc:
+            print(f"cli-capture-watch: could not purge {path}: {exc}", file=sys.stderr)
+
+
+def main() -> None:
+    lock_fh = acquire_lock()  # noqa: F841 — held for process lifetime
+
+    if not RAW_DIR.is_dir():
+        return
+
+    reap_orphaned_writing_files()
+
+    now = time.time()
+    for path in sorted(RAW_DIR.iterdir()):
+        if path == LOCK_FILE or not path.is_file():
+            continue
+        match = RAW_FILENAME_RE.match(path.name)
+        if not match:
+            continue
+        if (now - path.stat().st_mtime) < MIN_AGE_SECONDS:
+            continue
+        process_raw_file(path, match.group("tool"))
+
+    purge_old_raw_files()
+
+
+if __name__ == "__main__":
+    main()

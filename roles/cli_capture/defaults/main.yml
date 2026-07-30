@@ -1,0 +1,44 @@
+---
+# cli_capture — automatic CLI output capture + redaction (opt-in tag: cli-capture).
+# See docs/tags.md for the tag/allowlist convention this role plugs into.
+
+cli_capture_enabled: true
+
+# High-signal commands wrapped for automatic capture. Configurable — not a hardcoded
+# separate dotfile. Each entry's clog tool alias comes from cli_capture_tool_map below.
+cli_capture_commands:
+  - terraform
+  - ansible-playbook
+  - kubectl
+  - vault
+
+# Maps a wrapped command name to the clog.py tool argument (tf|ansible|vault|k8s|auto).
+# See ~/Projects/personal/ai-skills/ai/claude/skills/log-clip/scripts/clog.py.
+cli_capture_tool_map:
+  terraform: tf
+  ansible-playbook: ansible
+  kubectl: k8s
+  vault: vault
+
+# Raw capture retention — purged by the watcher script on every invocation.
+cli_capture_retention_days: 14
+
+# Where the zsh wrapper functions write raw captures, and where clog.py writes
+# its filtered + redacted output.
+cli_capture_raw_dir: "{{ ansible_facts['env']['HOME'] }}/.cli-output/raw"
+cli_capture_log_dir: "{{ ansible_facts['env']['HOME'] }}/.claude/logs"
+
+# ai-skills clone containing clog.py — reused, not reimplemented (see ticket #68).
+cli_capture_ai_skills_clog: "{{ ansible_facts['env']['HOME'] }}/Projects/personal/ai-skills/ai/claude/skills/log-clip/scripts/clog.py"
+
+# Watcher script + launchd plist install locations.
+cli_capture_watcher_script: "{{ ansible_facts['env']['HOME'] }}/.cli-output/cli-capture-watch.py"
+cli_capture_plist_label: com.workstation-devops.cli-capture-watch
+cli_capture_plist_path: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/{{ cli_capture_plist_label }}.plist"
+cli_capture_watcher_log: "{{ ansible_facts['env']['HOME'] }}/Library/Logs/{{ cli_capture_plist_label }}.log"
+
+# Backstop interval (seconds) so retention purge still runs even if no new raw
+# files land to trigger QueueDirectories. See commit message for rationale.
+cli_capture_purge_interval_seconds: 86400
+
+cli_capture_python_bin: /usr/bin/python3
