@@ -137,6 +137,12 @@ homebrew_mas_apps: []
 homebrew_go_bin_path: "{{ brew_prefix }}/bin"
 homebrew_go_binaries: []
 
+# CLI tools installed via `uv tool install` (not available as Homebrew formulae).
+# Requires the `uv` formula (see homebrew_formulae_common) to already be installed.
+homebrew_uv_tools:
+  - package: graphifyy # https://github.com/Graphify-Labs/graphify
+    name: graphify
+
 # --- macOS defaults (Darwin only; roles/macos_defaults) ------------------------
 
 macos_defaults_enabled: true
