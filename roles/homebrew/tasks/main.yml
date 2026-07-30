@@ -312,6 +312,35 @@
         - homebrew_install_packages | default(true) | bool
         - not item.stat.exists | default(false)
 
+    - name: Check uv-tool CLI binaries on PATH
+      ansible.builtin.command: "command -v {{ item.name }}"
+      loop: "{{ homebrew_uv_tools | default([]) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: uv_tool_checks
+      failed_when: false
+      changed_when: false
+
+    - name: Show uv tools that would be installed (dry-run)
+      ansible.builtin.debug:
+        msg: "Would uv tool install {{ item.item.package }} → {{ item.item.name }}"
+      loop: "{{ uv_tool_checks.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - dry_run | default(false) | bool
+        - item.rc != 0
+
+    - name: Install missing uv tools
+      ansible.builtin.command: "{{ brew_prefix }}/bin/uv tool install {{ item.item.package }}"
+      loop: "{{ uv_tool_checks.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - homebrew_install_packages | default(true) | bool
+        - item.rc != 0
+
     - name: Check Mac App Store CLI sign-in
       ansible.builtin.command: mas account
       register: mas_account
