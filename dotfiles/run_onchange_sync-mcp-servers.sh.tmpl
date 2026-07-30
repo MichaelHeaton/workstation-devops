@@ -46,6 +46,11 @@ merge_mcp_servers "$HOME/Library/Application Support/Claude/claude_desktop_confi
 
 merge_mcp_servers "$HOME/.claude/settings.json"
 
+# Claude Code CLI reads user-scope MCP servers from the top-level "mcpServers"
+# key in ~/.claude.json, not from ~/.claude/settings.json — merge there too so
+# rotated tokens/wrapper changes actually take effect without manual edits.
+merge_mcp_servers "$HOME/.claude.json"
+
 if [[ -d "$HOME/.cursor" ]]; then
   merge_mcp_servers "$HOME/.cursor/mcp.json"
 fi
