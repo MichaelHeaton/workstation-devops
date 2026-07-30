@@ -2,11 +2,11 @@
 # merge-claude-hooks — register ai-skills hook scripts in ~/.claude/settings.json.
 #
 # ADDITIVE ONLY: installs Read (block-env-read), UserPromptSubmit (lean-context),
-# and SessionStart (check-ai-skills-sync) hooks when missing. Hook scripts are
-# deployed by ai-skills make install-system.
+# SessionStart (check-ai-skills-sync), and PostToolUse (config-capture-watch)
+# hooks when missing. Hook scripts are deployed by ai-skills make install-system.
 #
 # Bump to force re-run:
-# hooks-policy-version: v1.1.0
+# hooks-policy-version: v1.2.0
 
 set -euo pipefail
 
@@ -14,6 +14,7 @@ SETTINGS="$HOME/.claude/settings.json"
 BLOCK_ENV="$HOME/.claude/hooks/block-env-read.py"
 LEAN_CTX="$HOME/.claude/hooks/lean-context-reminder.py"
 SYNC_CHECK="$HOME/.claude/hooks/check-ai-skills-sync.py"
+CONFIG_CAPTURE="$HOME/.claude/hooks/config-capture-watch.py"
 
 if [[ ! -f "$SETTINGS" ]]; then
   echo "merge-claude-hooks: $SETTINGS not found, skipping"
@@ -57,12 +58,24 @@ SESSION_HOOK='{
   ]
 }'
 
+CONFIG_CAPTURE_HOOK='{
+  "matcher": "Edit|Write",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "__PYTHON__ __CONFIG_CAPTURE__"
+    }
+  ]
+}'
+
 READ_HOOK="${READ_HOOK//__PYTHON__/$PYTHON_BIN}"
 READ_HOOK="${READ_HOOK//__BLOCK_ENV__/$BLOCK_ENV}"
 PROMPT_HOOK="${PROMPT_HOOK//__PYTHON__/$PYTHON_BIN}"
 PROMPT_HOOK="${PROMPT_HOOK//__LEAN_CTX__/$LEAN_CTX}"
 SESSION_HOOK="${SESSION_HOOK//__PYTHON__/$PYTHON_BIN}"
 SESSION_HOOK="${SESSION_HOOK//__SYNC_CHECK__/$SYNC_CHECK}"
+CONFIG_CAPTURE_HOOK="${CONFIG_CAPTURE_HOOK//__PYTHON__/$PYTHON_BIN}"
+CONFIG_CAPTURE_HOOK="${CONFIG_CAPTURE_HOOK//__CONFIG_CAPTURE__/$CONFIG_CAPTURE}"
 
 if [[ ! -f "$BLOCK_ENV" ]]; then
   echo "merge-claude-hooks: $BLOCK_ENV missing (run ai-skills make install-system), skipping Read hook"
@@ -77,6 +90,11 @@ fi
 if [[ ! -f "$SYNC_CHECK" ]]; then
   echo "merge-claude-hooks: $SYNC_CHECK missing (run ai-skills make install-system), skipping SessionStart hook"
   SESSION_HOOK=""
+fi
+
+if [[ ! -f "$CONFIG_CAPTURE" ]]; then
+  echo "merge-claude-hooks: $CONFIG_CAPTURE missing (run ai-skills make install-system), skipping PostToolUse hook"
+  CONFIG_CAPTURE_HOOK=""
 fi
 
 has_read=$(jq '[.hooks.PreToolUse[]? | select(.matcher == "Read")] | length' "$SETTINGS")
@@ -113,6 +131,18 @@ if [[ -n "$SESSION_HOOK" && "$has_session" -eq 0 ]]; then
   echo "  done"
 elif [[ "$has_session" -gt 0 ]]; then
   echo "merge-claude-hooks: SessionStart hook already present, skipping"
+fi
+
+has_config_capture=$(jq '[.hooks.PostToolUse[]? | select(.matcher == "Edit|Write")] | length' "$SETTINGS")
+if [[ -n "$CONFIG_CAPTURE_HOOK" && "$has_config_capture" -eq 0 ]]; then
+  echo "merge-claude-hooks: adding PostToolUse hook (config-capture-watch)..."
+  tmp=$(mktemp)
+  jq --argjson hook "$CONFIG_CAPTURE_HOOK" \
+    '.hooks.PostToolUse = ((.hooks.PostToolUse // []) + [$hook])' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+elif [[ "$has_config_capture" -gt 0 ]]; then
+  echo "merge-claude-hooks: PostToolUse hook already present, skipping"
 fi
 
 echo "merge-claude-hooks: done"
