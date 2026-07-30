@@ -45,7 +45,22 @@ Default key basename: **`id_ed25519_github`** (`group_vars/work.yml`). Keys are 
    git ls-remote git@github.com:YOUR_ORG/cursor-rules.git HEAD
    ```
 
-   Set `YOUR_ORG/cursor-rules` in `managed_repos_local` inside `group_vars/work.local.yml`.
+   HTTPS equivalent (the default transport — see "SSH vs HTTPS" below):
+
+   ```bash
+   git ls-remote https://github.com/YOUR_ORG/cursor-rules.git HEAD
+   ```
+
+   Set `YOUR_ORG/cursor-rules` in `managed_repos_local` inside `group_vars/work.local.yml`. Entries should use `https://` URLs per `group_vars/work.local.yml.example`.
+
+## SSH vs HTTPS
+
+**HTTPS + `gh auth git-credential` is the default transport** for GHEC repo clone/fetch/push. It works around corporate port-22 blocks that cause `kex_exchange_identification: read: Operation timed out` errors on networks where outbound SSH is filtered. `dotfiles/dot_gitconfig.tmpl` rewrites `git@github.com:` and `git@gitlab.com:` URLs to their HTTPS equivalents via `insteadOf`, so most repos work over HTTPS even if you type or copy an SSH-style URL.
+
+The SSH key setup described above remains useful for:
+
+- Verifying connectivity with `ssh -T git@github.com`
+- Any host that genuinely requires literal SSH (e.g. legacy internal corp git, see "Internal corp Git" below)
 
 ## Multi-account layout
 

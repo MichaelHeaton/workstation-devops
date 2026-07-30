@@ -7,7 +7,7 @@
 # --- Managed repos (work-only clones) ----------------------------------------
 managed_repos_local:
   # optional: true — won't fail make apply when VPN is off or repo unreachable
-  - repo: git@github.com:YOUR_ORG/cursor-rules.git
+  - repo: https://github.com/YOUR_ORG/cursor-rules.git
     dest: work/cursor-rules
     optional: true
 

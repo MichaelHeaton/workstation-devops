@@ -15,6 +15,8 @@
 [url "https://github.com/"]
 	insteadOf = git@github.com:
 	insteadOf = git@github.com-personal:
+[url "https://gitlab.com/"]
+	insteadOf = git@gitlab.com:
 [includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal/"]
 	path = ~/.gitconfig-personal
 [includeIf "gitdir:{{ .chezmoi.homeDir }}/Projects/personal-gitlab/"]
