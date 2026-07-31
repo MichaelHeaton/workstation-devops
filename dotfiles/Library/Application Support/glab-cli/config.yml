@@ -1,0 +1,13 @@
+# glab CLI preferences (workstation-devops chezmoi)
+# Auth tokens and the `hosts:` section live outside this tracked file — glab
+# regenerates them via `glab auth login`. Never commit or manage that section
+# with chezmoi.
+git_protocol: ssh
+editor:
+browser:
+glamour_style: dark
+check_update: true
+display_hyperlinks: false
+host: gitlab.com
+no_prompt: false
+telemetry: true
