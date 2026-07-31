@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>{{ cli_capture_plist_label }}</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ cli_capture_python_bin }}</string>
+		<string>{{ cli_capture_watcher_script }}</string>
+	</array>
+
+	<!--
+	  QueueDirectories is the launchd key for "run this job whenever new files
+	  land in a directory" (job-queue-style pattern) — launchd starts the job
+	  each time the directory's contents change, and considers the directory
+	  non-empty until the job removes/renames the files it processed. This is
+	  the technically correct key here, not WatchPaths (which fires on changes
+	  to specific files/paths generically and does not have queue semantics for
+	  "drain this directory").
+	-->
+	<key>QueueDirectories</key>
+	<array>
+		<string>{{ cli_capture_raw_dir }}</string>
+	</array>
+
+	<!--
+	  Backstop: QueueDirectories only fires on directory changes, so retention
+	  purging would never run if no new commands are captured for a while. This
+	  interval guarantees the purge (and a re-scan) run at least once a day
+	  regardless of capture activity.
+	-->
+	<key>StartInterval</key>
+	<integer>{{ cli_capture_purge_interval_seconds }}</integer>
+
+	<key>RunAtLoad</key>
+	<false/>
+
+	<key>StandardOutPath</key>
+	<string>{{ cli_capture_watcher_log }}</string>
+
+	<key>StandardErrorPath</key>
+	<string>{{ cli_capture_watcher_log }}</string>
+</dict>
+</plist>

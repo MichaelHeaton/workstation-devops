@@ -1,0 +1,130 @@
+---
+# Automatic CLI output capture + redaction pipeline (ticket #68). Opt-in tag:
+# cli-capture — see docs/tags.md. Not part of workstation_tags_baseline and not
+# added to any profile; only runs when explicitly requested.
+
+- name: CLI capture role
+  when: cli_capture_enabled | default(true) | bool
+  block:
+    - name: Show raw + log directory creation (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would create {{ cli_capture_raw_dir }} and {{ cli_capture_log_dir }}.
+      when:
+        - dry_run | default(false) | bool
+        - "'cli-capture' in workstation_tags"
+
+    - name: Create raw capture directory
+      ansible.builtin.file:
+        path: "{{ cli_capture_raw_dir }}"
+        state: directory
+        mode: "0700"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Create Claude logs directory
+      ansible.builtin.file:
+        path: "{{ cli_capture_log_dir }}"
+        state: directory
+        mode: "0700"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Show zsh capture fragment (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would add cli-capture block to ~/.zshrc wrapping: {{ cli_capture_commands | join(', ') }}.
+      when:
+        - dry_run | default(false) | bool
+        - "'cli-capture' in workstation_tags"
+
+    - name: Deploy cli-capture fragment to zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED - workstation-devops cli-capture"
+        block: "{{ lookup('template', 'cli_capture.zsh.j2') }}"
+        insertafter: EOF
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Show watcher script deployment (dry-run)
+      ansible.builtin.debug:
+        msg: "Would deploy watcher script to {{ cli_capture_watcher_script }}."
+      when:
+        - dry_run | default(false) | bool
+        - "'cli-capture' in workstation_tags"
+
+    - name: Deploy cli-capture-watch.py watcher script
+      ansible.builtin.template:
+        src: cli-capture-watch.py.j2
+        dest: "{{ cli_capture_watcher_script }}"
+        mode: "0755"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Show launchd plist deployment (dry-run)
+      ansible.builtin.debug:
+        msg: "Would deploy {{ cli_capture_plist_path }} (QueueDirectories: {{ cli_capture_raw_dir }})."
+      when:
+        - dry_run | default(false) | bool
+        - "'cli-capture' in workstation_tags"
+
+    - name: Deploy cli-capture-watch launchd plist
+      ansible.builtin.template:
+        src: com.workstation-devops.cli-capture-watch.plist.j2
+        dest: "{{ cli_capture_plist_path }}"
+        mode: "0644"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Show launchd bootstrap (dry-run)
+      ansible.builtin.debug:
+        msg: "Would bootstrap {{ cli_capture_plist_label }} into gui/$(id -u) if not already loaded."
+      when:
+        - dry_run | default(false) | bool
+        - "'cli-capture' in workstation_tags"
+
+    - name: Check whether cli-capture-watch LaunchAgent is already loaded
+      ansible.builtin.command:
+        argv:
+          - launchctl
+          - print
+          - "gui/{{ lookup('pipe', 'id -u') }}/{{ cli_capture_plist_label }}"
+      register: cli_capture_launchctl_check
+      changed_when: false
+      failed_when: false
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+      tags:
+        - cli-capture
+
+    - name: Bootstrap cli-capture-watch LaunchAgent
+      ansible.builtin.command:
+        argv:
+          - launchctl
+          - bootstrap
+          - "gui/{{ lookup('pipe', 'id -u') }}"
+          - "{{ cli_capture_plist_path }}"
+      when:
+        - not (dry_run | default(false) | bool)
+        - "'cli-capture' in workstation_tags"
+        - cli_capture_launchctl_check.rc != 0
+      changed_when: true
+      tags:
+        - cli-capture

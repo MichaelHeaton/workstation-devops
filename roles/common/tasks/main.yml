@@ -65,6 +65,13 @@
   tags:
     - work
 
+- name: Import cli_capture role
+  ansible.builtin.import_role:
+    name: cli_capture
+  when: "'cli-capture' in workstation_tags"
+  tags:
+    - cli-capture
+
 - name: Import macos_defaults role
   ansible.builtin.import_role:
     name: macos_defaults
