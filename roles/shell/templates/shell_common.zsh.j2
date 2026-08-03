@@ -31,7 +31,7 @@ mytools() {
       for a in ${(ok)aliases}; do
         [[ $a == vault_* ]] && vault_cluster_aliases+=("$a")
       done
-      if (( ${#vault_cluster_aliases} )); then
+      if (( $#vault_cluster_aliases )); then
         echo "    ${(j:, :)vault_cluster_aliases}"
         echo "                        → VAULT_ADDR/NAMESPACE + OIDC login via vl (see docs/work/vault-tools.md)"
       else
