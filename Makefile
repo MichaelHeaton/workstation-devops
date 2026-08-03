@@ -1,4 +1,4 @@
-.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-vault-okta secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
+.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
 
 help:
 	@echo "workstation-devops — available targets"
@@ -25,7 +25,6 @@ help:
 	@echo "  Secrets"
 	@echo "    make secrets-check                  Verify all Keychain items and local secret files"
 	@echo "    make secrets-help                   List all secret setup commands"
-	@echo "    make secrets-vault-okta             Create/update Vault Okta Keychain item"
 	@echo "    make secrets-notion                 Notion MCP token → Keychain"
 	@echo "    make secrets-linear                 Linear MCP API key → Keychain"
 	@echo "    make secrets-atlassian              Atlassian Jira/Confluence tokens + config file"
@@ -87,9 +86,6 @@ secrets-check:
 	@./scripts/secrets/keychain-check.sh
 
 secrets: secrets-check
-
-secrets-vault-okta:
-	@./scripts/secrets/keychain-vault-okta.sh
 
 secrets-notion:
 	@./scripts/secrets/keychain-notion.sh

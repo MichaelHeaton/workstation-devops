@@ -5,7 +5,6 @@ cat <<'EOF'
 workstation-devops secrets (never commit passwords or API tokens)
 
 Keychain — default for all MCP tokens and corp passwords:
-  make secrets-vault-okta     Corp LDAP password (Vault / vl)
   make secrets-notion         Notion MCP integration token
   make secrets-linear         Linear MCP personal API key
   make secrets-atlassian      Atlassian MCP tokens (Jira + Confluence) + config file

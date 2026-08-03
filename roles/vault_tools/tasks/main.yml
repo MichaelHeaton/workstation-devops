@@ -1,5 +1,8 @@
 ---
-# Deploy Vault CLI helpers from onboarding wiki (vl / vault_login / vault_mgmt).
+# Install vl (adobe-security-tooling/vaultlogin) and deploy per-cluster
+# shell aliases (vault_login/vault_mgmt come from the same onboarding wiki
+# lineage, but auth itself is OIDC via the vl binary, not a hand-rolled
+# Okta shell function).
 
 - name: Vault tools role
   when: vault_tools_enabled | default(true) | bool
@@ -13,6 +16,123 @@
         mode: "0755"
       when: not (dry_run | default(false) | bool)
 
+    - name: Ensure vaultlogin install directory exists
+      ansible.builtin.file:
+        path: "{{ vaultlogin_install_dir }}"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Probe installed vl version
+      ansible.builtin.command:
+        argv:
+          - "{{ vaultlogin_install_dir }}/vl"
+          - --version
+      register: vaultlogin_version_probe
+      changed_when: false
+      failed_when: false
+      when: not (dry_run | default(false) | bool)
+
+    - name: Set vl install requirement
+      ansible.builtin.set_fact:
+        vaultlogin_install_needed: >-
+          {{
+            (vaultlogin_version_probe.rc | default(1)) != 0
+            or (('v' ~ vaultlogin_version) not in (vaultlogin_version_probe.stdout | default('')))
+          }}
+      when: not (dry_run | default(false) | bool)
+
+    - name: Assume vl install needed for dry-run preview
+      ansible.builtin.set_fact:
+        vaultlogin_install_needed: true
+      when: dry_run | default(false) | bool
+
+    - name: Show vl install plan (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would install vl v{{ vaultlogin_version }} from
+          https://github.com/{{ vaultlogin_github_repo }}/releases/download/v{{ vaultlogin_version }}/vl-v{{ vaultlogin_version }}-darwin-arm64.tar.gz
+          → {{ vaultlogin_install_dir }}/vl (via gh release download — private repo).
+      when:
+        - dry_run | default(false) | bool
+        - vaultlogin_install_needed | default(true) | bool
+
+    - name: Skip vl download — correct version already installed
+      ansible.builtin.debug:
+        msg: "vl v{{ vaultlogin_version }} already installed at {{ vaultlogin_install_dir }}/vl"
+      when:
+        - not (dry_run | default(false) | bool)
+        - not (vaultlogin_install_needed | default(true) | bool)
+
+    - name: Download vl release asset via gh
+      ansible.builtin.command:
+        argv:
+          - gh
+          - release
+          - download
+          - "v{{ vaultlogin_version }}"
+          - --repo
+          - "{{ vaultlogin_github_repo }}"
+          - --pattern
+          - "*-darwin-arm64.tar.gz"
+          - --dir
+          - /tmp
+          - --clobber
+      changed_when: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - vaultlogin_install_needed | default(true) | bool
+
+    - name: Install vl binary from downloaded tarball
+      ansible.builtin.shell: |
+        set -euo pipefail
+        tarball="/tmp/vl-v{{ vaultlogin_version }}-darwin-arm64.tar.gz"
+        extract="/tmp/vl-v{{ vaultlogin_version }}-extract"
+        rm -rf "$extract"
+        mkdir -p "$extract"
+        tar -xzf "$tarball" -C "$extract"
+        install -m 0755 "$extract/vl" "{{ vaultlogin_install_dir }}/vl"
+        rm -rf "$extract" "$tarball"
+      args:
+        executable: /bin/bash
+      register: vaultlogin_install
+      changed_when: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - vaultlogin_install_needed | default(true) | bool
+
+    - name: Verify vl version after install
+      ansible.builtin.command:
+        argv:
+          - "{{ vaultlogin_install_dir }}/vl"
+          - --version
+      register: vaultlogin_post_install_version
+      changed_when: false
+      failed_when: >-
+        ('v' ~ vaultlogin_version) not in (vaultlogin_post_install_version.stdout | default(''))
+      when:
+        - not (dry_run | default(false) | bool)
+        - vaultlogin_install is defined
+        - not (vaultlogin_install.skipped | default(false))
+
+    - name: Check vl token helper configuration
+      ansible.builtin.command: cat "{{ ansible_facts['env']['HOME'] }}/.vault"
+      register: vaultlogin_token_helper_check
+      changed_when: false
+      failed_when: false
+      when: not (dry_run | default(false) | bool)
+
+    - name: Configure vl as the Vault token helper
+      ansible.builtin.command:
+        argv:
+          - "{{ vaultlogin_install_dir }}/vl"
+          - token-helper
+          - setup
+      changed_when: true
+      when:
+        - not (dry_run | default(false) | bool)
+        - (vaultlogin_install_dir ~ '/vl') not in (vaultlogin_token_helper_check.stdout | default(''))
+
     - name: Deploy Vault shell functions
       ansible.builtin.template:
         src: vault_functions.zsh.j2
@@ -24,53 +144,8 @@
       ansible.builtin.debug:
         msg: >-
           Would deploy ~/.config/workstation-devops/vault_functions.zsh
-          (vl, vault_login, vault_mgmt) for work_username={{ work_username }}.
+          (per-cluster vl aliases, vault_mgmt) for work_username={{ work_username }}.
       when: dry_run | default(false) | bool
-
-    - name: Probe Vault Okta Keychain item
-      ansible.builtin.command:
-        argv:
-          - security
-          - find-generic-password
-          - -s
-          - "{{ vault_okta_keychain_service }}"
-          - -a
-          - "{{ work_username }}"
-          - -w
-      register: vault_okta_keychain_probe
-      changed_when: false
-      failed_when: false
-      no_log: true
-      when:
-        - not (dry_run | default(false) | bool)
-        - vault_okta_use_password_store | default(false) | bool
-        - vault_okta_op_ref | default('') | length == 0
-
-    - name: Set Vault Okta password-store readiness
-      ansible.builtin.set_fact:
-        vault_okta_password_store_active: >-
-          {{
-            (vault_okta_use_password_store | default(false) | bool)
-            and (
-              (vault_okta_op_ref | default('') | length > 0)
-              or (vault_okta_keychain_probe.rc | default(1) | int == 0)
-            )
-          }}
-      when: not (dry_run | default(false) | bool)
-
-    - name: Remind to create Vault Okta Keychain item
-      ansible.builtin.debug:
-        msg: >-
-          vault_okta_use_password_store is enabled but Keychain item
-          "{{ vault_okta_keychain_service }}" (account {{ work_username }}) was not found.
-          Use Keychain Access (NOT the Passwords app — those are separate stores).
-          Keychain Access → File → New Password Item → service {{ vault_okta_keychain_service }},
-          account {{ work_username }} → make apply again. See docs/work/vault-tools.md
-      when:
-        - not (dry_run | default(false) | bool)
-        - vault_okta_use_password_store | default(false) | bool
-        - vault_okta_op_ref | default('') | length == 0
-        - vault_okta_keychain_probe.rc | default(1) | int != 0
 
     - name: Source Vault functions from zshrc
       ansible.builtin.blockinfile:

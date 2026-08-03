@@ -2,102 +2,47 @@
 
 Automated by `roles/vault_tools` on `make apply` when `workstation_profile=work`.
 
-**Source:** Vault Engineer Onboarding wiki (internal) → Tips/Shortcuts → Bash Functions and Aliases
+**Auth tool:** [`vl` (adobe-security-tooling/vaultlogin)](https://github.com/adobe-security-tooling/vaultlogin) — OIDC-based, built and maintained by the Vault team. This role installs it and generates per-cluster aliases from `vault_clusters`; it replaces the older onboarding-wiki Okta shell function (Okta login was retired when the team's Vault clusters moved to OIDC).
 
 ## What Ansible deploys
 
-| Function | Purpose |
+| Item | Purpose |
 | ---------- | --------- |
-| `vl` | Numbered cluster picker → `VAULT_ADDR` + Okta login |
-| `vault_login` | Alias for `vl` (wiki name) |
-| `vault_mgmt` | Teleport app `vault-mgmt-access` → local proxy :8222 + Okta login |
+| `vl` binary | Installed to `~/.local/bin/vl`, pinned to `vaultlogin_version` |
+| `vault_<cluster>` aliases | One per entry in `vault_clusters` (e.g. `vault_test`, `vault_dev_amer`) — sets `VAULT_ADDR`/`VAULT_NAMESPACE`, unsets stale `VAULT_TOKEN`, runs `vl` |
+| `vault_local` | Plain `vault login` against a local dev-mode server (`127.0.0.1:8200`) |
+| `vault_mgmt` | Teleport app `vault-mgmt-access` → local proxy `:8222`, then `vl` |
+| `~/.vault` token helper config | `vl token-helper setup` — caches a separate token per `VAULT_ADDR`/`VAULT_NAMESPACE` in macOS Keychain |
 
-Deployed to `~/.config/workstation-devops/vault_functions.zsh`, sourced from `~/.zshrc`.
-
-**Username:** templated from `work_username` in `group_vars/work.yml` (your work LDAP username).
-
-**Okta password store:** Ansible writes `VAULT_OKTA_*` exports into the vault-tools block in `~/.zshrc` from `group_vars/work.local.yml` — do not edit that block by hand.
+Aliases deployed to `~/.config/workstation-devops/vault_functions.zsh`, sourced from `~/.zshrc`.
 
 ## Prerequisites
 
 - `vault` and `tsh` on PATH
+- `gh` authenticated (used by this role to pull the `vl` release — private org repo)
 - `TELEPORT_LOGIN` set (you may already have this in `~/.zshrc`)
 - VPN for corp Vault URLs
-- Required IAM groups for Okta auth (see internal onboarding wiki)
+- Required IAM/OIDC groups for your Vault clusters (see internal onboarding wiki)
 
-## Cluster list (`vl`)
+## Cluster list
 
-Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.yml.example`). The public repo ships an empty list; work machines add employer cluster URLs locally.
-
-## Optional: corp LDAP password from Keychain or 1Password
-
-`vl` and `vault_mgmt` still require **Okta MFA** (Watch push). This only skips typing the corp LDAP password.
-
-**Apple Passwords caveat:** the UI title is often **not** the Keychain `service` name, and many Apple Passwords entries are **not** visible to `security find-*` from Terminal. If lookup fails, you still get the normal password prompt (no error spam).
-
-### Ansible config (`group_vars/work.local.yml`)
-
-```yaml
-vault_okta_use_password_store: true
-vault_okta_keychain_service: work-vault-okta   # Keychain “Where” / security -s (label may differ)
-# vault_okta_op_ref: "op://Employee/Work VPN/password"   # instead of keychain, if using 1Password CLI
-```
-
-Or run **`make secrets-vault-okta`** (see [secrets-keychain.md](../secrets-keychain.md)).
-
-`make apply` updates the vault-tools block in `~/.zshrc`. Exports are written **only after** the Keychain item exists (or `vault_okta_op_ref` is set). Until then, `vl` uses the normal password prompt with no warning noise. Set `vault_okta_use_password_store: false` to disable entirely.
-
-### One-time manual step: Keychain Access (not Apple Passwords)
-
-**Important:** entries in the **Passwords** app (System Settings → Passwords) are **not** visible to `security` or Terminal. You must create the item in **Keychain Access** (`/Applications/Utilities/Keychain Access.app`).
-
-1. **Keychain Access** → **File → New Password Item** (not Passwords app → New Password)
-2. **Where (service):** `work-vault-okta` — must match `vault_okta_keychain_service`
-3. **Account Name:** your `work_username` (work LDAP)
-4. **Name (label):** any display name (often same as service)
-5. **Password:** corp LDAP / VPN password
-6. **Keychain:** login (default)
-7. `make apply` → `source ~/.zshrc` → first `vl` → **Touch ID** to allow Terminal
-
-Or run **`make secrets-vault-okta`** instead of manual steps.
-
-**Legacy machines:** if an existing Keychain item uses a different **Where** name, set `vault_okta_keychain_service` in `work.local.yml` to match — do not change the public repo default.
-
-Verify:
-
-```bash
-security find-generic-password -s work-vault-okta -a YOUR_LDAP -w && echo found
-```
-
-If you already added the password in the Passwords app, leave it there for autofill in browsers and **duplicate** the password into a Keychain Access item as above (same values).
-
-### 1Password CLI (optional)
-
-Set `vault_okta_op_ref` in `group_vars/work.local.yml` and leave keychain service unused. Run `op item list --categories Login` to find the `op://` path.
-
-### Discover an existing Keychain entry (if any)
-
-```bash
-security dump-keychain login.keychain-db 2>/dev/null | grep -i vault | head -20
-security find-generic-password -s 'work-vault-okta' -g 2>&1 | head -3   # after you create it
-```
-
-Do **not** use placeholder labels from examples literally — those will always fail.
-
-**Tradeoffs:** password may appear briefly in the process list; failed lookup falls back to the interactive prompt.
-
-**90-day corp password rotation:** when your employer forces a password change, update the Keychain item — [Runbook: corp password Keychain rotation](runbooks/corp-password-keychain-rotation.md).
+Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.yml.example`). The public repo ships an empty list; work machines add employer cluster URLs locally. Each entry generates an alias named `vault_<label lowercased, - → _>` (e.g. `TEST` → `vault_test`). `VAULT_NAMESPACE` defaults to `root`; add a per-entry `namespace:` key to override.
 
 ## Test
 
 ```bash
 source ~/.zshrc
-vl              # pick cluster, Okta MFA
-vault_mgmt      # MGMT via Teleport
+vault_test     # or whichever cluster alias you need — OIDC browser login
+vault_mgmt     # MGMT via Teleport
+vl --version   # confirm the pinned version installed
+cat ~/.vault   # confirm token_helper points at the installed vl
 ```
+
+## Bumping the `vl` version
+
+Edit `vaultlogin_version` in `roles/vault_tools/defaults/main.yml` → branch + PR → `make apply` re-installs.
 
 ## Not in this role (see roadmap)
 
-- `vault_heartbeat_env`, `vault_rw_loop` — add later if needed
 - Teleport `tshl` / `t` fzf helpers → [teleport.md](teleport.md) (`roles/teleport`)
 - Deprecated bastion `scb` / `bcp` — use Teleport

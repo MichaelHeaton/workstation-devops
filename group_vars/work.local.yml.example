@@ -15,7 +15,8 @@ managed_repos_local:
 klam_artifactory_host: artifactory.internal.example
 klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
 
-# --- Vault cluster URLs (vl picker) ------------------------------------------
+# --- Vault cluster URLs (vl aliases: vault_dev_amer, vault_test, etc.) -------
+# namespace defaults to "root" — set it per-cluster only if a cluster needs something else.
 vault_clusters:
   - label: DEV-AMER
     url: https://vault-amer.dev.internal.example
@@ -37,7 +38,4 @@ vault_clusters:
     url: https://vault-vii.dev.internal.example
   - label: VII-DEV-INT
     url: https://vault-int-vii.dev.internal.example
-
-# --- Optional: Okta password from Keychain -----------------------------------
-# vault_okta_use_password_store: true
-# vault_okta_keychain_service: work-vault-okta   # override if legacy Keychain “Where” differs
+    # namespace: root   # example override
