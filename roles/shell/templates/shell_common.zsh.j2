@@ -24,9 +24,20 @@ mytools() {
     found=1
   fi
 
-  if (( $+functions[vl] || $+functions[vault_mgmt] )); then
+  if (( $+commands[vl] || $+functions[vault_mgmt] )); then
     echo "  ── Vault ────────────────────────────────────────────────────────"
-    (( $+functions[vl] ))          && echo "    vl / vault_login    interactive cluster picker → VAULT_ADDR + Okta login"
+    if (( $+commands[vl] )); then
+      local -a vault_cluster_aliases
+      for a in ${(ok)aliases}; do
+        [[ $a == vault_* ]] && vault_cluster_aliases+=("$a")
+      done
+      if (( ${#vault_cluster_aliases} )); then
+        echo "    ${(j:, :)vault_cluster_aliases}"
+        echo "                        → VAULT_ADDR/NAMESPACE + OIDC login via vl (see docs/work/vault-tools.md)"
+      else
+        echo "    vl                  OIDC login (export VAULT_ADDR/VAULT_NAMESPACE first)"
+      fi
+    fi
     (( $+functions[vault_mgmt] ))  && echo "    vault_mgmt          Teleport vault-mgmt-access → local proxy :8222"
     echo ""
     found=1
