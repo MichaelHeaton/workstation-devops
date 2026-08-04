@@ -1,3 +1,11 @@
+{%- macro alias_name(cluster) -%}
+{%- set slug = cluster.label | lower | replace('-', '_') -%}
+{%- if slug.startswith('vault') -%}
+{{ slug }}
+{%- else -%}
+vault_{{ slug }}
+{%- endif -%}
+{%- endmacro -%}
 # Vault / Teleport CLI helpers — workstation-devops (work profile)
 # Wiki: Vault Engineer Onboarding → Tips/Shortcuts → Bash Functions and Aliases
 # Auth: vl (adobe-security-tooling/vaultlogin) — OIDC, driven by VAULT_ADDR/VAULT_NAMESPACE.
@@ -5,10 +13,35 @@
 
 # --- Per-cluster login aliases (wiki: vault_login; generated from vault_clusters) --
 # Add/edit clusters in group_vars/work.local.yml — see work.local.yml.example
-{% for cluster in vault_clusters %}
-alias vault_{{ cluster.label | lower | replace('-', '_') }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} && unset VAULT_TOKEN && vl'
-{% endfor %}
-alias vault_local='vault login -address=http://127.0.0.1:8200'
+# Optional per-cluster keys: tier (dev|prod, default dev); indent: true marks a
+# cluster as a mirror of the previous non-indented entry — used by mytools.
+# Alias name is vault_<label lowercased, - → _> — unless the label already
+# starts with "vault" (e.g. VAULT-A), in which case the prefix isn't doubled.
+{%- for cluster in vault_clusters %}
+alias {{ alias_name(cluster) }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} && unset VAULT_TOKEN && vl'
+{%- endfor %}
+
+# Ordered cluster list + tier/indent metadata, consumed by mytools (roles/shell)
+# to display clusters in vault_clusters order (not alphabetical) with tier
+# coloring and mirror indentation. Falls back to plain alphabetical listing if
+# undefined.
+typeset -ga VAULT_TOOLS_CLUSTER_ALIASES=(
+{%- for cluster in vault_clusters %}
+  "{{ alias_name(cluster) }}"
+{%- endfor %}
+)
+typeset -gA VAULT_TOOLS_CLUSTER_TIER=(
+{%- for cluster in vault_clusters %}
+  {{ alias_name(cluster) }} "{{ cluster.tier | default('dev') }}"
+{%- endfor %}
+)
+typeset -gA VAULT_TOOLS_CLUSTER_INDENT=(
+{%- for cluster in vault_clusters %}
+{%- if cluster.indent | default(false) %}
+  {{ alias_name(cluster) }} "true"
+{%- endif %}
+{%- endfor %}
+)
 
 # --- Vault MGMT (Teleport app vault-mgmt-access) -----------------------------
 
