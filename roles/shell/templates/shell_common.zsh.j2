@@ -35,8 +35,10 @@ mytools() {
         for a in $VAULT_TOOLS_CLUSTER_ALIASES; do
           tier="${VAULT_TOOLS_CLUSTER_TIER[$a]:-dev}"
           indented="${VAULT_TOOLS_CLUSTER_INDENT[$a]:-}"
-          color="green"
-          [[ "$tier" == "prod" ]] && color="red"
+          # cyan/blue — avoids the KLAM terminal-bg palette (green/yellow/red,
+          # see roles/klam/files/klam_aliases.zsh), which clashed with green/red text
+          color="cyan"
+          [[ "$tier" == "prod" ]] && color="blue"
           if [[ "$indented" == "true" ]]; then
             print -P "      %F{$color}${a}%f"
           else
