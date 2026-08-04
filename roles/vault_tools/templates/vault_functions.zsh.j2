@@ -8,11 +8,11 @@ vault_{{ slug }}
 {%- endmacro -%}
 {%- macro account_label(cluster) -%}
 {%- if cluster.aws_profile is defined -%}
-{{ cluster.aws_profile | replace('ces_', '') }}
+{{ cluster.aws_profile }}
 {%- elif (cluster.tier | default('dev')) == 'prod' -%}
-prod
+ces_prd
 {%- else -%}
-dev
+ces_dev
 {%- endif -%}
 {%- endmacro -%}
 # Vault / Teleport CLI helpers — workstation-devops (work profile)
