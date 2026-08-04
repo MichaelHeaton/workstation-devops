@@ -15,29 +15,44 @@ managed_repos_local:
 klam_artifactory_host: artifactory.internal.example
 klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
 
-# --- Vault cluster URLs (vl picker) ------------------------------------------
+# --- Vault cluster aliases (vl aliases: vault_dev_amer, vault_test, etc.) ----
+# namespace defaults to "root" — set it per-cluster only if a cluster needs something else.
+# tier: dev|prod (default dev) — controls mytools color (green/red) and puts dev-tier
+#   clusters first, matching the ces_sandbox/ces_dev/ces_prd ordering convention.
+# indent: true — marks a cluster as a mirror of the entry above it (e.g. a regional
+#   replica), indenting it slightly in mytools output.
 vault_clusters:
-  - label: DEV-AMER
-    url: https://vault-amer.dev.internal.example
-  - label: PROD-AMER
-    url: https://vault-amer.internal.example
-  - label: PROD-APAC
-    url: https://vault-apac.internal.example
-  - label: PROD-EMEA
-    url: https://vault-emea.internal.example
-  - label: TRANSIT
-    url: https://vault-transit-amer.internal.example
-  - label: VAULT-A
-    url: https://vault.internal.example
-  - label: VAULT-A-DEV
-    url: https://vault.dev.internal.example
-  - label: TEST
-    url: https://vault-test.dev.internal.example
   - label: VII-DEV
     url: https://vault-vii.dev.internal.example
+    tier: dev
   - label: VII-DEV-INT
     url: https://vault-int-vii.dev.internal.example
-
-# --- Optional: Okta password from Keychain -----------------------------------
-# vault_okta_use_password_store: true
-# vault_okta_keychain_service: work-vault-okta   # override if legacy Keychain “Where” differs
+    tier: dev
+    # namespace: root   # example override
+    # Requires the VII-internal MCP network — drop this entry if your machine can't reach it.
+  - label: TEST
+    url: https://vault-test.dev.internal.example
+    tier: dev
+  - label: DEV-AMER
+    url: https://vault-amer.dev.internal.example
+    tier: dev
+  - label: VAULT-A-DEV
+    url: https://vault.dev.internal.example
+    tier: dev
+  - label: PROD-AMER
+    url: https://vault-amer.internal.example
+    tier: prod
+  - label: PROD-APAC
+    url: https://vault-apac.internal.example
+    tier: prod
+    indent: true   # mirrors PROD-AMER
+  - label: PROD-EMEA
+    url: https://vault-emea.internal.example
+    tier: prod
+    indent: true   # mirrors PROD-AMER
+  - label: TRANSIT
+    url: https://vault-transit-amer.internal.example
+    tier: prod
+  - label: VAULT-A
+    url: https://vault.internal.example
+    tier: prod

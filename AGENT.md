@@ -71,10 +71,10 @@ Requires: KLAM installed (`make deps` will not install it — see [docs/work/kla
 
 | Command | What it does |
 | --------- | -------------------------------------------------- |
-| `vl` or `vault_login` | Interactive cluster picker (fzf) → sets `VAULT_ADDR` + Okta login |
-| `vault_mgmt` | Teleport `vault-mgmt-access` → local proxy on `:8222` + Okta login |
+| `vault_<cluster>` (e.g. `vault_test`) | Sets `VAULT_ADDR`/`VAULT_NAMESPACE`, unsets stale `VAULT_TOKEN`, runs `vl` (OIDC login) |
+| `vault_mgmt` | Teleport `vault-mgmt-access` → local proxy on `:8222` + `vl` (OIDC login) |
 
-Cluster list lives in `group_vars/work.local.yml` (gitignored). Okta password optionally pulled from Keychain (`make secrets-vault-okta`).
+Cluster list lives in `group_vars/work.local.yml` (gitignored) — each entry generates a `vault_<label>` alias. `vl` is [adobe-security-tooling/vaultlogin](https://github.com/adobe-security-tooling/vaultlogin), installed and pinned by `roles/vault_tools`.
 
 ### Teleport (work profile)
 
@@ -101,7 +101,7 @@ Auto-set on shell startup for personal machines. See [docs/home/platform-aws.md]
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
 - **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e work_username=YOUR_LDAP -e work_email=you@work.example'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e work_username=…` still overrides. Older chezmoi configs with a legacy username key are migrated on read.
 - **Work local overrides** — employer URLs/repos in `group_vars/work.local.yml` (gitignored; copy from `work.local.yml.example`).
-- **Secrets** — Keychain for corp LDAP password; `make secrets-check`, `make secrets-vault-okta`. See [docs/secrets-keychain.md](docs/secrets-keychain.md).
+- **Secrets** — Keychain for MCP tokens; `make secrets-check`. See [docs/secrets-keychain.md](docs/secrets-keychain.md).
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
 ## Work profile (CES Vault)

@@ -1,8 +1,9 @@
 ---
 vault_tools_enabled: true
 
-# Okta login: read corp password from Keychain (one-time item in Keychain Access — not Apple Passwords UI title)
-vault_okta_use_password_store: false
-vault_okta_keychain_service: work-vault-okta
-# Set instead of keychain when using 1Password CLI, e.g. op://Employee/Work VPN/password
-vault_okta_op_ref: ""
+# vl (adobe-security-tooling/vaultlogin) — OIDC-based Vault CLI, replaces the
+# onboarding-wiki Okta shell function. Pin explicitly; bump via PR when the
+# team ships a new tag.
+vaultlogin_version: "1.1.0"
+vaultlogin_github_repo: adobe-security-tooling/vaultlogin
+vaultlogin_install_dir: "{{ ansible_facts['env']['HOME'] }}/.local/bin"

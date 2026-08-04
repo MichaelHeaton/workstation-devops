@@ -17,23 +17,6 @@ echo
 missing=0
 ok=0
 
-# --- Keychain: vault Okta ----------------------------------------------------
-vault_service="$(resolve_vault_okta_service)"
-vault_account="$(resolve_work_username)"
-vault_label="$(resolve_vault_okta_label)"
-
-if [[ -z "$vault_account" ]]; then
-  echo "✗ vault_okta — account unknown (set work_username in group_vars/work.local.yml)"
-  missing=$((missing + 1))
-elif keychain_item_exists "$vault_service" "$vault_account"; then
-  echo "✓ Keychain vault_okta — service=${vault_service} account=${vault_account} label≈${vault_label}"
-  ok=$((ok + 1))
-else
-  echo "✗ Keychain vault_okta — missing (service=${vault_service} account=${vault_account})"
-  echo "  → make secrets-vault-okta"
-  missing=$((missing + 1))
-fi
-
 # --- Keychain: Notion MCP ----------------------------------------------------
 if keychain_item_exists "claude-mcp-notion" "claude-code"; then
   echo "✓ Keychain notion_mcp — service=claude-mcp-notion account=claude-code"

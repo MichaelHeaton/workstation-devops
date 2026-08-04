@@ -1,103 +1,47 @@
+{%- macro alias_name(cluster) -%}
+{%- set slug = cluster.label | lower | replace('-', '_') -%}
+{%- if slug.startswith('vault') -%}
+{{ slug }}
+{%- else -%}
+vault_{{ slug }}
+{%- endif -%}
+{%- endmacro -%}
 # Vault / Teleport CLI helpers — workstation-devops (work profile)
 # Wiki: Vault Engineer Onboarding → Tips/Shortcuts → Bash Functions and Aliases
-# Requires: vault, tsh on PATH; VPN for corp clusters
+# Auth: vl (adobe-security-tooling/vaultlogin) — OIDC, driven by VAULT_ADDR/VAULT_NAMESPACE.
+# Requires: vl, vault, tsh on PATH; VPN for corp clusters
 
-# Drop stale session exports when Ansible has not enabled them in ~/.zshrc yet
-if ! grep -q '^export VAULT_OKTA_USE_PASSWORD_STORE=1' "${HOME}/.zshrc" 2>/dev/null; then
-  unset VAULT_OKTA_USE_PASSWORD_STORE VAULT_OKTA_PASSWORD_CMD VAULT_OKTA_OP_REF 2>/dev/null
-fi
+# --- Per-cluster login aliases (wiki: vault_login; generated from vault_clusters) --
+# Add/edit clusters in group_vars/work.local.yml — see work.local.yml.example
+# Optional per-cluster keys: tier (dev|prod, default dev); indent: true marks a
+# cluster as a mirror of the previous non-indented entry — used by mytools.
+# Alias name is vault_<label lowercased, - → _> — unless the label already
+# starts with "vault" (e.g. VAULT-A), in which case the prefix isn't doubled.
+{%- for cluster in vault_clusters %}
+alias {{ alias_name(cluster) }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} && unset VAULT_TOKEN && vl'
+{%- endfor %}
 
-# --- Okta login (optional password from Keychain / 1Password) ----------------
-# Enabled via Ansible: group_vars/work.yml → vault_okta_use_password_store, vault_okta_keychain_service
-# One-time: Keychain Access → New Password Item (service {{ vault_okta_keychain_service }}, account {{ work_username }})
-
-_vault_okta_password() {
-  [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]] || return 1
-  local pass=""
-
-  if [[ -n "${VAULT_OKTA_PASSWORD_CMD:-}" ]]; then
-    # stderr suppressed — failed lookup must not spam the terminal
-    pass="$(${=VAULT_OKTA_PASSWORD_CMD} 2>/dev/null)" || return 1
-  elif [[ -n "${VAULT_OKTA_OP_REF:-}" ]] && command -v op >/dev/null 2>&1; then
-    pass="$(op read "${VAULT_OKTA_OP_REF}" 2>/dev/null)" || return 1
-  elif command -v security >/dev/null 2>&1; then
-    local user="{{ work_username }}"
-    local svc="${VAULT_OKTA_KEYCHAIN_SERVICE:-}"
-    if [[ -n "$svc" ]]; then
-      pass="$(security find-generic-password -s "$svc" -w 2>/dev/null)" \
-        || pass="$(security find-generic-password -a "$user" -s "$svc" -w 2>/dev/null)" \
-        || pass="$(security find-internet-password -s "$svc" -a "$user" -w 2>/dev/null)" \
-        || return 1
-    else
-      return 1
-    fi
-  else
-    return 1
-  fi
-  [[ -n "$pass" ]] || return 1
-  print -r -- "$pass"
-}
-
-_vault_okta_login() {
-  local user="{{ work_username }}"
-  local pass
-  if pass="$(_vault_okta_password)"; then
-    vault login -method=okta username="$user" password="$pass"
-  else
-    if [[ "${VAULT_OKTA_USE_PASSWORD_STORE:-0}" == 1 ]]; then
-      echo "Note: password store lookup failed — type corp LDAP password (MFA push still applies)." >&2
-      echo "  Fix: create Keychain item or adjust vault_okta_* in group_vars/work.local.yml — see docs/work/vault-tools.md" >&2
-    fi
-    vault login -method=okta username="$user"
-  fi
-}
-
-# --- Interactive cluster login (wiki: vault_login; alias vl) ---------------
-
-vl() {
-  local local_vault="http://127.0.0.1:8200"
-
-  local clusters=(
-{% for cluster in vault_clusters %}
-    "{{ cluster.label }}    | {{ cluster.url }}"
-{% endfor %}
-    "LOCAL       | $local_vault"
-  )
-
-{% raw %}
-  if (( $#clusters <= 1 )); then
-    echo "No Vault clusters configured. Add vault_clusters in group_vars/work.local.yml — see work.local.yml.example" >&2
-    return 1
-  fi
-
-  echo "Select a Vault cluster:"
-  local i=1
-  for entry in "${clusters[@]}"; do
-    printf "  %d) %s\n" "$i" "${entry%%|*}"
-    ((i++))
-  done
-
-  printf "Enter number: "
-  read -r choice
-  # zsh arrays are 1-indexed; menu numbers match cluster[$choice]
-  local selected="${clusters[$choice]}"
-  if [[ -z "$selected" ]]; then
-    echo "Invalid selection." >&2
-    return 1
-  fi
-
-  export VAULT_ADDR="${selected#*| }"
-  echo "VAULT_ADDR set to $VAULT_ADDR"
-
-  if [[ "$VAULT_ADDR" == *"127.0.0.1"* ]]; then
-    vault login
-  else
-    _vault_okta_login
-  fi
-{% endraw %}
-}
-
-alias vault_login=vl
+# Ordered cluster list + tier/indent metadata, consumed by mytools (roles/shell)
+# to display clusters in vault_clusters order (not alphabetical) with tier
+# coloring and mirror indentation. Falls back to plain alphabetical listing if
+# undefined.
+typeset -ga VAULT_TOOLS_CLUSTER_ALIASES=(
+{%- for cluster in vault_clusters %}
+  "{{ alias_name(cluster) }}"
+{%- endfor %}
+)
+typeset -gA VAULT_TOOLS_CLUSTER_TIER=(
+{%- for cluster in vault_clusters %}
+  {{ alias_name(cluster) }} "{{ cluster.tier | default('dev') }}"
+{%- endfor %}
+)
+typeset -gA VAULT_TOOLS_CLUSTER_INDENT=(
+{%- for cluster in vault_clusters %}
+{%- if cluster.indent | default(false) %}
+  {{ alias_name(cluster) }} "true"
+{%- endif %}
+{%- endfor %}
+)
 
 # --- Vault MGMT (Teleport app vault-mgmt-access) -----------------------------
 
@@ -114,9 +58,11 @@ vault_mgmt() {
   sleep 2
 
   export VAULT_ADDR="http://127.0.0.1:8222"
+  export VAULT_NAMESPACE="root"
+  unset VAULT_TOKEN
   echo "VAULT_ADDR set to ${VAULT_ADDR}"
 
-  if ! _vault_okta_login; then
+  if ! vl; then
     echo "Error: Vault login failed." >&2
     kill $PROXY_PID
     return 1

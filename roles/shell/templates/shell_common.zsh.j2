@@ -24,10 +24,41 @@ mytools() {
     found=1
   fi
 
-  if (( $+functions[vl] || $+functions[vault_mgmt] )); then
+  if (( $+commands[vl] || $+functions[vault_mgmt] )); then
     echo "  ── Vault ────────────────────────────────────────────────────────"
-    (( $+functions[vl] ))          && echo "    vl / vault_login    interactive cluster picker → VAULT_ADDR + Okta login"
-    (( $+functions[vault_mgmt] ))  && echo "    vault_mgmt          Teleport vault-mgmt-access → local proxy :8222"
+    if (( $+functions[vault_mgmt] )); then
+      print -P "    %F{magenta}vault_mgmt%f"
+    fi
+    if (( $+commands[vl] )); then
+      if (( $+parameters[VAULT_TOOLS_CLUSTER_ALIASES] )); then
+        local a tier indented color
+        for a in $VAULT_TOOLS_CLUSTER_ALIASES; do
+          tier="${VAULT_TOOLS_CLUSTER_TIER[$a]:-dev}"
+          indented="${VAULT_TOOLS_CLUSTER_INDENT[$a]:-}"
+          color="green"
+          [[ "$tier" == "prod" ]] && color="red"
+          if [[ "$indented" == "true" ]]; then
+            print -P "      %F{$color}${a}%f"
+          else
+            print -P "    %F{$color}${a}%f"
+          fi
+        done
+      else
+        # Fallback if VAULT_TOOLS_CLUSTER_ALIASES isn't defined (e.g. stale
+        # deploy) — plain alphabetical listing, no tiers/colors.
+        local -a vault_cluster_aliases
+        for a in ${(ok)aliases}; do
+          [[ $a == vault_* ]] && vault_cluster_aliases+=("$a")
+        done
+        if (( $#vault_cluster_aliases )); then
+          for a in $vault_cluster_aliases; do
+            echo "    $a"
+          done
+        else
+          echo "    vl                  OIDC login (export VAULT_ADDR/VAULT_NAMESPACE first)"
+        fi
+      fi
+    fi
     echo ""
     found=1
   fi
