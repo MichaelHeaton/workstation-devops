@@ -57,6 +57,29 @@ ces_term_reset() {
   _ces_klam_term_style reset
 }
 
+# Prompt indicator so an active AWS_PROFILE (right or wrong) is always visible,
+# not just inferred from terminal bg color. Plain/bold — relies on the default
+# foreground _ces_klam_term_style already sets per-profile for contrast, rather
+# than picking its own color (which is how the vault tier colors ended up
+# clashing with these same backgrounds).
+autoload -Uz add-zsh-hook
+
+typeset -gA _CES_KLAM_PROMPT_LABEL=(
+  ces_sandbox "sandbox (...3550)"
+  ces_dev     "dev (...9010)"
+  ces_prd     "PROD (...1222)"
+)
+
+_ces_klam_update_prompt() {
+  if [[ -n "${AWS_PROFILE:-}" ]]; then
+    RPROMPT="%B[AWS: ${_CES_KLAM_PROMPT_LABEL[$AWS_PROFILE]:-$AWS_PROFILE}]%b"
+  else
+    RPROMPT=""
+  fi
+}
+
+add-zsh-hook precmd _ces_klam_update_prompt
+
 # CES Vault KLAM profiles (legacy team docs used cstdev/cstprd — use ces_*)
 # Drop legacy alias definitions if this file was re-sourced after an older deploy.
 unalias ces_sandbox ces_dev ces_prd 2>/dev/null

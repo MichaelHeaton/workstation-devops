@@ -17,17 +17,23 @@ klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
 
 # --- Vault cluster aliases (vl aliases: vault_dev_amer, vault_test, etc.) ----
 # namespace defaults to "root" — set it per-cluster only if a cluster needs something else.
-# tier: dev|prod (default dev) — controls mytools color (green/red) and puts dev-tier
+# tier: dev|prod (default dev) — controls mytools color (cyan/blue) and puts dev-tier
 #   clusters first, matching the ces_sandbox/ces_dev/ces_prd ordering convention.
 # indent: true — marks a cluster as a mirror of the entry above it (e.g. a regional
 #   replica), indenting it slightly in mytools output.
+# aws_profile: ces_sandbox|ces_dev|ces_prd — overrides the KLAM account mytools tags
+#   this cluster with in its "[account]" suffix. Default is ces_dev for tier dev,
+#   ces_prd for tier prod; set this when the backing AWS account doesn't match tier
+#   (e.g. a sandbox-hosted dev cluster).
 vault_clusters:
   - label: VII-DEV
     url: https://vault-vii.dev.internal.example
     tier: dev
+    aws_profile: ces_sandbox
   - label: VII-DEV-INT
     url: https://vault-int-vii.dev.internal.example
     tier: dev
+    aws_profile: ces_sandbox
     # namespace: root   # example override
     # Requires the VII-internal MCP network — drop this entry if your machine can't reach it.
   - label: TEST

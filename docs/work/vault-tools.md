@@ -28,7 +28,9 @@ Aliases deployed to `~/.config/workstation-devops/vault_functions.zsh`, sourced 
 
 Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.yml.example`). The public repo ships an empty list; work machines add employer cluster URLs locally. Each entry generates an alias named `vault_<label lowercased, - → _>` (e.g. `TEST` → `vault_test`). `VAULT_NAMESPACE` defaults to `root`; add a per-entry `namespace:` key to override.
 
-`mytools` lists these aliases in `vault_clusters` order (not alphabetical), colored by an optional per-entry `tier: dev|prod` key (default `dev`) — dev/test clusters print first in green, production last in red, matching the `ces_sandbox`/`ces_dev`/`ces_prd` ordering convention. An optional `indent: true` key marks a cluster as a regional mirror of the entry above it (e.g. `PROD-APAC`/`PROD-EMEA` mirroring `PROD-AMER`), indenting it slightly in the listing.
+`mytools` lists these aliases in `vault_clusters` order (not alphabetical), colored by an optional per-entry `tier: dev|prod` key (default `dev`) — dev/test clusters print first in cyan, production last in blue. (Not green/red — those hues match the KLAM terminal-background palette, see `klam.md`, and clashed badly whenever a `ces_*` profile was active.) An optional `indent: true` key marks a cluster as a regional mirror of the entry above it (e.g. `PROD-APAC`/`PROD-EMEA` mirroring `PROD-AMER`), indenting it slightly in the listing.
+
+Each alias is also tagged with the KLAM account it actually runs in, e.g. `vault_vii_dev [sandbox]`, `vault_mgmt [prod]`. This defaults from `tier` (dev→`ces_dev`, prod→`ces_prd`) but can be overridden per cluster with `aws_profile: ces_sandbox|ces_dev|ces_prd` — needed for clusters like `VII-DEV`, which is dev-tier but sandbox-hosted. The tag is deliberately plain text, not colored to match the KLAM account — that would reproduce the same green/yellow/red clash for whichever cluster matches your active session.
 
 ## Test
 
