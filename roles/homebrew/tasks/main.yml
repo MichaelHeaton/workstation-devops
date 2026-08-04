@@ -257,24 +257,33 @@
         - homebrew_available | bool
         - homebrew_casks_pkg_to_install | length > 0
 
-    - name: Install PKG casks with elevated installer
-      become: true
-      ansible.builtin.command:
-        argv:
-          - /usr/sbin/installer
-          - -pkg
-          - "{{ item.stdout | trim }}"
-          - -target
-          - /
-      loop: "{{ homebrew_pkg_cask_files.results | default([]) }}"
-      loop_control:
-        label: "{{ item.item }}"
-      when:
-        - not (dry_run | default(false) | bool)
-        - homebrew_install_packages | default(true) | bool
-        - homebrew_available | bool
-        - item.stdout is defined
-        - item.stdout | trim | length > 0
+    - name: Install PKG casks with elevated installer (needs sudo — make apply ASK_BECOME=1)
+      block:
+        - name: Install PKG casks with elevated installer
+          become: true
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/installer
+              - -pkg
+              - "{{ item.stdout | trim }}"
+              - -target
+              - /
+          loop: "{{ homebrew_pkg_cask_files.results | default([]) }}"
+          loop_control:
+            label: "{{ item.item }}"
+          when:
+            - not (dry_run | default(false) | bool)
+            - homebrew_install_packages | default(true) | bool
+            - homebrew_available | bool
+            - item.stdout is defined
+            - item.stdout | trim | length > 0
+      rescue:
+        - name: Explain PKG cask install failure (sudo likely required)
+          ansible.builtin.fail:
+            msg: >-
+              Installing a PKG cask ({{ homebrew_casks_pkg_to_install | join(', ') }})
+              requires sudo, which `make apply` doesn't ask for by default.
+              Re-run: make apply ASK_BECOME=1
 
     - name: Install Homebrew casks
       ansible.builtin.command: "{{ brew_bin }} install --cask --adopt {{ item }}"

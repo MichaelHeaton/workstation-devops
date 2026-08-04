@@ -10,7 +10,8 @@ help:
 	@echo "    make hooks                          Install pre-commit hooks"
 	@echo ""
 	@echo "  Apply"
-	@echo "    make apply                          Apply full configuration (logs to logs/apply-*.log; sudo if PKG casks install)"
+	@echo "    make apply                          Apply full configuration (logs to logs/apply-*.log)"
+	@echo "    make apply ASK_BECOME=1             Also prompt for sudo (only needed for a new PKG cask install)"
 	@echo "    make dry-run                        Preview changes without writing anything"
 	@echo "    make apply TAGS=dotfiles            Run only the dotfiles (chezmoi) tag"
 	@echo "    make apply SKIP_TAGS=work           Skip work-tagged tooling"
@@ -42,10 +43,15 @@ EXTRA_VARS ?=
 ANSIBLE_EXTRA_ARGS ?=
 TAGS ?=
 SKIP_TAGS ?=
+# Sudo is only needed for the homebrew role's PKG-cask installer task (rare —
+# new PKG cask, first install). Off by default so routine `make apply` runs
+# don't prompt for a password you don't have memorized; opt in when you know
+# a new PKG cask needs installing: make apply ASK_BECOME=1
+ASK_BECOME ?=
 ANSIBLE_EXTRA_VAR_ARGS := $(EXTRA_VARS) $(ANSIBLE_EXTRA_ARGS)
 ANSIBLE_TAG_ARGS := $(if $(TAGS),--tags $(TAGS),) $(if $(SKIP_TAGS),--skip-tags $(SKIP_TAGS),)
 ANSIBLE_PLAYBOOK := ansible-playbook site.yml $(ANSIBLE_PROFILE_ARGS) $(ANSIBLE_EXTRA_VAR_ARGS) $(ANSIBLE_TAG_ARGS)
-ANSIBLE_APPLY := $(ANSIBLE_PLAYBOOK) --ask-become-pass
+ANSIBLE_APPLY := $(ANSIBLE_PLAYBOOK) $(if $(ASK_BECOME),--ask-become-pass,)
 
 deps:
 	@./scripts/bootstrap-deps.sh
