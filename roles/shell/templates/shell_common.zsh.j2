@@ -27,22 +27,26 @@ mytools() {
   if (( $+commands[vl] || $+functions[vault_mgmt] )); then
     echo "  ── Vault ────────────────────────────────────────────────────────"
     if (( $+functions[vault_mgmt] )); then
-      print -P "    %F{magenta}vault_mgmt%f"
+      print -P "    %F{magenta}vault_mgmt%f [prod]"
     fi
     if (( $+commands[vl] )); then
       if (( $+parameters[VAULT_TOOLS_CLUSTER_ALIASES] )); then
-        local a tier indented color
+        local a tier indented color account
         for a in $VAULT_TOOLS_CLUSTER_ALIASES; do
           tier="${VAULT_TOOLS_CLUSTER_TIER[$a]:-dev}"
           indented="${VAULT_TOOLS_CLUSTER_INDENT[$a]:-}"
+          # account tag is plain text, not colored — color-matching it to the
+          # KLAM account would clash the same way the tier colors used to
+          # (see the cyan/blue note below) whenever that account is active.
+          account="${VAULT_TOOLS_CLUSTER_ACCOUNT[$a]:-}"
           # cyan/blue — avoids the KLAM terminal-bg palette (green/yellow/red,
           # see roles/klam/files/klam_aliases.zsh), which clashed with green/red text
           color="cyan"
           [[ "$tier" == "prod" ]] && color="blue"
           if [[ "$indented" == "true" ]]; then
-            print -P "      %F{$color}${a}%f"
+            print -P "      %F{$color}${a}%f${account:+ [$account]}"
           else
-            print -P "    %F{$color}${a}%f"
+            print -P "    %F{$color}${a}%f${account:+ [$account]}"
           fi
         done
       else

@@ -6,6 +6,15 @@
 vault_{{ slug }}
 {%- endif -%}
 {%- endmacro -%}
+{%- macro account_label(cluster) -%}
+{%- if cluster.aws_profile is defined -%}
+{{ cluster.aws_profile | replace('ces_', '') }}
+{%- elif (cluster.tier | default('dev')) == 'prod' -%}
+prod
+{%- else -%}
+dev
+{%- endif -%}
+{%- endmacro -%}
 # Vault / Teleport CLI helpers — workstation-devops (work profile)
 # Wiki: Vault Engineer Onboarding → Tips/Shortcuts → Bash Functions and Aliases
 # Auth: vl (adobe-security-tooling/vaultlogin) — OIDC, driven by VAULT_ADDR/VAULT_NAMESPACE.
@@ -15,6 +24,10 @@ vault_{{ slug }}
 # Add/edit clusters in group_vars/work.local.yml — see work.local.yml.example
 # Optional per-cluster keys: tier (dev|prod, default dev); indent: true marks a
 # cluster as a mirror of the previous non-indented entry — used by mytools.
+# aws_profile (ces_sandbox|ces_dev|ces_prd) overrides the KLAM account mytools
+# tags this cluster with — default is ces_dev for tier dev, ces_prd for tier
+# prod. Set this when a cluster's backing AWS account doesn't match its tier
+# (e.g. VII-DEV lives in ces_sandbox, not the shared ces_dev account).
 # Alias name is vault_<label lowercased, - → _> — unless the label already
 # starts with "vault" (e.g. VAULT-A), in which case the prefix isn't doubled.
 {% for cluster in vault_clusters %}
@@ -40,6 +53,11 @@ typeset -gA VAULT_TOOLS_CLUSTER_INDENT=(
 {%- if cluster.indent | default(false) %}
   {{ alias_name(cluster) }} "true"
 {%- endif %}
+{%- endfor %}
+)
+typeset -gA VAULT_TOOLS_CLUSTER_ACCOUNT=(
+{%- for cluster in vault_clusters %}
+  {{ alias_name(cluster) }} "{{ account_label(cluster) }}"
 {%- endfor %}
 )
 
