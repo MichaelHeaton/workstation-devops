@@ -27,7 +27,7 @@ mytools() {
   if (( $+commands[vl] || $+functions[vault_mgmt] )); then
     echo "  ── Vault ────────────────────────────────────────────────────────"
     if (( $+functions[vault_mgmt] )); then
-      print -P "    %F{magenta}vault_mgmt%f [prod]"
+      print -P "    %F{magenta}vault_mgmt%f [ces_prd]"
     fi
     if (( $+commands[vl] )); then
       if (( $+parameters[VAULT_TOOLS_CLUSTER_ALIASES] )); then
