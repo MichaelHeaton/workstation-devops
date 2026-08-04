@@ -17,9 +17,9 @@ vault_{{ slug }}
 # cluster as a mirror of the previous non-indented entry — used by mytools.
 # Alias name is vault_<label lowercased, - → _> — unless the label already
 # starts with "vault" (e.g. VAULT-A), in which case the prefix isn't doubled.
-{%- for cluster in vault_clusters %}
+{% for cluster in vault_clusters %}
 alias {{ alias_name(cluster) }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} && unset VAULT_TOKEN && vl'
-{%- endfor %}
+{% endfor %}
 
 # Ordered cluster list + tier/indent metadata, consumed by mytools (roles/shell)
 # to display clusters in vault_clusters order (not alphabetical) with tier
