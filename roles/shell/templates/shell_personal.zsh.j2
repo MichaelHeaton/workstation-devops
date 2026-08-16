@@ -9,3 +9,10 @@ platform_bootstrap() {
   export AWS_REGION="{{ personal_aws_region }}"
   export TF_STATE_BUCKET_NAME="{{ personal_tf_state_bucket }}"
 }
+
+# Starship shows this instead of the full VAULT_ADDR URL. Only set a default
+# when an address is already present (unmanaged ~/.zshrc on the homelab Mac)
+# and a vault_* alias hasn't already named the cluster.
+if [[ -n "${VAULT_ADDR:-}" && -z "${VAULT_CLUSTER:-}" ]]; then
+  export VAULT_CLUSTER="{{ personal_vault_cluster }}"
+fi

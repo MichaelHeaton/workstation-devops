@@ -74,6 +74,11 @@ ces_term_reset() {
 # interpolation, not further command substitution) — so a $(...) sequence
 # baked into their stored value is never re-evaluated, it just prints
 # literally. Recomputing the finished string every precmd sidesteps that.
+#
+# When Starship owns the prompt (STARSHIP_SHELL set by `starship init zsh`),
+# skip this splice — Starship's aws module already shows AWS_PROFILE (see
+# dotfiles/dot_config/starship.toml profile_aliases). Terminal bg/tab colors
+# from _ces_klam_term_style still apply.
 typeset -gA _CES_KLAM_PROMPT_LABEL=(
   ces_sandbox "sandbox (...3550)"
   ces_dev     "dev (...9010)"
@@ -98,7 +103,13 @@ _ces_klam_prompt_segment() {
   print -n "%F{magenta}%B[AWS: ${_CES_KLAM_PROMPT_LABEL[$AWS_PROFILE]:-$AWS_PROFILE}]%b%f "
 }
 
-if (( $+parameters[ZSH_THEME_GIT_PROMPT_DIRTY] )) && [[ "$ZSH_THEME_GIT_PROMPT_DIRTY" == *'%1{✗'* ]]; then
+if [[ -n "${STARSHIP_SHELL:-}" ]]; then
+  if (( $+functions[_ces_klam_refresh_git_prompt_vars] )); then
+    autoload -Uz add-zsh-hook
+    add-zsh-hook -d precmd _ces_klam_refresh_git_prompt_vars 2>/dev/null
+    unfunction _ces_klam_refresh_git_prompt_vars
+  fi
+elif (( $+parameters[ZSH_THEME_GIT_PROMPT_DIRTY] )) && [[ "$ZSH_THEME_GIT_PROMPT_DIRTY" == *'%1{✗'* ]]; then
   # Capture the pristine templates once (guard so re-sourcing this file
   # doesn't capture an already-modified value as if it were the original).
   if [[ -z "${_CES_KLAM_DIRTY_BEFORE:-}" ]]; then

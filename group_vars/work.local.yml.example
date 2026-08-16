@@ -25,6 +25,7 @@ klam_artifactory_pypi_path: artifactory/api/pypi/pypi-klam-cli-release/simple
 #   this cluster with in its "[account]" suffix. Default is ces_dev for tier dev,
 #   ces_prd for tier prod; set this when the backing AWS account doesn't match tier
 #   (e.g. a sandbox-hosted dev cluster).
+# Each alias also exports VAULT_CLUSTER=<label> for the Starship prompt.
 vault_clusters:
   - label: VII-DEV
     url: https://vault-vii.dev.internal.example

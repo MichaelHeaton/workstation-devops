@@ -14,7 +14,7 @@ make dry-run       # full personal/work preview (uses ~/.workstation_profile if 
 | ----- | --- |
 | `scripts/log-triage.sh` on fixture | Apply logs remain parseable after failures |
 | `tests/playbooks/personal-chezmoi-identity.yml` | Personal profile must not hit undefined `full_name` / `work_email` in `site.yml` identity merge |
-| `tests/playbooks/render-shell-templates.yml` | `shell_personal.zsh.j2` must pass `zsh -n` before `blockinfile` touches `~/.zshrc` |
+| `tests/playbooks/render-shell-templates.yml` | `shell_*.zsh.j2`, `vault_functions.zsh.j2`, and `klam_aliases.zsh` must pass `zsh -n`; generated aliases export `VAULT_CLUSTER`; `starship.toml` parses when starship is installed |
 | `site.yml` with `dry_run=true` | End-to-end Jinja evaluation for personal profile |
 | `make -n apply` | Apply target tees to `logs/apply-*.log` (survives terminal resets) |
 

@@ -129,3 +129,9 @@ ces_term_reset   # restore default colors and unset AWS_PROFILE
 | `ces_prd` | Red | Prod warning |
 
 iTerm2: if background does not change, check **Preferences → Profiles → Terminal → Allow terminal to change opacity** / ANSI color reporting. Tab color uses iTerm2 proprietary escapes; background uses OSC 11.
+
+## Prompt (AWS profile)
+
+When **Starship** is on PATH, `AWS_PROFILE` shows in the prompt via Starship's aws module (`ces_sandbox` → `sandbox (...3550)`). The older oh-my-zsh git-prompt splice is skipped so AWS is not shown twice. See [shell-prompt.md](../shell-prompt.md).
+
+Without Starship, the splice still injects `[AWS: sandbox (...3550)]` into the oh-my-zsh git segment.

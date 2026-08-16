@@ -16,6 +16,7 @@ Employer-specific URLs and repos: **`group_vars/work.local.yml`** (gitignored; c
 | Brave work profiles | `dotfiles/brave-profiles/` |
 | AI Spend Tracker (public DMG) | `roles/mac_dmg_apps` — [ai-spend-tracker.md](ai-spend-tracker.md) |
 | Vault CLI helpers (`vl` — OIDC) | `roles/vault_tools` — [vault-tools.md](vault-tools.md) |
+| Starship prompt (git / AWS / Vault) | chezmoi + `shell` tag — [shell-prompt.md](../shell-prompt.md) |
 | KLAM CLI + `ces_*` AWS aliases | `roles/klam` — [klam.md](klam.md) |
 | Teleport fzf (`t`, `tshl`) | `roles/teleport` — [teleport.md](teleport.md) |
 | kubelogin v0.1.9 (Ethos) | `roles/kubernetes` — [kubernetes.md](kubernetes.md) |

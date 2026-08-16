@@ -64,8 +64,8 @@ make apply TAGS=shell
 
 | Tag | What runs |
 | ----- | ----------- |
-| `dotfiles` | Chezmoi (git, SSH, gh config, zprofile, MCP, Claude merges, Brave, …) |
-| `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`); personal block when `home` is in allowlist |
+| `dotfiles` | Chezmoi (git, SSH, gh config, zprofile, Starship prompt, MCP, Claude merges, Brave, …) |
+| `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`, guarded `starship init`); personal block when `home` is in allowlist |
 | `editors` | Cursor/VS Code settings + extension install script |
 | `work` | Work shell, Teleport fzf, kubelogin v0.1.9, GHEC SSH, KLAM, Vault tools, work editor extensions |
 | `home` | Personal AWS defaults (`platform-bootstrap` profile), `~/.aws/config` stub, homelab tasks in `roles/personal/` — see [platform-aws.md](home/platform-aws.md) |

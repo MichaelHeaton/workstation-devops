@@ -34,7 +34,7 @@ aws sts get-caller-identity --profile platform-bootstrap
 
 ## Daily use
 
-New shells on a personal Mac pick up the exports automatically. To re-apply after
+New shells on a personal Mac pick up the exports automatically. Starship shows `AWS_PROFILE` in the prompt ([shell-prompt.md](../shell-prompt.md)). To re-apply after
 `ces_term_reset` or `unset AWS_PROFILE` on a hybrid machine:
 
 ```bash

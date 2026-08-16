@@ -30,7 +30,7 @@ Bootstrap installs the toolchain; Ansible applies layout, packages, and clones p
 - **Brave profiles** — `dotfiles/brave-profiles/profiles.json` holds icons, colors, and NTP backgrounds. After UI changes: quit Brave, run `./scripts/brave-profiles-export.sh`, commit, then `make apply` on other machines.
 - **Apple Notes (code snippets)** — `roles/macos_defaults` uses PlistBuddy on the Notes sandbox plist; `defaults write com.apple.Notes` does not work on modern sandboxed Notes. Apply quits Notes first.
 - **Editor extensions** — lists in `dotfiles/editors/*.txt`; installed when `editors` tag is allowed. Work-only extensions require `work` tag. See [docs/editors.md](docs/editors.md).
-- **Git / SSH / shell** — chezmoi (`dotfiles` tag) for git/SSH/gh/zprofile; `shell` tag for zshrc fragments. Work tooling (`work` tag): Teleport, kubelogin, KLAM, Vault. See [docs/tags.md](docs/tags.md).
+- **Git / SSH / shell** — chezmoi (`dotfiles` tag) for git/SSH/gh/zprofile/Starship; `shell` tag for zshrc fragments. Work tooling (`work` tag): Teleport, kubelogin, KLAM, Vault. See [docs/tags.md](docs/tags.md). Prompt: [docs/shell-prompt.md](docs/shell-prompt.md).
 
 ## Key commands
 
@@ -71,7 +71,7 @@ Requires: KLAM installed (`make deps` will not install it — see [docs/work/kla
 
 | Command | What it does |
 | --------- | -------------------------------------------------- |
-| `vault_<cluster>` (e.g. `vault_test`) | Sets `VAULT_ADDR`/`VAULT_NAMESPACE`, unsets stale `VAULT_TOKEN`, runs `vl` (OIDC login) |
+| `vault_<cluster>` (e.g. `vault_test`) | Sets `VAULT_ADDR`/`VAULT_NAMESPACE`/`VAULT_CLUSTER`, unsets stale `VAULT_TOKEN`, runs `vl` (OIDC login) |
 | `vault_mgmt` | Teleport `vault-mgmt-access` → local proxy on `:8222` + `vl` (OIDC login) |
 
 Cluster list lives in `group_vars/work.local.yml` (gitignored) — each entry generates a `vault_<label>` alias. `vl` is [adobe-security-tooling/vaultlogin](https://github.com/adobe-security-tooling/vaultlogin), installed and pinned by `roles/vault_tools`.
@@ -94,10 +94,14 @@ Requires: `tsh` and `fzf` on PATH, `TELEPORT_LOGIN` set (= LDAP username).
 
 Auto-set on shell startup for personal machines. See [docs/home/platform-aws.md](docs/home/platform-aws.md).
 
+### Prompt (Starship)
+
+Git branch, AWS profile, gcloud account, and Vault cluster (`VAULT_CLUSTER`) render in the prompt when `starship` is on PATH. Work machines do not brew-install it (detect-first). See [docs/shell-prompt.md](docs/shell-prompt.md).
+
 ## Gotchas
 
 - **`make dry-run` must not write** — chezmoi/repos/directories respect `dry_run`.
-- **`make test` before apply changes** — catches undefined personal chezmoi vars and broken `shell_personal.zsh.j2` before they touch `~/.zshrc`. Failed applies: `make triage` on `logs/apply-*.log`.
+- **`make test` before apply changes** — catches undefined personal chezmoi vars and broken shell/vault zsh templates before they touch `~/.zshrc`. Failed applies: `make triage` on `logs/apply-*.log`.
 - **Profile required** — `make apply` passes `-e workstation_profile=…` when `~/.workstation_profile` exists; first run needs `make profile` or an explicit `-e`.
 - **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e work_username=YOUR_LDAP -e work_email=you@work.example'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e work_username=…` still overrides. Older chezmoi configs with a legacy username key are migrated on read.
 - **Work local overrides** — employer URLs/repos in `group_vars/work.local.yml` (gitignored; copy from `work.local.yml.example`).

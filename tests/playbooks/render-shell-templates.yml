@@ -11,6 +11,7 @@
     personal_aws_profile: platform-bootstrap
     personal_aws_region: us-west-2
     personal_tf_state_bucket: test-tfstate-bucket
+    personal_vault_cluster: specterrealm
     workstation_tags:
       - home
       - shell
@@ -18,19 +19,83 @@
     brew_prefix: /opt/homebrew
     brew_bin: /opt/homebrew/bin/brew
     ai_skills_accounts_shell: ""
+    _test_dir: "{{ ansible_facts['env']['HOME'] }}/.cache/workstation-devops-test-shell"
+    vault_clusters:
+      - label: VII-DEV
+        url: https://vault-vii.dev.internal.example
+        tier: dev
+        aws_profile: ces_sandbox
+      - label: VAULT-A
+        url: https://vault.internal.example
+        tier: prod
   tasks:
+    - name: Ensure test cache dir
+      ansible.builtin.file:
+        path: "{{ _test_dir }}"
+        state: directory
+        mode: "0755"
+
     - name: Render personal shell fragment
       ansible.builtin.template:
         src: ../../roles/shell/templates/shell_personal.zsh.j2
-        dest: "{{ ansible_facts['env']['HOME'] }}/.cache/workstation-devops-test-shell-personal.zsh"
+        dest: "{{ _test_dir }}/shell-personal.zsh"
         mode: "0644"
 
-    - name: Validate personal shell fragment (zsh -n)
+    - name: Render common shell fragment
+      ansible.builtin.template:
+        src: ../../roles/shell/templates/shell_common.zsh.j2
+        dest: "{{ _test_dir }}/shell-common.zsh"
+        mode: "0644"
+
+    - name: Render vault functions
+      ansible.builtin.template:
+        src: ../../roles/vault_tools/templates/vault_functions.zsh.j2
+        dest: "{{ _test_dir }}/vault-functions.zsh"
+        mode: "0644"
+
+    - name: Validate zsh fragments (zsh -n)
       ansible.builtin.command:
-        cmd: zsh -n "{{ ansible_facts['env']['HOME'] }}/.cache/workstation-devops-test-shell-personal.zsh"
+        cmd: zsh -n "{{ item }}"
+      loop:
+        - "{{ _test_dir }}/shell-personal.zsh"
+        - "{{ _test_dir }}/shell-common.zsh"
+        - "{{ _test_dir }}/vault-functions.zsh"
+        - "{{ playbook_dir }}/../../roles/klam/files/klam_aliases.zsh"
       changed_when: false
 
-    - name: Remove test artifact
+    - name: Slurp rendered vault functions
+      ansible.builtin.slurp:
+        src: "{{ _test_dir }}/vault-functions.zsh"
+      register: vault_functions_rendered
+
+    - name: Vault aliases export VAULT_CLUSTER
+      ansible.builtin.assert:
+        that:
+          - >-
+            'VAULT_CLUSTER="VII-DEV"' in vault_functions_body
+          - >-
+            'VAULT_CLUSTER="VAULT-A"' in vault_functions_body
+          - >-
+            'VAULT_CLUSTER="mgmt"' in vault_functions_body
+        fail_msg: vault_functions.zsh.j2 must export VAULT_CLUSTER on cluster aliases and vault_mgmt
+      vars:
+        vault_functions_body: "{{ vault_functions_rendered.content | b64decode }}"
+
+    - name: Stat starship binary
+      ansible.builtin.stat:
+        path: "{{ brew_prefix }}/bin/starship"
+      register: starship_bin
+
+    - name: Check starship config parses
+      ansible.builtin.command:
+        cmd: starship print-config
+      environment:
+        STARSHIP_CONFIG: "{{ playbook_dir }}/../../dotfiles/dot_config/starship.toml"
+        TERM: xterm-256color
+      changed_when: false
+      when: starship_bin.stat.exists
+
+    - name: Remove test artifacts
       ansible.builtin.file:
-        path: "{{ ansible_facts['env']['HOME'] }}/.cache/workstation-devops-test-shell-personal.zsh"
+        path: "{{ _test_dir }}"
         state: absent
