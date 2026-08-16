@@ -84,3 +84,10 @@ mytools() {
     echo ""
   fi
 }
+
+# Starship prompt (git + AWS + gcloud + Vault). Skip when already initialized
+# (an unmanaged `eval "$(starship init zsh)"` earlier in ~/.zshrc) or when the
+# binary is missing — work machines are detect-first and may not have it yet.
+if command -v starship >/dev/null 2>&1 && [[ -z "${STARSHIP_SHELL:-}" ]]; then
+  eval "$(starship init zsh)"
+fi

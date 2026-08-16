@@ -9,7 +9,7 @@ Automated by `roles/vault_tools` on `make apply` when `workstation_profile=work`
 | Item | Purpose |
 | ---------- | --------- |
 | `vl` binary | Installed to `~/.local/bin/vl`, pinned to `vaultlogin_version` |
-| `vault_<cluster>` aliases | One per entry in `vault_clusters` (e.g. `vault_test`, `vault_dev_amer`) — sets `VAULT_ADDR`/`VAULT_NAMESPACE`, unsets stale `VAULT_TOKEN`, runs `vl` |
+| `vault_<cluster>` aliases | One per entry in `vault_clusters` (e.g. `vault_test`, `vault_dev_amer`) — sets `VAULT_ADDR`/`VAULT_NAMESPACE`/`VAULT_CLUSTER`, unsets stale `VAULT_TOKEN`, runs `vl` |
 | `vault_local` | Plain `vault login` against a local dev-mode server (`127.0.0.1:8200`) |
 | `vault_mgmt` | Teleport app `vault-mgmt-access` → local proxy `:8222`, then `vl` |
 | `~/.vault` token helper config | `vl token-helper setup` — caches a separate token per `VAULT_ADDR`/`VAULT_NAMESPACE` in macOS Keychain |
@@ -32,12 +32,15 @@ Configure **`vault_clusters`** in `group_vars/work.local.yml` (see `work.local.y
 
 Each alias is also tagged with the KLAM account it actually runs in, e.g. `vault_vii_dev [ces_sandbox]`, `vault_mgmt [ces_prd]` — matching the exact profile names in the AWS (KLAM) section above it. This defaults from `tier` (dev→`ces_dev`, prod→`ces_prd`) but can be overridden per cluster with `aws_profile: ces_sandbox|ces_dev|ces_prd` — needed for clusters like `VII-DEV`, which is dev-tier but sandbox-hosted. The tag is deliberately plain text, not colored to match the KLAM account — that would reproduce the same green/yellow/red clash for whichever cluster matches your active session.
 
+`VAULT_CLUSTER` is the short label Starship shows in the prompt (`🔒 VII-DEV`) instead of the full URL. `vault_mgmt` sets it to `mgmt`. See [shell-prompt.md](../shell-prompt.md).
+
 ## Test
 
 ```bash
 source ~/.zshrc
 vault_test     # or whichever cluster alias you need — OIDC browser login
-vault_mgmt     # MGMT via Teleport
+# prompt should show 🔒 TEST (Starship) once VAULT_CLUSTER is set
+vault_mgmt     # MGMT via Teleport — prompt shows 🔒 mgmt
 vl --version   # confirm the pinned version installed
 cat ~/.vault   # confirm token_helper points at the installed vl
 ```

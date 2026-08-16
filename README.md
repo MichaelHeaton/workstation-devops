@@ -67,6 +67,8 @@ roles/personal/          # personal-only hooks
 
 **Every profile** clones `managed_repos_common` from `all.yml` (multi-domain Cursor workspaces, skills, memex, this repo). Profile vars add the rest (homelab vs work tooling).
 
+Prompt (git / AWS / gcloud / Vault): [docs/shell-prompt.md](docs/shell-prompt.md).
+
 - **`workspace`** — Cursor `.code-workspace` files (multi-domain)
 - **`personal/ai-skills`** — portable AI workspace (`make install-system` + `make hooks-install` on clone and re-apply)
 - **`personal/memex`** — knowledge vault

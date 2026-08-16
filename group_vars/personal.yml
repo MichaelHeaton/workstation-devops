@@ -9,6 +9,7 @@ workstation_tags_profile:
 personal_aws_profile: platform-bootstrap
 personal_aws_region: us-west-2
 personal_tf_state_bucket: mccleaton-tfstate
+personal_vault_cluster: specterrealm
 
 projects_buckets:
   - name: personal

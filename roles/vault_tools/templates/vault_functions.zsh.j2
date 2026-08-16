@@ -28,10 +28,12 @@ ces_dev
 # tags this cluster with — default is ces_dev for tier dev, ces_prd for tier
 # prod. Set this when a cluster's backing AWS account doesn't match its tier
 # (e.g. VII-DEV lives in ces_sandbox, not the shared ces_dev account).
+# Each alias also exports VAULT_CLUSTER=<label> for the Starship prompt
+# (see dotfiles/dot_config/starship.toml).
 # Alias name is vault_<label lowercased, - → _> — unless the label already
 # starts with "vault" (e.g. VAULT-A), in which case the prefix isn't doubled.
 {% for cluster in vault_clusters %}
-alias {{ alias_name(cluster) }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} && unset VAULT_TOKEN && vl'
+alias {{ alias_name(cluster) }}='export VAULT_ADDR={{ cluster.url }} VAULT_NAMESPACE={{ cluster.namespace | default("root") }} VAULT_CLUSTER="{{ cluster.label }}" && unset VAULT_TOKEN && vl'
 {% endfor %}
 
 # Ordered cluster list + tier/indent metadata, consumed by mytools (roles/shell)
@@ -77,8 +79,9 @@ vault_mgmt() {
 
   export VAULT_ADDR="http://127.0.0.1:8222"
   export VAULT_NAMESPACE="root"
+  export VAULT_CLUSTER="mgmt"
   unset VAULT_TOKEN
-  echo "VAULT_ADDR set to ${VAULT_ADDR}"
+  echo "VAULT_ADDR set to ${VAULT_ADDR} (VAULT_CLUSTER=${VAULT_CLUSTER})"
 
   if ! vl; then
     echo "Error: Vault login failed." >&2

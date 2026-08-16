@@ -76,6 +76,7 @@ homebrew_formulae_common:
   - docker
   - docker-completion
   - fzf
+  - starship
   - gnupg
   - tmux
   - tree

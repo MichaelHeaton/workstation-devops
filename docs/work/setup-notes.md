@@ -12,6 +12,7 @@ Automated steps run via `make apply` (profile `work`). Complete these **before**
 
 - Set **`TELEPORT_LOGIN`** to your work LDAP username (short name, not full email).
 - **Corp VPN** — connect for internal Git, Jenkins, and Vault URLs when using those tools.
+- **Starship** — the git/AWS/Vault prompt bar. Work apply will not `brew install` it. Put `starship` on PATH, then `make apply TAGS=shell`. See [shell-prompt.md](../shell-prompt.md).
 
 ## Local overrides (work machines)
 

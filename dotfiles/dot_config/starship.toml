@@ -1,0 +1,27 @@
+# Starship prompt — workstation-devops (chezmoi → ~/.config/starship.toml)
+# Session context: directory, git, AWS, gcloud, Vault. $all keeps language
+# modules (terraform, python, …) when a project file is nearby.
+#
+# Vault: Starship 1.26 has no built-in vault module. vault_* aliases export
+# VAULT_CLUSTER (short label); this env_var segment renders it.
+
+format = "$all"
+
+[aws]
+format = 'on [$symbol$profile( \($region\))(\[$duration\])]($style) '
+style = "bold yellow"
+
+[aws.profile_aliases]
+ces_sandbox = "sandbox (...3550)"
+ces_dev = "dev (...9010)"
+ces_prd = "PROD (...1222)"
+
+[gcloud]
+format = 'on [$symbol$account(@$domain)]($style) '
+style = "bold blue"
+
+[env_var.VAULT_CLUSTER]
+variable = "VAULT_CLUSTER"
+symbol = "🔒 "
+style = "bold cyan"
+format = "on [$symbol$env_value]($style) "
