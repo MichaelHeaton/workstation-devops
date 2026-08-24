@@ -9,6 +9,53 @@ Go binaries — no MCP tool schemas loaded into context every turn, help text
 loaded on demand instead. Forked from `Adobe-AIFoundations/jira-cli` and
 `Adobe-AIFoundations/confluence-cli`.
 
+## CLI vs MCP — measured findings (2026-08-24)
+
+The wiki's token-efficiency pitch was benchmarked against the CLI's own
+unflagged output, never against the MCP tools' actual responses. Testing
+both side by side on real data (50-issue and 43-issue Jira searches, one
+Confluence page read) told a different story:
+
+| Operation | CLI (best flags) | MCP | Winner |
+| --------- | ----------------- | --- | ------ |
+| Jira search, 50 issues, 4 fields | 29,588 bytes (`--minimize --query`) | ~15,900 bytes | **MCP, ~2x smaller** |
+| Jira search, 43 issues (own open tickets) | 33,441 bytes (`--minimize`) | ~13,600 bytes | **MCP, ~2.4x smaller** |
+| Confluence page read (same page) | 9,404 bytes (`--markdown --minimize`) | 9,079 bytes | Tie |
+
+MCP's Jira tool flattens `status`/`priority` into `{name, category, color}`;
+jira-cli's `--minimize`/`--query` still pass through Jira's raw REST shape
+(`statusCategory`, nested `description`, IDs) even at its most aggressive
+flags. MCP's Confluence tool already converts to Markdown and trims metadata
+by default, so `--markdown --minimize` doesn't buy anything extra there.
+Correctness was solid both times — CLI and MCP returned identical keys,
+order, and timestamps for the same query.
+
+**When the CLI is actually the better choice:**
+
+- **Bulk operations** — `jira bulk update/transition/comment/mixed` (up to
+  100 issues, one stdin-JSON call). No MCP equivalent for bulk update/
+  transition/comment (MCP only has batch create + batch changelogs).
+- **Attachments** — `attachment download <id> --dest /path` writes straight
+  to disk. The MCP equivalent returns a base64 blob into the agent's context
+  first — fine for a few KB, real cost for anything larger.
+- **Fixed schema footprint** — ~90 `mcp__atlassian__*` tool *names* sit in
+  context every turn even lazy-loaded; the CLI costs nothing until `--help`
+  is actually invoked.
+- **Uses your own PAT**, not whatever identity backs the MCP server —
+  matters if that server's access differs from yours on restricted content.
+- **Works with no agent in the loop** — shell scripts, cron, `mytools`-style
+  aliases; MCP tools only exist inside an MCP client.
+
+**Where MCP is still the better default:** everyday search/read/single-issue
+work (smaller payloads, confirmed above) and broader coverage — jira-cli's
+own admitted gaps (delete issue, watchers, worklog reads, SLA, ProForma,
+epic-link) are all things the MCP tool list already covers.
+
+**Net:** this isn't a wholesale MCP replacement. Reach for the CLI for bulk
+changes or attachment-heavy work; keep MCP as the default for search/read.
+Nothing here has been wired into `ai-skills` as a default yet — see
+"Claude skill files" below.
+
 ## What Ansible does
 
 | Step | Automated |
