@@ -17,6 +17,14 @@ download`), this role clones the actual source into a visible working tree under
 use the same checkout Ansible manages, and there's no dependency on either repo
 publishing release binaries.
 
+**This is not a wholesale MCP replacement.** Measured side-by-side (not just
+the wiki's own benchmarks), MCP is equal-or-smaller per call on search/read
+and covers more Jira operations. The CLI earns its place for bulk
+update/transition/comment (no MCP equivalent) and attachment I/O (stays off
+disk vs. base64 through context). See
+[docs/work/atlassian-cli.md](../../docs/work/atlassian-cli.md#cli-vs-mcp--measured-findings-2026-08-24)
+for the numbers.
+
 ## Inputs / Interface
 
 | Variable | Required | Default | Notes |
