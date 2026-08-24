@@ -26,6 +26,7 @@
       "mcp__atlassian__jira_get_project_components",
       "mcp__atlassian__confluence_get_page",
       "mcp__atlassian__confluence_get_page_children",
+      "mcp__atlassian__confluence_get_page_diff",
       "mcp__atlassian__confluence_search",
       "mcp__ccd_session_mgmt__search_session_transcripts"
     ]
