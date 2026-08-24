@@ -1,0 +1,164 @@
+---
+# Clones jira-cli/confluence-cli and builds each into atlassian_cli_install_dir.
+# Credentials (Jira PAT via Keychain, Confluence PAT via credential helper) are
+# NOT configured here — that's a one-time manual step, see docs/work/atlassian-cli.md.
+
+- name: Atlassian CLI tools (jira-cli / confluence-cli)
+  when: atlassian_cli_enabled | default(true) | bool
+  tags:
+    - work
+  block:
+    - name: Check which atlassian CLI repos are already cloned
+      ansible.builtin.stat:
+        path: "{{ projects_root }}/{{ item.dest }}/.git"
+      register: atlassian_cli_repo_state
+      loop: "{{ atlassian_cli_tools }}"
+      loop_control:
+        label: "{{ item.dest }}"
+
+    - name: Show atlassian CLI repos that would be cloned (dry-run)
+      ansible.builtin.debug:
+        msg: "Would clone {{ item.item.repo }} → {{ projects_root }}/{{ item.item.dest }}"
+      loop: "{{ atlassian_cli_repo_state.results }}"
+      loop_control:
+        label: "{{ item.item.dest }}"
+      when:
+        - dry_run | default(false) | bool
+        - not item.stat.exists
+
+    - name: Clone atlassian CLI repos
+      ansible.builtin.command:
+        argv:
+          - git
+          - clone
+          - -b
+          - "{{ item.item.version }}"
+          - "{{ item.item.repo }}"
+          - "{{ projects_root }}/{{ item.item.dest }}"
+      loop: "{{ atlassian_cli_repo_state.results }}"
+      loop_control:
+        label: "{{ item.item.dest }}"
+      register: atlassian_cli_clone_results
+      failed_when: false
+      changed_when: atlassian_cli_clone_results.rc == 0
+      when:
+        - not (dry_run | default(false) | bool)
+        - not item.stat.exists
+
+    - name: Warn when an atlassian CLI repo clone failed
+      ansible.builtin.debug:
+        msg: >-
+          {{ item.item.item.dest }} not cloned (rc={{ item.rc }}). Confirm git/gh auth
+          for {{ item.item.item.repo }} (private repo), then re-run make apply.
+      loop: "{{ atlassian_cli_clone_results.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.item.dest | default('unknown') }}"
+      when:
+        - atlassian_cli_clone_results is defined
+        - not item.skipped | default(false)
+        - item.rc | default(0) != 0
+
+    - name: Check working tree before pull
+      ansible.builtin.command: git status --porcelain
+      args:
+        chdir: "{{ projects_root }}/{{ item.item.dest }}"
+      register: atlassian_cli_worktree_status
+      loop: "{{ atlassian_cli_repo_state.results }}"
+      loop_control:
+        label: "{{ item.item.dest }}"
+      changed_when: false
+      failed_when: false
+      when:
+        - not (dry_run | default(false) | bool)
+        - item.stat.exists
+
+    - name: Warn when pull skipped due to local changes
+      ansible.builtin.debug:
+        msg: >-
+          Skipping pull for {{ item.item.item.dest }} — local modifications present.
+          Commit, stash, or discard changes, then re-run make apply.
+      loop: "{{ atlassian_cli_worktree_status.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.item.dest }}"
+      when:
+        - not item.skipped | default(false)
+        - item.rc | default(1) == 0
+        - item.stdout | default('') | trim | length > 0
+
+    - name: Pull latest commits (ff-only, clean tree only)
+      ansible.builtin.command: git pull --ff-only
+      args:
+        chdir: "{{ projects_root }}/{{ item.item.item.dest }}"
+      register: atlassian_cli_pull_result
+      loop: "{{ atlassian_cli_worktree_status.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.item.dest }}"
+      failed_when: false
+      changed_when: >-
+        atlassian_cli_pull_result.rc == 0
+        and 'Already up to date' not in (atlassian_cli_pull_result.stdout | default(''))
+      when:
+        - not item.skipped | default(false)
+        - item.rc | default(1) == 0
+        - item.stdout | default('') | trim | length == 0
+
+    - name: Show atlassian CLI build plan (dry-run)
+      ansible.builtin.debug:
+        msg: >-
+          Would build {{ projects_root }}/{{ item.dest }} →
+          {{ atlassian_cli_install_dir }}/{{ item.name }}
+      loop: "{{ atlassian_cli_tools }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: dry_run | default(false) | bool
+
+    - name: Ensure atlassian CLI install directory exists
+      ansible.builtin.file:
+        path: "{{ atlassian_cli_install_dir }}"
+        state: directory
+        mode: "0755"
+      when: not (dry_run | default(false) | bool)
+
+    - name: Build atlassian CLI binaries
+      ansible.builtin.command:
+        argv:
+          - go
+          - build
+          - -ldflags=-s -w
+          - -o
+          - "{{ atlassian_cli_install_dir }}/{{ item.name }}"
+          - .
+        chdir: "{{ projects_root }}/{{ item.dest }}"
+      register: atlassian_cli_build_result
+      loop: "{{ atlassian_cli_tools }}"
+      loop_control:
+        label: "{{ item.name }}"
+      failed_when: false
+      changed_when: true
+      when: not (dry_run | default(false) | bool)
+
+    - name: Fail when an atlassian CLI build failed
+      ansible.builtin.fail:
+        msg: >-
+          go build failed for {{ item.item.name }} in
+          {{ projects_root }}/{{ item.item.dest }} (rc={{ item.rc }}).
+          {{ item.stderr | default('') | truncate(400, True) }}
+      loop: "{{ atlassian_cli_build_result.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - atlassian_cli_build_result is defined
+        - not item.skipped | default(false)
+        - item.rc | default(0) != 0
+
+    - name: Verify atlassian CLI binaries run
+      ansible.builtin.command:
+        argv:
+          - "{{ atlassian_cli_install_dir }}/{{ item.name }}"
+          - --help
+      register: atlassian_cli_verify
+      changed_when: false
+      loop: "{{ atlassian_cli_tools }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: not (dry_run | default(false) | bool)
