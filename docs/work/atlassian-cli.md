@@ -30,6 +30,25 @@ by default, so `--markdown --minimize` doesn't buy anything extra there.
 Correctness was solid both times — CLI and MCP returned identical keys,
 order, and timestamps for the same query.
 
+**The wiki's own benchmark page reproduces exactly, and still favors MCP.**
+The wiki's efficiency table (`page get`/`--minimize`/`--markdown --minimize`:
+12,866 → 10,517 → 6,441 bytes) doesn't name the page it was run against —
+it turned out to be Blake's own `~blake` space page, "Jira Tickets Reference
+Report" (id `3562794356`). Re-running that exact benchmark reproduced all
+three numbers byte-for-byte. But fetching the same page via MCP:
+
+| Call | Bytes |
+| ---- | ----- |
+| CLI, no flags | 12,866 |
+| CLI, `--minimize` | 10,517 |
+| CLI, `--markdown --minimize` | 6,441 |
+| **MCP `confluence_get_page`** | **5,409** |
+
+MCP is **16% smaller than the CLI's best case, on the CLI's own showcase
+page.** Across all tests run so far (two Jira searches, two Confluence page
+reads, one of them Blake's own benchmark page), MCP has not lost on raw
+payload size once.
+
 **When the CLI is actually the better choice:**
 
 - **Bulk operations** — `jira bulk update/transition/comment/mixed` (up to
