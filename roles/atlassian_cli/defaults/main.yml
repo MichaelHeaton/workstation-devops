@@ -1,0 +1,19 @@
+---
+atlassian_cli_enabled: true
+
+# jira-cli / confluence-cli — Go CLIs that replace the Atlassian MCP server's
+# jira_*/confluence_* tools for Claude Code, forked by Blake Garner from
+# Adobe-AIFoundations. Cloned as a visible working tree under ~/Projects
+# (not `go install`ed into the module cache) so local changes/PRs to either
+# fork use the same checkout Ansible manages. Pin explicitly; bump via PR.
+atlassian_cli_tools:
+  - name: jira
+    repo: https://github.com/blake_adobe/jira-cli.git
+    dest: adobe/jira-cli
+    version: main
+  - name: confluence
+    repo: https://github.com/blake_adobe/confluence-cli.git
+    dest: adobe/confluence-cli
+    version: main
+
+atlassian_cli_install_dir: "{{ ansible_facts['env']['HOME'] }}/.local/bin"

@@ -115,6 +115,7 @@ Git branch, AWS profile, gcloud account, and Vault cluster (`VAULT_CLUSTER`) ren
 - **kubelogin v0.1.9 only** (Ethos); bastion aliases `scb`/`bcp`/`bcp2` deprecated — use Teleport
 - **KLAM** needs IAM groups before profiles work; **TELEPORT_LOGIN** = LDAP username (not email)
 - **Corp VPN** for internal Git/Jenkins/Vault at runtime
+- **jira-cli / confluence-cli** — `roles/atlassian_cli` clones + builds from source (not pip/brew); PAT setup is manual. See [docs/work/atlassian-cli.md](docs/work/atlassian-cli.md).
 
 ## Migration
 

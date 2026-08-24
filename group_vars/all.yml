@@ -66,6 +66,7 @@ homebrew_formulae_common:
   - jq
   - yq
   - direnv
+  - go # roles/atlassian_cli builds jira-cli/confluence-cli from source
   - terraform
   - yamllint
   - ansible-lint

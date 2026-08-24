@@ -37,6 +37,13 @@
   tags:
     - work
 
+- name: Import atlassian_cli role
+  ansible.builtin.import_role:
+    name: atlassian_cli
+  when: "'work' in workstation_tags"
+  tags:
+    - work
+
 - name: Import klam role
   ansible.builtin.import_role:
     name: klam
