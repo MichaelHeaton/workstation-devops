@@ -63,6 +63,8 @@ Cloudflare DNS moved out of the standalone `McCleaton/cloudflare` repo into
 `homelab-infra/terraform/cloudflare/` (#102). It is now an HCP Terraform workspace, plan/apply
 VCS-driven on `main` — not local S3 + GHA. Clone `homelab-infra`, not a separate cloudflare repo.
 
+Hub repo: `MichaelHeaton/homelab-infra` (transferred from `specterrealm-homelab`).
+
 | Item | Value |
 | ---- | ----- |
 | Path | `~/Projects/specterrealm/homelab/homelab-infra/terraform/cloudflare` |

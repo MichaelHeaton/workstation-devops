@@ -29,7 +29,7 @@ managed_repos:
     dest: personal/memex-suite
   # cloudflare + observability consolidated into homelab-infra (#102) — TF now lives in
   # homelab-infra/terraform/{cloudflare,observability}; no standalone clones needed.
-  - repo: https://github.com/specterrealm-homelab/homelab-infra.git
+  - repo: https://github.com/MichaelHeaton/homelab-infra.git
     dest: specterrealm/homelab/homelab-infra
   - repo: https://github.com/MichaelHeaton/minecraft-modpack-family.git
     dest: specterrealm/esport/minecraft-modpack-family
