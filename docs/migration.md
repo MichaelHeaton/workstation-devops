@@ -19,7 +19,17 @@ Set profile once: `make profile` (writes `~/.workstation_profile`).
 1. Edit `group_vars/<profile>.yml` if needed.
 2. `make dry-run` then `make apply`.
 3. If you still have a duplicate tree at `~/Projects/workspaces/`, point `origin` at `git@github.com-personal:MichaelHeaton/workspaces.git` and use a single checkout at `~/Projects/workspace/` (playbook `dest`).
-4. Delete any leftover `~/Projects/work/workstation-ces_vault` checkout — that repo was merged into this one and **deleted** on GitHub ([docs/work/README.md](work/README.md)).
+4. **homelab-infra org transfer** — if you already have a clone at `~/Projects/specterrealm/homelab/homelab-infra` from `specterrealm-homelab/homelab-infra`, repoint `origin`:
+
+   ```bash
+   cd ~/Projects/specterrealm/homelab/homelab-infra
+   git remote set-url origin https://github.com/MichaelHeaton/homelab-infra.git
+   git remote -v   # confirm MichaelHeaton URL
+   ```
+
+   Or run `make apply` — the repos role repoints `origin` when it differs from `group_vars/personal.yml`. See also [homelab-infra migration runbook](https://github.com/MichaelHeaton/homelab-infra/blob/main/docs/github-personal-account-migration.md).
+
+5. Delete any leftover `~/Projects/work/workstation-ces_vault` checkout — that repo was merged into this one and **deleted** on GitHub ([docs/work/README.md](work/README.md)).
 
 ## Naming
 
@@ -27,3 +37,4 @@ Set profile once: `make profile` (writes `~/.workstation_profile`).
 | ------ | -------- |
 | `~/Projects/workspace/` | GitHub [MichaelHeaton/workspaces](https://github.com/MichaelHeaton/workspaces) (playbook `dest: workspace`) |
 | `~/Projects/personal/workstation-devops/` | GitHub [MichaelHeaton/workstation-devops](https://github.com/MichaelHeaton/workstation-devops) |
+| `~/Projects/specterrealm/homelab/homelab-infra/` | GitHub [MichaelHeaton/homelab-infra](https://github.com/MichaelHeaton/homelab-infra) (playbook `dest: specterrealm/homelab/homelab-infra`) |
