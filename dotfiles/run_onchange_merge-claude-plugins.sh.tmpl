@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# merge-claude-plugins — register ces-skills as a Claude Code plugin in ~/.claude/settings.json.
+#
+# ADDITIVE ONLY: adds the ces-skills marketplace + enables the plugin if missing.
+# Never removes or replaces other extraKnownMarketplaces/enabledPlugins entries.
+# Work machines only — ces-skills is an Adobe-internal repo.
+# Claude Code itself fetches/updates the marketplace clone on next launch; this
+# script only declares the desired state, the same way remote-settings.json
+# declares adobe-security-skills@oneadobe-security org-wide.
+#
+# Idempotent: skips if already present.
+# Requires: jq
+#
+# Bump this version string to force a re-run on next chezmoi apply:
+# plugins-policy-version: v1.0.0
+
+set -euo pipefail
+
+{{ if .feature_work -}}
+SETTINGS="$HOME/.claude/settings.json"
+
+if [[ ! -f "$SETTINGS" ]]; then
+  echo "merge-claude-plugins: $SETTINGS not found, skipping"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: merge-claude-plugins: jq not installed, skipping" >&2
+  exit 0
+fi
+
+MARKETPLACE='{
+  "source": {
+    "source": "github",
+    "repo": "adobe-security-tooling/ces-skills"
+  }
+}'
+
+# ---------------------------------------------------------------------------
+# 1. Register the ces-skills marketplace
+# ---------------------------------------------------------------------------
+has_marketplace=$(jq '(.extraKnownMarketplaces // {}) | has("ces-skills")' "$SETTINGS")
+if [[ "$has_marketplace" != "true" ]]; then
+  echo "merge-claude-plugins: adding ces-skills marketplace..."
+  tmp=$(mktemp)
+  jq --argjson mp "$MARKETPLACE" \
+    '.extraKnownMarketplaces = ((.extraKnownMarketplaces // {}) + {"ces-skills": $mp})' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+else
+  echo "merge-claude-plugins: ces-skills marketplace already registered, skipping"
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Enable the ces-skills plugin
+# ---------------------------------------------------------------------------
+already_enabled=$(jq '(.enabledPlugins // {}) | has("ces-skills@ces-skills")' "$SETTINGS")
+if [[ "$already_enabled" != "true" ]]; then
+  echo "merge-claude-plugins: enabling ces-skills@ces-skills..."
+  tmp=$(mktemp)
+  jq '.enabledPlugins = ((.enabledPlugins // {}) + {"ces-skills@ces-skills": true})' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done"
+else
+  echo "merge-claude-plugins: ces-skills@ces-skills already enabled, skipping"
+fi
+
+echo "merge-claude-plugins: done"
+{{ else -}}
+echo "merge-claude-plugins: not a work machine, skipping"
+{{ end -}}
