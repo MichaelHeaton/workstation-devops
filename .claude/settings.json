@@ -33,7 +33,9 @@
       "Bash(git -C * worktree list*)",
       "mcp__2026a88b-8ad2-4256-9eca-84b6d836599b__slack_read_thread",
       "mcp__2026a88b-8ad2-4256-9eca-84b6d836599b__slack_search_public_and_private",
-      "mcp__2026a88b-8ad2-4256-9eca-84b6d836599b__slack_read_channel"
+      "mcp__2026a88b-8ad2-4256-9eca-84b6d836599b__slack_read_channel",
+      "mcp__2026a88b-8ad2-4256-9eca-84b6d836599b__slack_search_public",
+      "mcp__ccd_session_mgmt__list_sessions"
     ]
   }
 }
