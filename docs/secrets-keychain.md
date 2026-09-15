@@ -13,8 +13,6 @@
 | Command | Purpose |
 | --------- | --------- |
 | `make secrets-check` | Verify Keychain items and local secret files (no password output) |
-| `make secrets-notion` | Interactive create/update Notion MCP token in Keychain |
-| `make secrets-linear` | Interactive create/update Linear MCP API key in Keychain |
 | `make secrets-atlassian` | Atlassian MCP: store Jira + Confluence tokens in Keychain and create config file |
 | `make secrets-atlassian-env` | Create `~/.mcp/env/atlassian-config.env` from template (config only, no tokens) |
 | `make secrets-help` | List all secret setup commands |
@@ -25,8 +23,6 @@ Metadata lives in `config/secrets-registry.yml`:
 
 | ID | Store | Service / path | Account | Used by |
 | ---- | ------- | ---------------- | --------- | --------- |
-| `notion_mcp` | Keychain | `claude-mcp-notion` | `claude-code` | Notion MCP |
-| `linear_mcp` | Keychain | `claude-mcp-linear` | `claude-code` | Linear MCP |
 | `klam_artifactory_api_key` | Shell env | `KLAM_ARTIFACTORY_API_KEY` | — | KLAM pip install |
 | `atlassian_mcp_jira` | Keychain | `claude-mcp-atlassian-jira` | `claude-code` | Atlassian MCP |
 | `atlassian_mcp_confluence` | Keychain | `claude-mcp-atlassian-confluence` | `claude-code` | Atlassian MCP |
@@ -38,8 +34,6 @@ Employer URLs, repo paths, and any legacy Keychain service names belong in **`gr
 
 | Secret | Where it lives |
 | -------- | ---------------- |
-| Notion MCP token | Keychain (`make secrets-notion`) |
-| Linear MCP API key | Keychain (`make secrets-linear`) |
 | Artifactory API key | `export KLAM_ARTIFACTORY_API_KEY=…` at apply time |
 | Jira / Confluence tokens | Keychain (`make secrets-atlassian`) |
 | SSH private keys | `~/.ssh/` |
