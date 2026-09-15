@@ -8,9 +8,12 @@ Adobe standardized on GitHub Copilot as the primary coding agent (Claude Code re
 
 | Piece | Location |
 | ------- | ---------- |
-| `copilot-cli` Homebrew cask | `group_vars/work.yml` → `homebrew_casks_profile` |
+| `copilot-cli` Homebrew cask (CLI) | `group_vars/work.yml` → `homebrew_casks_profile` |
+| `github-copilot-app` Homebrew cask (desktop app, `GitHub Copilot.app`) | `group_vars/work.yml` → `homebrew_casks_profile` + `homebrew_cask_app_bundles` |
 
-Work profile sets `homebrew_install_packages: false` (employer IT installs apps outside Homebrew) — `make apply` **detects** `copilot-cli` and reports it missing rather than installing it, unless you override:
+Both the CLI and the desktop app read the same config directory, `~/.copilot/` (MCP servers in `~/.copilot/mcp-config.json`, skills in `~/.copilot/skills/<name>/`).
+
+Work profile sets `homebrew_install_packages: false` (employer IT installs apps outside Homebrew) — `make apply` **detects** these casks and reports them missing rather than installing them, unless you override:
 
 ```bash
 make apply EXTRA_VARS='-e homebrew_install_packages=true' TAGS=work
@@ -20,6 +23,7 @@ Or install directly:
 
 ```bash
 brew install --cask copilot-cli
+brew install --cask github-copilot-app
 ```
 
 ## One-time manual steps (cannot be automated)
@@ -41,7 +45,7 @@ brew install --cask copilot-cli
    ```
 
    then symlink `~/.claude/skills` → `~/.copilot/skills` so Copilot can read them (skills become manually invoked, not auto-triggered).
-4. **Migrate MCP servers** — ask Copilot directly (`copilot mcp add`); reported to work cleanly for the servers already in `~/.mcp/servers.json`.
+4. **Migrate MCP servers** — ask Copilot directly (`copilot mcp add`); reported to work cleanly for the servers already in `~/.mcp/servers.json`. Manual alternative: edit `~/.copilot/mcp-config.json` directly — each server needs a `type` (`local` or `http`) and a `tools` allowlist (`["*"]` to match Claude's default), and names can't contain spaces. Claude Desktop's OAuth-based "Web" connectors don't carry over automatically — copy the server URL from Claude's Connectors settings, add it as `type: "http"`, then sign in fresh when Copilot prompts.
 
 ## Useful links
 
