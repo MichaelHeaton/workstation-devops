@@ -21,6 +21,7 @@ Employer-specific URLs and repos: **`group_vars/work.local.yml`** (gitignored; c
 | Teleport fzf (`t`, `tshl`) | `roles/teleport` — [teleport.md](teleport.md) |
 | kubelogin v0.1.9 (Ethos) | `roles/kubernetes` — [kubernetes.md](kubernetes.md) |
 | GHEC SSH + gh config | `roles/git_github` + chezmoi — [git-github.md](git-github.md) |
+| GitHub Copilot CLI (Homebrew cask) | `group_vars/work.yml` → `homebrew_casks_profile` — [github-copilot.md](github-copilot.md) |
 
 ## Import history
 

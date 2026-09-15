@@ -24,9 +24,12 @@ homebrew_formulae_profile:
 
 homebrew_casks_profile:
   - microsoft-teams
+  - copilot-cli
+  - github-copilot-app
 
 homebrew_cask_app_bundles:
   microsoft-teams: Microsoft Teams.app
+  github-copilot-app: GitHub Copilot.app
 
 # AI Spend Tracker — public DMG (no employer GitHub SSO). Detect always; install via make apply.
 mac_dmg_apps_profile:
