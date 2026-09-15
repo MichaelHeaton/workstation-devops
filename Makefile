@@ -1,4 +1,4 @@
-.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-notion secrets-linear secrets-atlassian secrets-atlassian-env secrets-help repos-export repos-sync-notion
+.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-atlassian secrets-atlassian-env secrets-help
 
 help:
 	@echo "workstation-devops — available targets"
@@ -26,14 +26,8 @@ help:
 	@echo "  Secrets"
 	@echo "    make secrets-check                  Verify all Keychain items and local secret files"
 	@echo "    make secrets-help                   List all secret setup commands"
-	@echo "    make secrets-notion                 Notion MCP token → Keychain"
-	@echo "    make secrets-linear                 Linear MCP API key → Keychain"
 	@echo "    make secrets-atlassian              Atlassian Jira/Confluence tokens + config file"
 	@echo "    make secrets-atlassian-env          Create ~/.mcp/env/atlassian-config.env"
-	@echo ""
-	@echo "  Repos"
-	@echo "    make repos-export                   Export managed_repos to Notion Repositories DB"
-	@echo "    make repos-sync-notion              Export + print Notion sync instructions"
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -93,12 +87,6 @@ secrets-check:
 
 secrets: secrets-check
 
-secrets-notion:
-	@./scripts/secrets/keychain-notion.sh
-
-secrets-linear:
-	@./scripts/secrets/keychain-linear.sh
-
 secrets-atlassian:
 	@./scripts/secrets/keychain-atlassian.sh
 
@@ -107,16 +95,3 @@ secrets-atlassian-env:
 
 secrets-help:
 	@./scripts/secrets/help.sh
-
-# Ansible managed_repos → Notion Repositories (Projects dest, Clone scope)
-# Override profile: make repos-export REPOS_PROFILE=work
-REPOS_PROFILE ?= $(if $(WORKSTATION_PROFILE),$(WORKSTATION_PROFILE),personal)
-
-repos-export:
-	@./scripts/export-managed-repos.py --profile $(REPOS_PROFILE)
-
-repos-sync-notion: repos-export
-	@echo ""
-	@echo "Next: sync Projects dest + Clone scope to Notion (Repositories DB)."
-	@echo "  Use Notion MCP — procedure: scripts/sync-notion-repo-layout.md"
-	@echo "  Or ask your agent: sync repo dests to Notion"
