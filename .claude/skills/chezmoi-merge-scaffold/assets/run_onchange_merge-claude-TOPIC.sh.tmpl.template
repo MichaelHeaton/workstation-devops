@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# merge-claude-__TOPIC__ — __ONE_LINE_PURPOSE__
+#
+# ADDITIVE ONLY: __ADDITIVE_GUARANTEE__ (say exactly what this script will
+# never remove or overwrite — existing allow/deny entries, other hooks,
+# mcpServers, additionalDirectories, model, theme, etc.)
+#
+# Idempotent: skips each section if already present.
+# Requires: jq
+#
+# Bump this version string to force a re-run on next chezmoi apply:
+# __TOPIC__-policy-version: v1.0.0
+
+set -euo pipefail
+
+# OPTIONAL work-only gating — delete this line and its matching {{ end -}}
+# near the bottom if __TOPIC__ applies to every machine. Only wrap the whole
+# body (see run_onchange_merge-claude-plugins.sh.tmpl) when the merge target
+# is genuinely work-only (an internal marketplace, work-only hook, etc.).
+{{ if .feature_work -}}
+
+SETTINGS="$HOME/.claude/settings.json"
+
+if [[ ! -f "$SETTINGS" ]]; then
+  echo "merge-claude-__TOPIC__: $SETTINGS not found, skipping"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: merge-claude-__TOPIC__: jq not installed, skipping" >&2
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Absolute paths for any binaries referenced inside hook commands — guards
+# against PATH-shadowing/binary-planting. Delete this block if the script
+# only merges static JSON (permission entries, plugin registration) with no
+# hook commands.
+# ---------------------------------------------------------------------------
+# JQ_BIN=$(command -v jq)
+
+# ---------------------------------------------------------------------------
+# __TOPIC__ payload to merge in. Shape depends on the target:
+#   - permissions.allow / permissions.deny   -> flat JSON array of strings
+#   - hooks.<Event>                          -> one hook-block object (see
+#                                               run_onchange_merge-claude-hooks.sh.tmpl)
+#   - extraKnownMarketplaces / enabledPlugins -> JSON object keyed by name
+# ---------------------------------------------------------------------------
+__TOPIC_UPPER___ENTRIES='[
+  "__EXAMPLE_ENTRY__"
+]'
+
+# ---------------------------------------------------------------------------
+# Merge — pick ONE pattern matching the payload shape above, delete the rest.
+# ---------------------------------------------------------------------------
+
+# Pattern A: flat array merge (permissions.allow / permissions.deny)
+current_count=$(jq '(.__JSON_PATH__ // []) | length' "$SETTINGS")
+merged_count=$(jq --argjson new "$__TOPIC_UPPER___ENTRIES" \
+  '((.__JSON_PATH__ // []) + $new | unique) | length' "$SETTINGS")
+if [[ "$merged_count" -gt "$current_count" ]]; then
+  echo "merge-claude-__TOPIC__: adding $((merged_count - current_count)) new entries..."
+  tmp=$(mktemp)
+  jq --argjson new "$__TOPIC_UPPER___ENTRIES" \
+    '.__JSON_PATH__ = ((.__JSON_PATH__ // []) + $new | unique)' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "  done (total: $merged_count)"
+else
+  echo "merge-claude-__TOPIC__: up to date ($current_count entries)"
+fi
+
+# Pattern B: single hook-block presence check (hooks.<Event>, matcher-scoped)
+# has_block=$(jq '[.hooks.__EVENT__[]? | select(.matcher == "__MATCHER__")] | length' "$SETTINGS")
+# if [[ "$has_block" -eq 0 ]]; then
+#   echo "merge-claude-__TOPIC__: adding __EVENT__ hook..."
+#   tmp=$(mktemp)
+#   jq --argjson hook "$HOOK_BLOCK" \
+#     '.hooks.__EVENT__ = ((.hooks.__EVENT__ // []) + [$hook])' \
+#     "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+#   echo "  done"
+# else
+#   echo "merge-claude-__TOPIC__: __EVENT__ hook already present, skipping"
+# fi
+
+# Pattern C: keyed object presence check (extraKnownMarketplaces / enabledPlugins)
+# already_present=$(jq '(.__JSON_PATH__ // {}) | has("__KEY__")' "$SETTINGS")
+# if [[ "$already_present" != "true" ]]; then
+#   echo "merge-claude-__TOPIC__: adding __KEY__..."
+#   tmp=$(mktemp)
+#   jq '.__JSON_PATH__ = ((.__JSON_PATH__ // {}) + {"__KEY__": __VALUE__})' \
+#     "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+#   echo "  done"
+# else
+#   echo "merge-claude-__TOPIC__: __KEY__ already present, skipping"
+# fi
+
+echo "merge-claude-__TOPIC__: done"
+
+{{ else -}}
+echo "merge-claude-__TOPIC__: not a work machine, skipping"
+{{ end -}}
