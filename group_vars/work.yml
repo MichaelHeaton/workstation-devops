@@ -24,6 +24,7 @@ homebrew_formulae_profile:
 
 homebrew_casks_profile:
   - microsoft-teams
+  - copilot-cli
 
 homebrew_cask_app_bundles:
   microsoft-teams: Microsoft Teams.app
