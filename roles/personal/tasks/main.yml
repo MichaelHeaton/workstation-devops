@@ -1,9 +1,11 @@
 ---
 # Personal profile — home-tagged tasks (see docs/tags.md).
 
-- name: Show AWS config block for platform-bootstrap (dry-run)
+- name: Show AWS config (dry-run)
   ansible.builtin.debug:
-    msg: Would ensure [profile platform-bootstrap] exists in ~/.aws/config (region/output only).
+    msg: >-
+      Would write managed ~/.aws/config with [profile {{ personal_aws_profile }}]
+      and [profile cvmtb] (region/output only; credentials stay in ~/.aws/credentials).
   when:
     - dry_run | default(false) | bool
     - "'home' in workstation_tags"
@@ -21,12 +23,11 @@
   tags:
     - home
 
-- name: Ensure platform-bootstrap profile in AWS config
-  ansible.builtin.blockinfile:
-    path: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
-    marker: "# {mark} ANSIBLE MANAGED - workstation-devops platform-bootstrap"
-    block: "{{ lookup('file', 'aws_platform_bootstrap_profile.ini') }}"
-    create: true
+# Own the whole file so re-apply heals orphans from `aws configure` or broken blockinfile markers.
+- name: Write managed AWS config profiles
+  ansible.builtin.template:
+    src: aws_config.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
     mode: "0600"
   when:
     - not (dry_run | default(false) | bool)

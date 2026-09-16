@@ -12,6 +12,7 @@ format = 'on [$symbol$profile( \($region\))(\[$duration\])]($style) '
 style = "bold yellow"
 
 [aws.profile_aliases]
+cvmtb = "CVMTB (...7495)"
 ces_sandbox = "sandbox (...3550)"
 ces_dev = "dev (...9010)"
 ces_prd = "PROD (...1222)"

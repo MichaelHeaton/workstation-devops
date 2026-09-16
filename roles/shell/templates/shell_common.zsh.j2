@@ -20,6 +20,7 @@ mytools() {
   if (( $+functions[platform_bootstrap] )); then
     echo "  ── Personal AWS ─────────────────────────────────────────────────"
     echo "    platform_bootstrap  re-export AWS_PROFILE + region + tfstate bucket"
+    (( $+functions[cvmtb] )) && echo "    cvmtb               Cedar Valley MTB site (616714047495)"
     echo ""
     found=1
   fi
