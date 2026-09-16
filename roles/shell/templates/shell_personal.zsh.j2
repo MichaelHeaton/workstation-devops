@@ -10,6 +10,13 @@ platform_bootstrap() {
   export TF_STATE_BUCKET_NAME="{{ personal_tf_state_bucket }}"
 }
 
+# Cedar Valley MTB org site (account 616714047495) — see docs/home/cvmtb-aws.md
+cvmtb() {
+  export AWS_PROFILE="cvmtb"
+  export AWS_REGION="us-west-2"
+  export TF_STATE_BUCKET_NAME="rcv-website-terraform-state-616714047495"
+}
+
 # Starship shows this instead of the full VAULT_ADDR URL. Only set a default
 # when an address is already present (unmanaged ~/.zshrc on the homelab Mac)
 # and a vault_* alias hasn't already named the cluster.

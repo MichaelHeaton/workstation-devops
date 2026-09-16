@@ -1,0 +1,13 @@
+# Managed by workstation-devops (roles/personal). Region/output only.
+# Access keys live in ~/.aws/credentials — see docs/home/platform-aws.md and docs/home/cvmtb-aws.md.
+# Do not run `aws configure --profile …` for these profiles; it rewrites this file.
+
+[default]
+
+[profile {{ personal_aws_profile }}]
+region = {{ personal_aws_region }}
+output = json
+
+[profile cvmtb]
+region = {{ personal_aws_region }}
+output = json

@@ -24,11 +24,13 @@ spoke plans, and helper scripts — not for applying platform-bootstrap root mod
 
 ## One-time credentials
 
-Chezmoi manages **`~/.aws/config`** (profile metadata only). **Access keys** stay in
-`~/.aws/credentials` — create manually:
+Ansible (`roles/personal`, `home` tag) owns **`~/.aws/config`** (region/output only).
+**Access keys** stay in `~/.aws/credentials` — set them without rewriting config:
 
 ```bash
-aws configure --profile platform-bootstrap
+aws configure set aws_access_key_id AKIA... --profile platform-bootstrap
+aws configure set aws_secret_access_key ... --profile platform-bootstrap
+# Do not use `aws configure --profile …` — it rewrites ~/.aws/config and fights Ansible.
 aws sts get-caller-identity --profile platform-bootstrap
 ```
 
