@@ -88,12 +88,12 @@ Requires: `tsh` and `fzf` on PATH, `TELEPORT_LOGIN` set (= LDAP username).
 
 ### Personal AWS (personal profile)
 
-| Command | What it does |
-| --------- | -------------------------------------------------- |
-| `platform_bootstrap` | Re-export `AWS_PROFILE=platform-bootstrap`, `AWS_REGION=us-west-2`, `TF_STATE_BUCKET_NAME=mccleaton-tfstate` |
-| `cvmtb` | Cedar Valley MTB — `AWS_PROFILE=cvmtb`, account `616714047495` — [cvmtb-aws.md](docs/home/cvmtb-aws.md) |
-
-Auto-set on shell startup for personal machines. See [docs/home/platform-aws.md](docs/home/platform-aws.md).
+No shortcuts and no default `AWS_PROFILE`. The only laptop profile is the break-glass SSO
+profile `specterrealm-management` (platform-bootstrap `make op-*`, ADR-011), chosen explicitly
+each time; never for day-to-day work or from AI tools. See
+[docs/home/aws-break-glass.md](docs/home/aws-break-glass.md). The old `platform-bootstrap` and
+`cvmtb` key profiles are retired ([platform-aws.md](docs/home/platform-aws.md),
+[cvmtb-aws.md](docs/home/cvmtb-aws.md)).
 
 ### Prompt (Starship)
 
@@ -107,7 +107,7 @@ Git branch, AWS profile, gcloud account, and Vault cluster (`VAULT_CLUSTER`) ren
 - **Work chezmoi identity** — first work run: `make apply EXTRA_VARS='-e work_username=YOUR_LDAP -e work_email=you@work.example'`. Stored in `~/.config/chezmoi/chezmoi.yaml` and reused on later runs (including `TAGS=shell`). CLI `-e work_username=…` still overrides. Older chezmoi configs with a legacy username key are migrated on read.
 - **Work local overrides** — employer URLs/repos in `group_vars/work.local.yml` (gitignored; copy from `work.local.yml.example`).
 - **Secrets** — Keychain for MCP tokens; `make secrets-check`. See [docs/secrets-keychain.md](docs/secrets-keychain.md).
-- **Personal AWS config** — `roles/personal` owns `~/.aws/config` via template (region/output). Keys stay in `~/.aws/credentials`. Do not run `aws configure --profile …` for managed profiles; use `aws configure set aws_access_key_id|aws_secret_access_key --profile …` instead.
+- **Personal AWS config** — `roles/personal` owns `~/.aws/config` via template, driven by `personal_aws_profiles` / `personal_aws_sso_sessions` in `group_vars/personal.yml` (SSO only, no static keys). Do not run `aws configure` or `aws configure sso`; they rewrite the file. Apply alone with `--tags aws` (see [docs/tags.md](docs/tags.md)). `~/.aws/credentials` is not managed.
 - **SSH host keys** — `repos` role runs `ssh-keyscan` before cloning.
 
 ## Work profile (CES Vault)

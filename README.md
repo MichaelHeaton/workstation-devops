@@ -41,7 +41,7 @@ make apply      # apply (installs missing items only when profile allows)
 
 | Profile | Typical machine | Extra installs |
 | --------- | ----------------- | ---------------- |
-| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack); AWS `platform-bootstrap` profile — [docs/home/platform-aws.md](docs/home/platform-aws.md) |
+| `personal` | Your Mac | Homelab repos, Steam; Homebrew installs + optional MAS (Slack); break-glass AWS SSO profile `specterrealm-management` — [docs/home/aws-break-glass.md](docs/home/aws-break-glass.md) |
 | `work` | Work laptop | Detect-only packages (IT installs); no MAS; CES Vault docs + MCP dotfiles — [docs/work/](docs/work/) |
 
 **Override for one run:** `ansible-playbook site.yml -e workstation_profile=work`

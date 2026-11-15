@@ -19,6 +19,16 @@ else
   ansible-playbook tests/playbooks/render-shell-templates.yml
 fi
 
+echo "==> ~/.aws/config render + aws tag scope"
+ansible-playbook tests/playbooks/render-aws-config.yml
+
+echo "==> retired AWS profiles gone (platform-bootstrap, cvmtb)"
+RETIRED_AWS_RE='\[profile (platform-bootstrap|cvmtb)\]|AWS_PROFILE="?(platform-bootstrap|cvmtb|\{\{ *personal_aws_profile)|personal_aws_profile([^s]|$)|^ *(platform_bootstrap|cvmtb)\(\)'
+if grep -rnE "$RETIRED_AWS_RE" roles group_vars dotfiles tests/playbooks; then
+  echo "FAIL: retired platform-bootstrap / cvmtb AWS profile references remain (LAB-1227)" >&2
+  exit 1
+fi
+
 echo "==> site.yml personal dry-run (full playbook, no writes)"
 ansible-playbook site.yml \
   -e dry_run=true \

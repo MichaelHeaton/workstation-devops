@@ -37,4 +37,4 @@ Personal `~/.zshrc` may still have an unmanaged init line from before this was m
 
 - Vault aliases set `VAULT_CLUSTER` — [vault-tools.md](work/vault-tools.md)
 - KLAM AWS + terminal colors — [klam.md](work/klam.md)
-- Personal AWS defaults — [platform-aws.md](home/platform-aws.md)
+- Personal AWS (break-glass SSO profile) — [aws-break-glass.md](home/aws-break-glass.md)
