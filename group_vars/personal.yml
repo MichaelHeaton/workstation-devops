@@ -5,9 +5,23 @@
 workstation_tags_profile:
   - home
 
-# Personal AWS / Terraform (platform-bootstrap). Override in personal.local.yml if needed.
-personal_aws_profile: platform-bootstrap
+# Personal AWS — rendered into ~/.aws/config by roles/personal (`aws` tag). SSO only: no
+# static keys. See docs/home/aws-break-glass.md. No profile is exported as AWS_PROFILE.
+# Add another SSO session (e.g. Cedar Valley MTB later) as one more entry in each list.
 personal_aws_region: us-west-2
+personal_aws_sso_sessions:
+  - name: specterrealm
+    start_url: https://d-926631fcf2.awsapps.com/start
+    region: us-west-2
+    registration_scopes: sso:account:access
+personal_aws_profiles:
+  # Break-glass operator profile for the AWS Organization (platform-bootstrap `make op-*`, ADR-011).
+  - name: specterrealm-management
+    region: us-west-2
+    output: json
+    sso_session: specterrealm
+    sso_account_id: "893407364620"
+    sso_role_name: AdministratorAccess
 personal_tf_state_bucket: mccleaton-tfstate
 personal_vault_cluster: specterrealm
 

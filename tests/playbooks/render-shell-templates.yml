@@ -8,7 +8,6 @@
   gather_facts: true
   vars:
     workstation_profile: personal
-    personal_aws_profile: platform-bootstrap
     personal_aws_region: us-west-2
     personal_tf_state_bucket: test-tfstate-bucket
     personal_vault_cluster: specterrealm
@@ -80,6 +79,22 @@
         fail_msg: vault_functions.zsh.j2 must export VAULT_CLUSTER on cluster aliases and vault_mgmt
       vars:
         vault_functions_body: "{{ vault_functions_rendered.content | b64decode }}"
+
+    - name: Slurp rendered personal shell fragment
+      ansible.builtin.slurp:
+        src: "{{ _test_dir }}/shell-personal.zsh"
+      register: shell_personal_rendered
+
+    - name: Personal shell sets no default AWS_PROFILE and no retired helpers (LAB-1227)
+      ansible.builtin.assert:
+        that:
+          - shell_personal_body is not search('export AWS_PROFILE')
+          - "'platform_bootstrap()' not in shell_personal_body"
+          - "'cvmtb()' not in shell_personal_body"
+          - "'export AWS_REGION=' in shell_personal_body"
+        fail_msg: shell_personal.zsh.j2 must not export AWS_PROFILE or define platform_bootstrap/cvmtb helpers
+      vars:
+        shell_personal_body: "{{ shell_personal_rendered.content | b64decode }}"
 
     - name: Stat starship binary
       ansible.builtin.stat:

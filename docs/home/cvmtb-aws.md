@@ -1,52 +1,24 @@
-# Cedar Valley MTB AWS (cvmtb profile)
+# Cedar Valley MTB AWS (`cvmtb` profile) — RETIRED
 
-Volunteer team website infrastructure — **separate** from McCleaton `platform-bootstrap`.
+> **Retired (LAB-1227, Nov 2026).** The laptop `cvmtb` profile and its static keys were only for
+> running the Website repo's Terraform from this machine. The Website repo now runs from its own
+> pipeline, so the profile was removed from `~/.aws/config` and the `cvmtb` shell helper is gone.
+> A Cedar Valley MTB SSO session may be added later on the same pattern as
+> [aws-break-glass.md](aws-break-glass.md); not now.
 
 | Item | Value |
 | ---- | ----- |
-| AWS account | `616714047495` |
-| Profile | `cvmtb` |
-| Region | `us-west-2` |
-| Terraform state bucket | `rcv-website-terraform-state-616714047495` |
+| AWS account | `616714047495` (Cedar Valley MTB) |
 | Repo | [Cedar-Valley-MTB/Website](https://github.com/Cedar-Valley-MTB/Website) |
 
-## One-time credentials
+## Manual cleanup (once)
 
-Ansible (`roles/personal`, `home` tag) owns **`~/.aws/config`** (region/output only).
-Keys stay in `~/.aws/credentials` — set them without rewriting config:
+Ansible never touches `~/.aws/credentials`, so these steps are yours.
 
-```bash
-aws configure set aws_access_key_id AKIA... --profile cvmtb
-aws configure set aws_secret_access_key ... --profile cvmtb
-# Do not use `aws configure --profile …` — it rewrites ~/.aws/config and fights Ansible.
-aws sts get-caller-identity --profile cvmtb   # Account must be 616714047495
-```
-
-## Daily use
-
-**In the Website repo**, direnv sets `AWS_PROFILE=cvmtb` via `.envrc`:
-
-```bash
-cd ~/Projects/Ceder-Valley-MTB/Website
-direnv allow
-aws sts get-caller-identity
-```
-
-**Anywhere else**, switch explicitly (do not use default `platform-bootstrap`):
-
-```bash
-cvmtb
-aws sts get-caller-identity
-```
-
-## Infra commands
-
-From the Website repo root:
-
-```bash
-make infra-bootstrap
-make infra-preview-apply
-make infra-preview-output
-```
-
-See Website `docs/aws-setup.md` and `infra/README.md`.
+1. Note the key ID: in `~/.aws/credentials`, copy the `aws_access_key_id` value under `[cvmtb]`.
+2. In AWS account **`616714047495`**, IAM console → **Users** → the user that owns that key ID →
+   **Security credentials** → **Access keys**: **Deactivate** it. Leave it inactive for a few
+   days to confirm the Website pipeline is unaffected, then **Delete** it.
+3. Delete the whole `[cvmtb]` section from `~/.aws/credentials`.
+4. In the Website repo, `.envrc` may still set `AWS_PROFILE=cvmtb`; that profile no longer
+   exists on this laptop (tracked in that repo, not here).

@@ -1,0 +1,94 @@
+---
+# Render roles/personal/templates/aws_config.j2 from the real group_vars/personal.yml and
+# compare byte-for-byte with tests/fixtures/aws_config.expected (LAB-1227).
+# Also checks the `aws` tag selects only the AWS tasks, so it can run without a full apply.
+
+- name: Render and check ~/.aws/config template
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars_files:
+    - ../../group_vars/all.yml
+    - ../../group_vars/personal.yml
+  vars:
+    _test_dir: "{{ ansible_facts['env']['HOME'] }}/.cache/workstation-devops-test-aws"
+  tasks:
+    - name: Ensure test cache dir
+      ansible.builtin.file:
+        path: "{{ _test_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render aws_config.j2
+      ansible.builtin.template:
+        src: ../../roles/personal/templates/aws_config.j2
+        dest: "{{ _test_dir }}/config"
+        mode: "0600"
+
+    - name: Slurp rendered config
+      ansible.builtin.slurp:
+        src: "{{ _test_dir }}/config"
+      register: aws_config_rendered
+
+    - name: Rendered config matches the expected file exactly
+      ansible.builtin.assert:
+        that:
+          - aws_config_body == lookup('ansible.builtin.file', playbook_dir ~ '/../fixtures/aws_config.expected', rstrip=False)
+        fail_msg: "aws_config.j2 render differs from tests/fixtures/aws_config.expected:\n{{ aws_config_body }}"
+      vars:
+        aws_config_body: "{{ aws_config_rendered.content | b64decode }}"
+
+    - name: No retired profiles and no static keys in rendered config
+      ansible.builtin.assert:
+        that:
+          - "'platform-bootstrap' not in aws_config_body"
+          - "'cvmtb' not in aws_config_body"
+          - "'aws_access_key_id' not in aws_config_body"
+          - "'aws_secret_access_key' not in aws_config_body"
+        fail_msg: rendered ~/.aws/config must hold only SSO profiles (no platform-bootstrap / cvmtb / keys)
+      vars:
+        aws_config_body: "{{ aws_config_rendered.content | b64decode }}"
+
+    - name: List tasks selected by --tags aws
+      ansible.builtin.command:
+        argv:
+          - ansible-playbook
+          - "{{ playbook_dir }}/../../site.yml"
+          - -e
+          - workstation_profile=personal
+          - --tags
+          - aws
+          - --list-tasks
+      changed_when: false
+      register: aws_tag_tasks
+
+    - name: The aws tag selects only the AWS config tasks and the personal shell block
+      ansible.builtin.assert:
+        that:
+          - _selected | sort == _expected | sort
+        fail_msg: "--tags aws selects unexpected tasks: {{ _selected }}"
+      vars:
+        _expected:
+          - Show AWS config (dry-run)
+          - Ensure ~/.aws exists
+          - Write managed AWS config (SSO profiles + sso-sessions)
+          - Deploy personal shell fragment to zshrc
+        _selected: >-
+          {{ aws_tag_tasks.stdout_lines
+             | select('search', 'TAGS: \[')
+             | reject('search', '^\s*play #')
+             | map('regex_replace', '^\s*(?:[\w-]+ : )?(.+?)\s+TAGS: .*$', '\1')
+             | reject('in', _always_pre_tasks)
+             | list }}
+        _always_pre_tasks:
+          - Load profile-specific variables
+          - Check for optional local profile overrides
+          - Load optional local profile overrides
+          - Merge workstation feature tag allowlist
+          - Read persisted chezmoi identity
+          - Apply persisted chezmoi identity (when seeded)
+
+    - name: Remove test artifacts
+      ansible.builtin.file:
+        path: "{{ _test_dir }}"
+        state: absent

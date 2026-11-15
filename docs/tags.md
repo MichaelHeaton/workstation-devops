@@ -60,6 +60,15 @@ make apply TAGS=dotfiles
 make apply TAGS=shell
 ```
 
+**Only `~/.aws/config` (+ the personal zshrc block), no full run** — check first, then apply:
+
+```bash
+ansible-playbook site.yml -i inventory/localhost.yml -e workstation_profile=personal --tags aws --check --diff
+ansible-playbook site.yml -i inventory/localhost.yml -e workstation_profile=personal --tags aws --diff
+```
+
+Add `--skip-tags shell` to leave `~/.zshrc` alone. Details: [aws-break-glass.md](home/aws-break-glass.md).
+
 ## Tag → capability map
 
 | Tag | What runs |
@@ -68,7 +77,8 @@ make apply TAGS=shell
 | `shell` | Common zshrc block (PATH, ai-skills `accounts.shell`, guarded `starship init`); personal block when `home` is in allowlist |
 | `editors` | Cursor/VS Code settings + extension install script |
 | `work` | Work shell, Teleport fzf, kubelogin v0.1.9, GHEC SSH, KLAM, Vault tools, work editor extensions |
-| `home` | Personal AWS defaults (`platform-bootstrap` + `cvmtb`), owned `~/.aws/config`, homelab tasks in `roles/personal/` — see [platform-aws.md](home/platform-aws.md) |
+| `home` | Personal shell defaults (`AWS_REGION`, no `AWS_PROFILE`), owned `~/.aws/config` (break-glass SSO profile only), homelab tasks in `roles/personal/` — see [aws-break-glass.md](home/aws-break-glass.md) |
+| `aws` | *Narrow, for applying alone:* only the `~/.aws/config` tasks in `roles/personal/` plus the `shell-personal` block in `~/.zshrc`. Nothing else runs. See below. |
 | `cli-capture` | *(opt-in, not in any default allowlist)* Automatic CLI output capture — zsh wrapper functions for `terraform`/`ansible-playbook`/`kubectl`/`vault` tee raw output into `~/.cli-output/raw/`; a launchd LaunchAgent (`roles/cli_capture/`) redacts + filters it into `~/.claude/logs/` via `clog.py` and purges raw captures past retention. Enable with `make apply EXTRA_VARS='-e workstation_tags_extra=[cli-capture]'`. |
 
 Chezmoi templates read boolean flags from `~/.config/chezmoi/chezmoi.yaml` (`feature_work`, `feature_editors`, …), refreshed on every `make apply`.

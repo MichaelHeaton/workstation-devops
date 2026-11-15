@@ -84,8 +84,8 @@
       ansible.builtin.debug:
         msg: >-
           Would add personal shell block to ~/.zshrc
-          (AWS_PROFILE={{ personal_aws_profile }}, AWS_REGION={{ personal_aws_region }},
-          TF_STATE_BUCKET_NAME={{ personal_tf_state_bucket }}).
+          (AWS_REGION={{ personal_aws_region }},
+          TF_STATE_BUCKET_NAME={{ personal_tf_state_bucket }}; no AWS_PROFILE default).
       when:
         - dry_run | default(false) | bool
         - "'home' in workstation_tags"
@@ -102,3 +102,5 @@
       tags:
         - shell
         - home
+        # `aws` tag: rewrites only this marked block in ~/.zshrc (drops the old AWS_PROFILE export).
+        - aws

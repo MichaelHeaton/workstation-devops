@@ -1,0 +1,17 @@
+# Managed by workstation-devops (roles/personal, `aws` tag) from group_vars/personal.yml.
+# SSO only, no static keys. Break-glass use only: see docs/home/aws-break-glass.md.
+# Do not run `aws configure` or `aws configure sso`; they rewrite this file. Edit the vars instead.
+
+[default]
+
+[profile specterrealm-management]
+region = us-west-2
+output = json
+sso_session = specterrealm
+sso_account_id = 893407364620
+sso_role_name = AdministratorAccess
+
+[sso-session specterrealm]
+sso_start_url = https://d-926631fcf2.awsapps.com/start
+sso_region = us-west-2
+sso_registration_scopes = sso:account:access

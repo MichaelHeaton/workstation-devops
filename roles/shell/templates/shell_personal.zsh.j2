@@ -1,21 +1,9 @@
-# Personal / homelab AWS — platform-bootstrap (workstation-devops)
-# Credentials: ~/.aws/credentials [platform-bootstrap] — see docs/home/platform-aws.md
-export AWS_PROFILE="${AWS_PROFILE:-{{ personal_aws_profile }}}"
+# Personal / homelab shell defaults (workstation-devops)
+# No default AWS_PROFILE on purpose: the only laptop AWS profile is the break-glass
+# `specterrealm-management` SSO profile, chosen explicitly each time (--profile / PROFILE=).
+# See docs/home/aws-break-glass.md.
 export AWS_REGION="${AWS_REGION:-{{ personal_aws_region }}}"
 export TF_STATE_BUCKET_NAME="${TF_STATE_BUCKET_NAME:-{{ personal_tf_state_bucket }}}"
-
-platform_bootstrap() {
-  export AWS_PROFILE="{{ personal_aws_profile }}"
-  export AWS_REGION="{{ personal_aws_region }}"
-  export TF_STATE_BUCKET_NAME="{{ personal_tf_state_bucket }}"
-}
-
-# Cedar Valley MTB org site (account 616714047495) — see docs/home/cvmtb-aws.md
-cvmtb() {
-  export AWS_PROFILE="cvmtb"
-  export AWS_REGION="us-west-2"
-  export TF_STATE_BUCKET_NAME="rcv-website-terraform-state-616714047495"
-}
 
 # Starship shows this instead of the full VAULT_ADDR URL. Only set a default
 # when an address is already present (unmanaged ~/.zshrc on the homelab Mac)

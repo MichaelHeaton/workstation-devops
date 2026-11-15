@@ -4,13 +4,16 @@
 - name: Show AWS config (dry-run)
   ansible.builtin.debug:
     msg: >-
-      Would write managed ~/.aws/config with [profile {{ personal_aws_profile }}]
-      and [profile cvmtb] (region/output only; credentials stay in ~/.aws/credentials).
+      Would write managed ~/.aws/config with SSO profiles
+      {{ personal_aws_profiles | default([]) | map(attribute='name') | join(', ') }}
+      and sso-sessions {{ personal_aws_sso_sessions | default([]) | map(attribute='name') | join(', ') }}.
+      ~/.aws/credentials is not managed.
   when:
     - dry_run | default(false) | bool
     - "'home' in workstation_tags"
   tags:
     - home
+    - aws
 
 - name: Ensure ~/.aws exists
   ansible.builtin.file:
@@ -22,9 +25,12 @@
     - "'home' in workstation_tags"
   tags:
     - home
+    - aws
 
 # Own the whole file so re-apply heals orphans from `aws configure` or broken blockinfile markers.
-- name: Write managed AWS config profiles
+# `aws` tag runs only this file's AWS tasks + the personal shell block:
+#   ansible-playbook site.yml -e workstation_profile=personal --tags aws --check --diff
+- name: Write managed AWS config (SSO profiles + sso-sessions)
   ansible.builtin.template:
     src: aws_config.j2
     dest: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
@@ -34,6 +40,7 @@
     - "'home' in workstation_tags"
   tags:
     - home
+    - aws
 
 - name: Mark personal profile role applied
   ansible.builtin.set_fact:

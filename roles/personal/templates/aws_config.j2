@@ -1,13 +1,21 @@
-# Managed by workstation-devops (roles/personal). Region/output only.
-# Access keys live in ~/.aws/credentials — see docs/home/platform-aws.md and docs/home/cvmtb-aws.md.
-# Do not run `aws configure --profile …` for these profiles; it rewrites this file.
+# Managed by workstation-devops (roles/personal, `aws` tag) from group_vars/personal.yml.
+# SSO only, no static keys. Break-glass use only: see docs/home/aws-break-glass.md.
+# Do not run `aws configure` or `aws configure sso`; they rewrite this file. Edit the vars instead.
 
 [default]
+{% for p in personal_aws_profiles | default([]) %}
 
-[profile {{ personal_aws_profile }}]
-region = {{ personal_aws_region }}
-output = json
+[profile {{ p.name }}]
+region = {{ p.region | default(personal_aws_region) }}
+output = {{ p.output | default('json') }}
+sso_session = {{ p.sso_session }}
+sso_account_id = {{ p.sso_account_id }}
+sso_role_name = {{ p.sso_role_name }}
+{% endfor %}
+{% for s in personal_aws_sso_sessions | default([]) %}
 
-[profile cvmtb]
-region = {{ personal_aws_region }}
-output = json
+[sso-session {{ s.name }}]
+sso_start_url = {{ s.start_url }}
+sso_region = {{ s.region | default(personal_aws_region) }}
+sso_registration_scopes = {{ s.registration_scopes | default('sso:account:access') }}
+{% endfor %}
