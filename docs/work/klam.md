@@ -31,7 +31,19 @@ Set **`klam_artifactory_host`** in `group_vars/work.local.yml` (see `work.local.
 
 The CLI is **not** installed until you pass an Artifactory API key. Aliases alone will fail with `command not found: klam` until pip install runs.
 
-**Preferred** (keeps the key out of shell history):
+**Fastest** (installs just KLAM, skips the rest of `make apply`):
+
+```bash
+# VPN on; API key from Artifactory profile page (not corp VPN password)
+export KLAM_ARTIFACTORY_API_KEY='paste-key-here'
+export WORK_USERNAME=YOUR_LDAP   # Artifactory LDAP — not your macOS login name
+cd ~/Projects/personal/workstation-devops
+make install-klam
+source ~/.zshrc
+klam --help
+```
+
+**Preferred full apply** (keeps the key out of shell history, also applies everything else tagged `work`):
 
 ```bash
 # VPN on; API key from Artifactory profile page (not corp VPN password)
