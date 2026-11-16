@@ -1,4 +1,4 @@
-.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-atlassian secrets-atlassian-env secrets-help
+.PHONY: help dry-run check apply deps hooks lint test triage profile secrets secrets-check secrets-atlassian secrets-atlassian-env secrets-help install-klam
 
 help:
 	@echo "workstation-devops — available targets"
@@ -28,6 +28,10 @@ help:
 	@echo "    make secrets-help                   List all secret setup commands"
 	@echo "    make secrets-atlassian              Atlassian Jira/Confluence tokens + config file"
 	@echo "    make secrets-atlassian-env          Create ~/.mcp/env/atlassian-config.env"
+	@echo ""
+	@echo "  KLAM"
+	@echo "    make install-klam                   Install KLAM CLI only (pip) + deploy ces_* aliases"
+	@echo "                                         Needs: export KLAM_ARTIFACTORY_API_KEY=... WORK_USERNAME=..."
 
 WORKSTATION_PROFILE := $(shell test -f "$(HOME)/.workstation_profile" && tr -d '[:space:]' < "$(HOME)/.workstation_profile")
 ANSIBLE_PROFILE_ARGS := $(if $(WORKSTATION_PROFILE),-e workstation_profile=$(WORKSTATION_PROFILE),)
@@ -95,3 +99,14 @@ secrets-atlassian-env:
 
 secrets-help:
 	@./scripts/secrets/help.sh
+
+# Installs just the KLAM CLI (pip) + ces_* shell aliases, skipping the rest
+# of make apply. Needs: export KLAM_ARTIFACTORY_API_KEY=... (Artifactory
+# profile page API key, not your corp VPN password) and
+# export WORK_USERNAME=YOUR_LDAP (Artifactory LDAP username).
+install-klam:
+	@test -n "$$KLAM_ARTIFACTORY_API_KEY" || { echo "error: export KLAM_ARTIFACTORY_API_KEY=... first (Artifactory profile page -> API Key)"; exit 1; }
+	@test -n "$$WORK_USERNAME" || { echo "error: export WORK_USERNAME=YOUR_LDAP first (Artifactory LDAP username, not your macOS login)"; exit 1; }
+	$(ANSIBLE_PLAYBOOK) --tags klam -e klam_artifactory_api_key=$$KLAM_ARTIFACTORY_API_KEY -e work_username=$$WORK_USERNAME
+	@echo ""
+	@echo "Done. Open a new shell (or: source ~/.zshrc) then: klam --help"
